@@ -311,8 +311,8 @@ export default function TeacherCalculator() {
           </CardContent>
         </>}
 
-        <div className="flex items-center justify-between border-t border-border bg-muted/30 p-4 md:px-8 print:hidden">
-          <Button type="button" variant="ghost" onClick={() => goTo(step - 1)} disabled={step === 0}><ArrowLeft size={17} /> Anterior</Button>
+        <div className={`flex items-center border-t border-border bg-muted/30 p-4 md:px-8 print:hidden ${step === 0 ? "justify-end" : "justify-between"}`}>
+          {step > 0 && <Button type="button" variant="ghost" onClick={() => goTo(step - 1)}><ArrowLeft size={17} /> Anterior</Button>}
           {step < 3 && <Button type="button" onClick={() => !currentStepInvalid && goTo(step + 1)} disabled={currentStepInvalid}>{step === 2 ? "Ver resultado" : "Continuar"}<ArrowRight size={17} /></Button>}
         </div>
       </Card>

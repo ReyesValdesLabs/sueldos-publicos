@@ -1,4 +1,4 @@
-name: Actualizar indicadores Previred
+name: Update Previred indicators
 
 on:
   schedule:
