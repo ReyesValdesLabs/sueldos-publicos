@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
+const decimalMoney = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const trancheNames = { access: "Acceso", initial: "Inicial", early: "Temprano", advanced: "Avanzado", expert1: "Experto I", expert2: "Experto II" } as const;
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Carrera docente", "Previsión y extras", "Resultado"];
@@ -18,6 +20,18 @@ const date = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", y
 const month = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
 const sourceUpdatedLabel = date.format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
 const paymentPeriodLabel = month.format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
+
+function parseMoney(value: string) {
+  const sanitized = value.replace(/[^\d,.]/g, "");
+  const dotParts = sanitized.split(".");
+  const normalized = sanitized.includes(",")
+    ? sanitized.replace(/\./g, "").replace(",", ".")
+    : dotParts.length === 2 && dotParts[1].length <= 2
+      ? sanitized
+      : sanitized.replace(/\./g, "");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
 
 function currentChilePeriod() {
   const parts = new Intl.DateTimeFormat("en", { year: "numeric", month: "2-digit", timeZone: "America/Santiago" }).formatToParts(new Date());
@@ -51,19 +65,46 @@ const initialInput: CalculationInput = {
 function SelectField({ id, label, value, onChange, children, help }: { id: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode; help?: string }) {
   return <div className="field-group">
     <Label htmlFor={id}>{label}</Label>
-    <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="select-field">{children}</select>
+    <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="form-control">{children}</select>
     {help && <p className="field-help">{help}</p>}
   </div>;
 }
 
-function NumberField({ id, label, value, onChange, min = 0, max, suffix, help }: { id: string; label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; suffix?: string; help?: string }) {
+function NumberField({ id, label, value, onChange, min = 0, max, suffix, help, error, moneyDecimals = 0 }: { id: string; label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; suffix?: string; help?: string; error?: string; moneyDecimals?: 0 | 2 }) {
+  const isMoney = suffix === "$";
+  const [draftValue, setDraftValue] = useState<string | null>(null);
+  const displayValue = draftValue ?? (isMoney ? (moneyDecimals === 2 ? decimalMoney : integerMoney).format(value) : value);
+  const describedBy = [help ? `${id}-help` : "", error ? `${id}-error` : ""].filter(Boolean).join(" ") || undefined;
+  const handleInput = (rawValue: string) => {
+    if (rawValue === "") {
+      setDraftValue("");
+      onChange(0);
+      return;
+    }
+    setDraftValue(null);
+    onChange(isMoney ? parseMoney(rawValue) : Number(rawValue));
+  };
+
   return <div className="field-group">
     <Label htmlFor={id}>{label}</Label>
     <div className="relative">
-      <Input id={id} type="number" min={min} max={max} value={value} onInput={(event) => onChange(Number(event.currentTarget.value))} className={suffix ? "pr-16" : undefined} />
+      <Input
+        id={id}
+        type={isMoney ? "text" : "number"}
+        inputMode={isMoney ? "decimal" : undefined}
+        min={isMoney ? undefined : min}
+        max={isMoney ? undefined : max}
+        value={displayValue}
+        aria-describedby={describedBy}
+        aria-invalid={Boolean(error)}
+        onInput={(event) => handleInput(event.currentTarget.value)}
+        onBlur={() => setDraftValue(null)}
+        className={`form-control${suffix ? " pr-16" : ""}`}
+      />
       {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{suffix}</span>}
     </div>
-    {help && <p className="field-help">{help}</p>}
+    {help && <p id={`${id}-help`} className="field-help">{help}</p>}
+    {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
   </div>;
 }
 
@@ -103,6 +144,10 @@ export default function TeacherCalculator() {
   const update = <K extends keyof CalculationInput>(key: K, value: CalculationInput[K]) => setInput((current) => ({ ...current, [key]: value }));
   const appliedHours = Math.min(44, Math.max(0, Math.round(input.weeklyHours || 0)));
   const legalBase = activeParameters.hourlyRate[input.educationLevel] * appliedHours;
+  const bienniaError = input.biennia < 0 || input.biennia > 15 || !Number.isInteger(input.biennia)
+    ? "Ingresa un número entero entre 0 y 15."
+    : undefined;
+  const currentStepInvalid = step === 1 && Boolean(bienniaError);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -151,7 +196,7 @@ export default function TeacherCalculator() {
               <NumberField id="weekly-hours" label="Horas de contrato semanales" value={input.weeklyHours} onChange={(value) => update("weeklyHours", value)} min={1} max={44} suffix="horas" help="Máximo legal con un mismo empleador: 44 horas." />
             </div>
             <div className="legal-value-card">
-              <div aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{currency.format(activeParameters.hourlyRate[input.educationLevel])} por hora × {appliedHours} horas</small></div>
+              <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{currency.format(activeParameters.hourlyRate[input.educationLevel])} por hora × {appliedHours} horas</small></div>
               <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real sin alterar la base legal de las asignaciones." />
             </div>
             {editBase && <NumberField id="paid-base" label="Sueldo base pagado" value={input.paidBaseSalary ?? legalBase} onChange={(value) => update("paidBaseSalary", value)} suffix="$" />}
@@ -162,7 +207,7 @@ export default function TeacherCalculator() {
           <CardHeader><CardTitle>Carrera docente</CardTitle><CardDescription>Usa antecedentes acreditados. Si no conoces un beneficio, déjalo desactivado.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
             <div className="form-grid">
-              <NumberField id="biennia" label="Bienios reconocidos" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="Cada bienio corresponde a dos años acreditados; máximo 15." />
+              <NumberField id="biennia" label="Bienios reconocidos" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="Cada bienio corresponde a dos años acreditados; máximo 15." error={bienniaError} />
               <SelectField id="tranche" label="Tramo profesional" value={input.tranche} onChange={(value) => update("tranche", value as CalculationInput["tranche"])}>
                 {Object.entries(trancheNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </SelectField>
@@ -206,7 +251,7 @@ export default function TeacherCalculator() {
                   </div>
                 </div>
                 <div className="form-grid">
-                  <NumberField id="manual-uf" label="Valor UF" value={manualValues.uf} onChange={(value) => setManualValues((current) => ({ ...current, uf: value }))} min={1} suffix="$" />
+                  <NumberField id="manual-uf" label="Valor UF" value={manualValues.uf} onChange={(value) => setManualValues((current) => ({ ...current, uf: value }))} min={1} suffix="$" moneyDecimals={2} />
                   <NumberField id="manual-pension-cap" label="Tope imponible AFP" value={manualValues.pensionCapUf} onChange={(value) => setManualValues((current) => ({ ...current, pensionCapUf: value }))} min={1} suffix="UF" />
                   <NumberField id="manual-afc-cap" label="Tope Seguro de Cesantía" value={manualValues.unemploymentCapUf} onChange={(value) => setManualValues((current) => ({ ...current, unemploymentCapUf: value }))} min={1} suffix="UF" />
                 </div>
@@ -243,8 +288,8 @@ export default function TeacherCalculator() {
                 {input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}
                 {input.manualItems.map((item) => <div key={item.id} className="manual-row">
                   <Input aria-label="Nombre del concepto" placeholder="Nombre del concepto" value={item.name} onChange={(event) => patchManualItem(item.id, { name: event.target.value })} />
-                  <Input aria-label={`Monto de ${item.name || "concepto"}`} type="number" min="0" placeholder="Monto" value={item.amount || ""} onChange={(event) => patchManualItem(item.id, { amount: Number(event.target.value) })} />
-                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="select-field" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}>
+                  <Input aria-label={`Monto de ${item.name || "concepto"}`} type="text" inputMode="numeric" placeholder="Monto" value={item.amount ? integerMoney.format(item.amount) : ""} onChange={(event) => patchManualItem(item.id, { amount: parseMoney(event.target.value) })} />
+                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}>
                     <option value="taxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible, no tributable</option><option value="nonImposable">No imponible</option><option value="discount">Descuento</option>
                   </select>
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button>
@@ -268,7 +313,7 @@ export default function TeacherCalculator() {
 
         <div className="flex items-center justify-between border-t border-border bg-muted/30 p-4 md:px-8 print:hidden">
           <Button type="button" variant="ghost" onClick={() => goTo(step - 1)} disabled={step === 0}><ArrowLeft size={17} /> Anterior</Button>
-          {step < 3 && <Button type="button" onClick={() => goTo(step + 1)}>{step === 2 ? "Ver resultado" : "Continuar"}<ArrowRight size={17} /></Button>}
+          {step < 3 && <Button type="button" onClick={() => !currentStepInvalid && goTo(step + 1)} disabled={currentStepInvalid}>{step === 2 ? "Ver resultado" : "Continuar"}<ArrowRight size={17} /></Button>}
         </div>
       </Card>
 

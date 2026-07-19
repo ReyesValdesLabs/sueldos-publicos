@@ -133,6 +133,8 @@ a, button, input, select, summary { outline-offset: 3px; }
 .step-item small { font-weight: 700; }
 .field-group { display: grid; align-content: start; gap: .45rem; }
 .field-help { margin: 0; color: var(--muted-foreground); font-size: .78rem; line-height: 1.5; }
+.field-error { margin: -.15rem 0 0; color: var(--destructive); font-size: .78rem; font-weight: 650; line-height: 1.5; }
+.form-control[aria-invalid="true"] { border-color: var(--destructive); }
 .data-update-line { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .65rem; margin: .7rem 0 0; color: var(--muted-foreground); font-size: .8rem; }
 .data-update-line svg { color: var(--primary); }
 .data-update-line a { display: inline-flex; align-items: center; gap: .25rem; color: var(--primary); font-weight: 750; text-decoration: none; }
@@ -141,7 +143,7 @@ a, button, input, select, summary { outline-offset: 3px; }
 .data-alert > svg { color: #a66b00; }
 .data-alert strong, .data-alert p { display: block; }
 .data-alert p { margin: .2rem 0 0; color: var(--muted-foreground); font-size: .82rem; line-height: 1.5; }
-.select-field { height: 3rem; width: 100%; border: 1px solid var(--input); border-radius: .75rem; background: var(--background); padding: .5rem .875rem; color: var(--foreground); font: inherit; }
+.form-control { height: 3rem; width: 100%; border: 1px solid var(--input); border-radius: .75rem; background: var(--background); padding: .5rem .875rem; color: var(--foreground); font: inherit; box-shadow: none; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; }
 .form-grid.single-field { grid-template-columns: minmax(0, 1fr); }
 .option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
@@ -154,10 +156,13 @@ a, button, input, select, summary { outline-offset: 3px; }
 .check-field small { margin-top: .2rem; color: var(--muted-foreground); line-height: 1.4; }
 .context-help-link { display: inline-flex; min-height: 2rem; align-items: center; gap: .4rem; color: var(--primary); font-size: .8rem; font-weight: 750; text-decoration: none; }
 .context-help-link:hover { text-decoration: underline; }
-.legal-value-card { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; border-radius: 1rem; background: var(--muted); padding: 1.1rem; }
-.legal-value-card span, .legal-value-card strong, .legal-value-card small { display: block; }
-.legal-value-card strong { margin: .25rem 0; font-size: 1.4rem; }
-.legal-value-card small { color: var(--muted-foreground); }
+.legal-value-card { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 1rem; border-radius: 1rem; background: var(--muted); padding: 1rem 1.1rem; }
+.legal-value-summary span, .legal-value-summary strong, .legal-value-summary small { display: block; }
+.legal-value-summary strong { margin: .25rem 0; font-size: 1.4rem; }
+.legal-value-summary small { color: var(--muted-foreground); }
+.legal-value-card > .check-field { align-items: center; border-radius: .75rem; padding: .7rem .8rem; }
+.legal-value-card > .check-field strong { font-size: .9rem; line-height: 1.3; }
+.legal-value-card > .check-field small { font-size: .72rem; }
 .advanced-panel { border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; }
 .advanced-panel summary { cursor: pointer; font-weight: 750; }
 .parameter-panel { border: 1px solid var(--border); border-radius: 1rem; background: var(--muted); padding: 1rem; }
