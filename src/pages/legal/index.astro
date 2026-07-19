@@ -1,0 +1,67 @@
+---
+import { ArrowRight, ExternalLink, Scale } from "lucide-react";
+import { LEGAL_ENTRIES } from "@/data/legal";
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const officialSources = [
+  {
+    group: "Normativa docente",
+    sources: [
+      { title: "Estatuto Docente — DFL N.º 1 de 1996", description: "Marco consolidado para RBMN, experiencia, tramo, alumnos prioritarios y otras remuneraciones docentes.", url: "https://www.bcn.cl/leychile/navegar?idNorma=60439" },
+      { title: "Ley N.º 20.903 — Carrera Docente", description: "Crea el Sistema de Desarrollo Profesional Docente y modifica la estructura de asignaciones.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1087343" },
+      { title: "CPEIP — Asignaciones de Carrera Docente", description: "Explicación institucional, requisitos, fórmulas y valores vigentes de BRP, tramo y alumnos prioritarios.", url: "https://cpeip.cl/carrera-docente-asignaciones/" },
+      { title: "Ley N.º 20.158 — BRP", description: "Establece la Bonificación de Reconocimiento Profesional por título y mención.", url: "https://www.bcn.cl/leychile/navegar?idNorma=256863" },
+      { title: "Ley N.º 21.040 — Educación Pública", description: "Crea los Servicios Locales de Educación Pública y regula el traspaso desde la administración municipal.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1111237" },
+      { title: "Ley N.º 20.248 — Alumnos prioritarios", description: "Define la calidad de alumno prioritario utilizada para determinar la concentración del establecimiento.", url: "https://www.bcn.cl/leychile/navegar?idNorma=269001" },
+      { title: "Decreto N.º 117 de 2026 — RTM", description: "Fija la Remuneración Total Mínima considerada por la calculadora para el período.", url: "https://nuevo.leychile.cl/servicios/Consulta/Exportar?exportar_formato=pdf&hddResultadoExportar=1224739.2026-06-04.0.0%23&nombrearchivo=Decreto-117_04-JUN-2026&radioExportar=Normas" },
+    ],
+  },
+  {
+    group: "Parámetros y descuentos",
+    sources: [
+      { title: "Previred — Indicadores previsionales", description: `UF, UTM, topes imponibles y comisiones AFP utilizados en ${P.label.toLowerCase()}.`, url: P.previred.sourceUrl },
+      { title: "SII — Impuesto Único de Segunda Categoría", description: "Tramos, factores y rebajas mensuales aplicables al impuesto de trabajadores dependientes.", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026_art52.htm" },
+      { title: "Superintendencia de Pensiones — Comisiones AFP", description: "Comisiones vigentes cobradas por cada administradora de fondos de pensiones.", url: "https://www.spensiones.cl/portal/institucional/594/w3-article-2815.html" },
+      { title: "Superintendencia de Salud — Cotizaciones", description: "Reglas de cotización legal de salud para Fonasa e Isapres.", url: "https://www.superdesalud.gob.cl/tax-materias-isapres/cotizaciones-de-salud-3465/" },
+    ],
+  },
+];
+---
+<BaseLayout title="Respaldo legal de los cálculos | Sueldos Públicos" description="Consulta las fórmulas, criterios y fuentes oficiales utilizadas por la calculadora de liquidación docente.">
+  <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. La versión activa corresponde a julio de 2026.</p></header>
+  <section class="page-shell official-sources" aria-labelledby="fuentes-principales">
+    <div class="section-heading">
+      <span class="eyebrow">Documentos consultados</span>
+      <h2 id="fuentes-principales">Fuentes oficiales principales</h2>
+      <p>Cada enlace indica qué parte del cálculo respalda. La página de cada concepto muestra además sus fuentes específicas.</p>
+    </div>
+    {officialSources.map((group) => (
+      <div class="official-source-group">
+        <h3>{group.group}</h3>
+        <div class="official-source-grid">
+          {group.sources.map((source) => (
+            <a class="official-source-card" href={source.url} target="_blank" rel="noopener noreferrer">
+              <span>{source.title}<ExternalLink size={14} /></span>
+              <p>{source.description}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+  <section class="page-shell legal-list" aria-label="Conceptos legales">
+    {LEGAL_ENTRIES.map((entry) => (
+      <a class="legal-card legal-index-card" href={`/legal/${entry.slug}/`}>
+        <Scale size={23} />
+        <h2 class="text-xl font-bold">{entry.title}</h2>
+        <p>{entry.summary}</p>
+        <div class="legal-card-sources">
+          <strong>Fuentes</strong>
+          <span>{entry.sources.map((source) => source.label).join(" · ")}</span>
+        </div>
+        <span class="inline-flex items-center gap-2 font-bold text-primary">Ver detalle y documentos <ArrowRight size={16} /></span>
+      </a>
+    ))}
+  </section>
+</BaseLayout>

@@ -1,0 +1,25 @@
+---
+import { ArrowLeft, ExternalLink, Scale } from "lucide-react";
+import { LEGAL_ENTRIES, type LegalEntry } from "@/data/legal";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+export function getStaticPaths() {
+  return LEGAL_ENTRIES.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+interface Props { entry: LegalEntry }
+const { entry } = Astro.props;
+---
+<BaseLayout title={`${entry.title} | Respaldo legal | Sueldos Públicos`} description={entry.summary}>
+  <header class="page-header page-shell"><a href="/legal/" class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p></header>
+  <div class="page-shell legal-detail">
+    <article class="legal-content">
+      <h2>A quién se aplica</h2><p>{entry.appliesTo}</p>
+      <h2>Cómo lo calcula esta herramienta</h2>{entry.explanation.map((paragraph) => <p>{paragraph}</p>)}
+      <div class="formula" aria-label="Fórmula utilizada">{entry.formula}</div>
+      <h2>Consideraciones</h2><ul>{entry.notes.map((note) => <li>{note}</li>)}</ul>
+      <p class="mt-8 rounded-xl bg-muted p-4 text-sm">Esta página explica la implementación de la calculadora y no reemplaza una interpretación jurídica aplicada a un caso particular.</p>
+    </article>
+    <aside><div class="source-box"><Scale size={24} className="text-primary" /><h2 class="mt-3 font-bold">Fuentes oficiales</h2><p class="text-sm leading-6 text-muted-foreground">Enlaces consultados para documentar el concepto y sus parámetros.</p>{entry.sources.map((source) => <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ExternalLink size={14} className="inline" /></a>)}</div></aside>
+  </div>
+</BaseLayout>

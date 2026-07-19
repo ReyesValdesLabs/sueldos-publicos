@@ -1,0 +1,63 @@
+---
+import { ArrowRight, BookOpenCheck, Calculator, CalendarClock, FileCheck2, LockKeyhole, Scale, ShieldCheck, Sparkles } from "lucide-react";
+import AdSlot from "@/components/AdSlot.astro";
+import TeacherCalculator from "@/components/TeacherCalculator";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
+
+const sourceUpdatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
+const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
+---
+<BaseLayout title="Calculadora de sueldo docente en Chile | Sueldos Públicos" description="Estima gratis tu liquidación como docente municipal o SLEP, con desglose de haberes, descuentos y respaldo legal para cada cálculo.">
+  <section class="hero">
+    <div class="page-shell hero-grid">
+      <div>
+        <span class="eyebrow"><Sparkles size={16} /> Gratis, privado y transparente</span>
+        <h1>Entiende tu sueldo docente, peso por peso.</h1>
+        <p class="hero-copy">Estima tu liquidación como docente municipal o SLEP y revisa de dónde sale cada asignación, descuento y resultado.</p>
+        <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Calcular mi sueldo</a><a class="hero-button" href="/legal/"><Scale size={18} /> Revisar respaldo legal</a></div>
+      </div>
+      <aside class="trust-card" aria-label="Características de la calculadora">
+        <h2>Diseñada para darte claridad</h2>
+        <div class="trust-item"><CalendarClock size={22} /><div><strong>Actualizado el {sourceUpdatedLabel}</strong><span>Indicadores Previred para cotizaciones pagadas en {paymentPeriodLabel}.</span></div></div>
+        <div class="trust-item"><LockKeyhole size={22} /><div><strong>Tus datos quedan en tu equipo</strong><span>El cálculo ocurre completamente en tu navegador.</span></div></div>
+        <div class="trust-item"><BookOpenCheck size={22} /><div><strong>Resultado explicable</strong><span>Cada concepto automático enlaza a su respaldo.</span></div></div>
+      </aside>
+    </div>
+  </section>
+
+  <div class="page-shell section"><TeacherCalculator client:load /></div>
+  <AdSlot placement="después de la calculadora" />
+
+  <section id="metodologia" class="section section-muted">
+    <div class="page-shell">
+      <div class="section-heading"><span class="eyebrow">Cómo calculamos</span><h2>Una estimación que puedes auditar</h2><p>Separamos los parámetros oficiales de los datos que ingresas. La RBMN legal sigue siendo la base de las asignaciones aunque tu sueldo base pagado sea diferente.</p></div>
+      <div class="feature-grid">
+        <article class="feature-card"><ShieldCheck size={25} /><h3>Fuentes oficiales</h3><p>Las fórmulas se documentan con normas y parámetros de CPEIP, BCN, SII y organismos previsionales.</p></article>
+        <article class="feature-card"><FileCheck2 size={25} /><h3>Desglose completo</h3><p>Se muestran haberes, bases imponible y tributable, cotizaciones, impuesto y sueldo líquido estimado.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="page-shell">
+      <div class="section-heading"><span class="eyebrow">Respaldo legal</span><h2>No solo te damos un número</h2><p>Explora los conceptos principales para entender sus requisitos, fórmulas y fuentes oficiales.</p></div>
+      <div class="legal-grid">
+        <a class="legal-card" href="/legal/rbmn/"><Scale size={24} /><h3>RBMN</h3><p>Valor mínimo por hora cronológica según nivel y jornada contratada.</p></a>
+        <a class="legal-card" href="/legal/asignacion-tramo/"><Scale size={24} /><h3>Asignación de tramo</h3><p>Componentes de experiencia, progresión y monto fijo según tramo.</p></a>
+        <a class="legal-card" href="/legal/brp/"><Scale size={24} /><h3>BRP</h3><p>Bonificación por título y mención, proporcional hasta 30 horas.</p></a>
+      </div>
+      <div class="hero-actions"><a class="hero-button" href="/legal/">Ver todo el respaldo legal <ArrowRight size={17} /></a></div>
+    </div>
+  </section>
+
+  <section id="preguntas" class="section section-muted">
+    <div class="page-shell"><div class="section-heading"><span class="eyebrow">Preguntas frecuentes</span><h2>Antes de usar el resultado</h2></div>
+      <div class="faq-list">
+        <details><summary>¿El resultado reemplaza mi liquidación?</summary><p>No. Es una estimación informativa. Tu empleador puede incluir conceptos locales, retroactivos, licencias, descuentos u otras situaciones que debes ingresar manualmente o revisar por separado.</p></details>
+        <details><summary>¿Funciona para colegios particulares subvencionados?</summary><p>Esta primera versión está acotada a docentes de establecimientos públicos municipales y SLEP. No recomendamos usarla para otros sostenedores.</p></details>
+        <details><summary>¿Guardan mi sueldo o mis datos?</summary><p>No. El cálculo se ejecuta en tu navegador y el sitio no necesita una cuenta. Solo la preferencia de tema puede guardarse localmente.</p></details>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,15 @@
+---
+import { Calculator, ChevronDown, Contrast, FileText, Landmark } from "lucide-react";
+---
+<header class="site-header print:hidden">
+  <div class="page-shell header-inner">
+    <a href="/" class="brand" aria-label="Sueldos Públicos, inicio"><span class="brand-mark"><Landmark size={21} /></span><span>Sueldos <strong>Públicos</strong></span></a>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <details class="nav-dropdown"><summary>Calculadoras <ChevronDown size={15} /></summary><div><a href="/#calculadora"><Calculator size={17} /> Liquidación docente</a></div></details>
+      <a href="/legal/">Respaldo legal</a>
+      <a href="/#metodologia">Cómo calculamos</a>
+    </nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar a tema oscuro" title="Cambiar tema"><Contrast size={19} /><span data-theme-label>Oscuro</span></button>
+    <details class="mobile-nav"><summary aria-label="Abrir menú">Menú</summary><nav aria-label="Navegación móvil"><a href="/#calculadora"><Calculator size={17} /> Calculadora docente</a><a href="/legal/"><FileText size={17} /> Respaldo legal</a><a href="/#metodologia">Cómo calculamos</a></nav></details>
+  </div>
+</header>
