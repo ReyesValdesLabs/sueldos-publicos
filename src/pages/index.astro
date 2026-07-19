@@ -4,6 +4,7 @@ import AdSlot from "@/components/AdSlot.astro";
 import TeacherCalculator from "@/components/TeacherCalculator";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
+import { sitePath } from "@/lib/site-path";
 
 const sourceUpdatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
 const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
@@ -15,7 +16,7 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
         <span class="eyebrow"><Sparkles size={16} /> Gratis, privado y transparente</span>
         <h1>Entiende tu sueldo docente, peso por peso.</h1>
         <p class="hero-copy">Estima tu liquidación como docente municipal o SLEP y revisa de dónde sale cada asignación, descuento y resultado.</p>
-        <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Calcular mi sueldo</a><a class="hero-button" href="/legal/"><Scale size={18} /> Revisar respaldo legal</a></div>
+        <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Calcular mi sueldo</a><a class="hero-button" href={sitePath("legal/")}><Scale size={18} /> Revisar respaldo legal</a></div>
       </div>
       <aside class="trust-card" aria-label="Características de la calculadora">
         <h2>Diseñada para darte claridad</h2>
@@ -43,11 +44,11 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
     <div class="page-shell">
       <div class="section-heading"><span class="eyebrow">Respaldo legal</span><h2>No solo te damos un número</h2><p>Explora los conceptos principales para entender sus requisitos, fórmulas y fuentes oficiales.</p></div>
       <div class="legal-grid">
-        <a class="legal-card" href="/legal/rbmn/"><Scale size={24} /><h3>RBMN</h3><p>Valor mínimo por hora cronológica según nivel y jornada contratada.</p></a>
-        <a class="legal-card" href="/legal/asignacion-tramo/"><Scale size={24} /><h3>Asignación de tramo</h3><p>Componentes de experiencia, progresión y monto fijo según tramo.</p></a>
-        <a class="legal-card" href="/legal/brp/"><Scale size={24} /><h3>BRP</h3><p>Bonificación por título y mención, proporcional hasta 30 horas.</p></a>
+        <a class="legal-card" href={sitePath("legal/rbmn/")}><Scale size={24} /><h3>RBMN</h3><p>Valor mínimo por hora cronológica según nivel y jornada contratada.</p></a>
+        <a class="legal-card" href={sitePath("legal/asignacion-tramo/")}><Scale size={24} /><h3>Asignación de tramo</h3><p>Componentes de experiencia, progresión y monto fijo según tramo.</p></a>
+        <a class="legal-card" href={sitePath("legal/brp/")}><Scale size={24} /><h3>BRP</h3><p>Bonificación por título y mención, proporcional hasta 30 horas.</p></a>
       </div>
-      <div class="hero-actions"><a class="hero-button" href="/legal/">Ver todo el respaldo legal <ArrowRight size={17} /></a></div>
+      <div class="hero-actions"><a class="hero-button" href={sitePath("legal/")}>Ver todo el respaldo legal <ArrowRight size={17} /></a></div>
     </div>
   </section>
 

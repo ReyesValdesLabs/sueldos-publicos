@@ -1,0 +1,11 @@
+.astro
+.git
+.github
+.idea
+.DS_Store
+dist
+node_modules
+*.log
+.env
+.env.*
+README.md

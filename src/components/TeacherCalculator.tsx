@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, ExternalLink, FileText, Info, Plus, Printer, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_PARAMETERS as P, type AfpKey, type PeriodParameters } from "@/data/parameters/2026-07";
 import { calculateTeacherSalary } from "@/lib/calculation/calculate";
+import { sitePath } from "@/lib/site-path";
 import type { CalculationInput, ManualItem, ManualKind } from "@/lib/calculation/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,7 @@ export default function TeacherCalculator() {
         <p className="mt-2 max-w-2xl text-muted-foreground">Completa tus antecedentes. Nada de lo que ingreses se guarda o se envía fuera de tu navegador.</p>
         <p className="data-update-line"><CalendarClock size={16} /><span>Última actualización previsional: <strong>{sourceUpdatedLabel}</strong></span><a href={P.previred.sourceUrl} target="_blank" rel="noopener noreferrer">Ver Previred <ExternalLink size={13} /></a></p>
       </div>
-      <a href="/legal/" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline"><ShieldCheck size={18} /> Ver respaldo legal</a>
+      <a href={sitePath("legal/")} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline"><ShieldCheck size={18} /> Ver respaldo legal</a>
     </div>
 
     {dataIssue && <div className="data-alert" role="alert"><AlertTriangle size={20} /><div><strong>{periodStale ? "Los indicadores previsionales pueden estar desactualizados" : "No pudimos comprobar la disponibilidad de Previred"}</strong><p>La copia verificada sigue disponible. También puedes ingresar los valores previsionales para esta simulación.</p></div><Button type="button" size="sm" variant="outline" onClick={() => { setManualParameters(true); goTo(2); }}>Ingresar valores</Button></div>}
@@ -224,7 +225,7 @@ export default function TeacherCalculator() {
               <NumberField id="apv" label="APV descontado por empleador" value={input.apv} onChange={(value) => update("apv", value)} min={0} suffix="$" />
               <div className="space-y-2">
                 <CheckField id="apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="Rebaja la base tributable" help="Actívalo solo si corresponde al régimen tributario informado para tu APV." />
-                <a className="context-help-link" href="/legal/apv/"><Info size={15} /> ¿Qué significa esta rebaja?</a>
+                <a className="context-help-link" href={sitePath("legal/apv/")}><Info size={15} /> ¿Qué significa esta rebaja?</a>
               </div>
             </div>
             <details className="advanced-panel">
@@ -296,7 +297,7 @@ function ResultTable({ title, lines, total, positive = false }: { title: string;
   return <section aria-labelledby={`result-${title}`}>
     <div className="mb-3 flex items-end justify-between"><h3 id={`result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div>
     <div className="overflow-hidden rounded-2xl border border-border">
-      {lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"}{line.taxable ? " · tributable" : ""}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={`/legal/${line.legalSlug}/`} aria-label={`Ver respaldo legal de ${line.label}`} title="Ver respaldo legal"><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}
+      {lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"}{line.taxable ? " · tributable" : ""}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`} title="Ver respaldo legal"><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}
     </div>
   </section>;
 }

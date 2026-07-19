@@ -3,6 +3,7 @@ import { ArrowRight, ExternalLink, Scale } from "lucide-react";
 import { LEGAL_ENTRIES } from "@/data/legal";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 
 const officialSources = [
   {
@@ -52,7 +53,7 @@ const officialSources = [
   </section>
   <section class="page-shell legal-list" aria-label="Conceptos legales">
     {LEGAL_ENTRIES.map((entry) => (
-      <a class="legal-card legal-index-card" href={`/legal/${entry.slug}/`}>
+      <a class="legal-card legal-index-card" href={sitePath(`legal/${entry.slug}/`)}>
         <Scale size={23} />
         <h2 class="text-xl font-bold">{entry.title}</h2>
         <p>{entry.summary}</p>

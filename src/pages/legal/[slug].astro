@@ -2,6 +2,7 @@
 import { ArrowLeft, ExternalLink, Scale } from "lucide-react";
 import { LEGAL_ENTRIES, type LegalEntry } from "@/data/legal";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 
 export function getStaticPaths() {
   return LEGAL_ENTRIES.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
@@ -11,7 +12,7 @@ interface Props { entry: LegalEntry }
 const { entry } = Astro.props;
 ---
 <BaseLayout title={`${entry.title} | Respaldo legal | Sueldos Públicos`} description={entry.summary}>
-  <header class="page-header page-shell"><a href="/legal/" class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p></header>
+  <header class="page-header page-shell"><a href={sitePath("legal/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p></header>
   <div class="page-shell legal-detail">
     <article class="legal-content">
       <h2>A quién se aplica</h2><p>{entry.appliesTo}</p>

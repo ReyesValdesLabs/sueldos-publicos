@@ -1,11 +1,12 @@
 ---
 import { Landmark } from "lucide-react";
+import { sitePath } from "@/lib/site-path";
 ---
 <footer class="site-footer print:hidden">
   <div class="page-shell footer-grid">
-    <div><a href="/" class="brand"><span class="brand-mark"><Landmark size={18} /></span><span>Sueldos <strong>Públicos</strong></span></a><p>Herramientas gratuitas para entender remuneraciones del sector público chileno.</p></div>
-    <div><strong>Herramientas</strong><a href="/#calculadora">Liquidación docente</a><a href="/legal/">Respaldo legal</a></div>
-    <div><strong>Información</strong><a href="/privacidad/">Privacidad</a><a href="/terminos/">Términos de uso</a></div>
+    <div><a href={sitePath()} class="brand"><span class="brand-mark"><Landmark size={18} /></span><span>Sueldos <strong>Públicos</strong></span></a><p>Herramientas gratuitas para entender remuneraciones del sector público chileno.</p></div>
+    <div><strong>Herramientas</strong><a href={sitePath("#calculadora")}>Liquidación docente</a><a href={sitePath("legal/")}>Respaldo legal</a></div>
+    <div><strong>Información</strong><a href={sitePath("privacidad/")}>Privacidad</a><a href={sitePath("terminos/")}>Términos de uso</a></div>
   </div>
   <div class="page-shell footer-bottom"><span>© {new Date().getFullYear()} Sueldos Públicos</span><span>Sitio informativo independiente · No es un portal gubernamental</span></div>
 </footer>

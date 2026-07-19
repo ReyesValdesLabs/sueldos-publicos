@@ -13,6 +13,16 @@ pnpm dev
 
 El sitio queda disponible en `http://localhost:4321`.
 
+## Demo en GitHub Pages
+
+Cada push a `main` ejecuta el workflow `Publicar demo en GitHub Pages` y publica
+el sitio en:
+
+`https://reyesvaldeslabs.github.io/sueldos-publicos/`
+
+La ruta base de Pages se activa únicamente durante ese workflow. El desarrollo
+local y la imagen Docker continúan sirviendo el sitio desde `/`.
+
 ## Validación
 
 ```sh
@@ -22,6 +32,64 @@ pnpm build
 ```
 
 La compilación genera únicamente archivos estáticos dentro de `dist/`.
+
+## Docker
+
+La imagen compila el sitio con Node.js y sirve únicamente los archivos estáticos
+resultantes mediante Nginx sin privilegios, en el puerto `8080`.
+
+```sh
+docker compose up --build -d
+```
+
+Después de iniciar, abre `http://localhost:8080`. Para usar otro puerto en el
+host, define `SITE_PORT`, por ejemplo:
+
+```sh
+SITE_PORT=3000 docker compose up --build -d
+```
+
+Comandos útiles:
+
+```sh
+docker compose ps
+docker compose logs -f web
+docker compose down
+```
+
+También se puede construir y ejecutar la imagen sin Compose:
+
+```sh
+docker build -t sueldos-publicos:local .
+docker run --rm -p 8080:8080 sueldos-publicos:local
+```
+
+El endpoint `GET /healthz` permite comprobar la salud del contenedor desde el
+VPS o desde un proxy inverso.
+
+### Imagen publicada en GHCR
+
+El workflow `Publicar imagen de contenedor` compila y publica una imagen para
+`linux/amd64` y `linux/arm64` cuando se crea cualquier tag de Git o cuando se
+ejecuta manualmente desde GitHub Actions.
+
+Los tags de versión semántica generan alias. Por ejemplo, `v1.2.3` publica
+`v1.2.3`, `1.2.3`, `1.2`, `1`, `latest` y una etiqueta asociada al SHA del
+commit. Una ejecución manual permite escoger la etiqueta y no reemplaza
+`latest` salvo que se solicite explícitamente.
+
+```sh
+docker pull ghcr.io/reyesvaldeslabs/sueldos-publicos:latest
+docker run -d \
+  --name sueldos-publicos \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  ghcr.io/reyesvaldeslabs/sueldos-publicos:latest
+```
+
+El paquete se crea privado inicialmente. Para descargarlo desde un VPS, inicia
+sesión con un token de GitHub que tenga permiso `read:packages`, o cambia la
+visibilidad del paquete a pública desde su configuración en GitHub.
 
 ## Estructura relevante
 
