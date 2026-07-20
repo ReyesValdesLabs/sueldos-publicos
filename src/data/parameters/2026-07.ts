@@ -46,12 +46,12 @@ export const JULY_2026_PARAMETERS: PeriodParameters = {
     { upTo: 5015430, factor: 0.135, rebate: 321704.01 },
     { upTo: 6448410, factor: 0.23, rebate: 798169.86 },
     { upTo: 8597880, factor: 0.304, rebate: 1275352.2 },
-    { upTo: 10747350, factor: 0.35, rebate: 1670854.68 },
-    { upTo: Number.POSITIVE_INFINITY, factor: 0.4, rebate: 2208222.18 },
+    { upTo: 22211190, factor: 0.35, rebate: 1670854.68 },
+    { upTo: Number.POSITIVE_INFINITY, factor: 0.4, rebate: 2781414.18 },
   ],
   sources: [
     { label: "CPEIP · Asignaciones Carrera Docente", url: "https://www.cpeip.cl/carrera-docente-asignaciones/" },
-    { label: "SII · Impuesto Único", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026_art52.htm" },
+    { label: "SII · Impuesto Único", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm" },
     { label: "Previred · Indicadores previsionales", url: PREVIRED_PARAMETERS.sourceUrl },
   ],
 };

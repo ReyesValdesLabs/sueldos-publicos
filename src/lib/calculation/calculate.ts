@@ -67,7 +67,7 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const healthLegal = money(imposableBase * 0.07);
   const health = input.healthSystem === "isapre" ? money(Math.max(healthLegal, input.isaprePlanUf * parameters.uf)) : healthLegal;
   const afcBase = Math.min(imposableEarnings, parameters.unemploymentCapUf * parameters.uf);
-  const afc = input.afcEnabled && input.contractType === "indefinite" ? money(afcBase * 0.006) : 0;
+  const afc = input.afcEnabled && input.contractType === "indefinite" && !input.afcContributionEnded ? money(afcBase * 0.006) : 0;
   const apv = money(input.apv);
   const apvTaxReduction = input.apvTaxDeductible ? Math.min(apv, money(parameters.uf * 50)) : 0;
   const taxableBase = money(Math.max(0, taxableEarnings - afp - healthLegal - afc - apvTaxReduction));
@@ -90,7 +90,8 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   if (paidBase !== legalRbmn) warnings.push("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
   if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   if (input.priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
-  if (input.afcEnabled) warnings.push("AFC es excepcional en este régimen. Confirma el descuento con tu liquidación o empleador.");
+  if (input.afcEnabled && input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que ya se cumplió el máximo de 11 años de cotizaciones en esta relación laboral.");
+  else if (input.afcEnabled) warnings.push("AFC es excepcional en este régimen. Confirma el descuento con tu liquidación o empleador.");
   if (input.weeklyHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   if (minimumCounted < minimumTarget) warnings.push("Se agregó una planilla complementaria estimada para alcanzar la Remuneración Total Mínima.");
 

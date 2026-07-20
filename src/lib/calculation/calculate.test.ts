@@ -22,6 +22,7 @@ const baseInput: CalculationInput = {
   apvTaxDeductible: true,
   afcEnabled: false,
   contractType: "indefinite",
+  afcContributionEnded: false,
   manualItems: [],
 };
 
@@ -82,5 +83,28 @@ describe("calculateTeacherSalary", () => {
     const result = calculateTeacherSalary(baseInput, { ...P, uf: 50_000, pensionCapUf: 1 });
     expect(result.imposableBase).toBe(50_000);
     expect(result.discounts.find((line) => line.id === "afp")?.amount).toBe(Math.round(50_000 * 0.1127));
+  });
+
+  it("uses the general IUSC brackets for dependent workers", () => {
+    const atThirtyFive = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 12_000_000 });
+    const atForty = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 25_000_000 });
+    expect(atThirtyFive.taxableBase).toBeGreaterThan(10_747_350);
+    expect(atThirtyFive.taxableBase).toBeLessThanOrEqual(22_211_190);
+    expect(atThirtyFive.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atThirtyFive.taxableBase * 0.35 - 1_670_854.68));
+    expect(atForty.taxableBase).toBeGreaterThan(22_211_190);
+    expect(atForty.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atForty.taxableBase * 0.4 - 2_781_414.18));
+  });
+
+  it("counts declared permanent monthly earnings toward RTM", () => {
+    const result = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "local", name: "Incentivo local permanente", amount: 100_000, kind: "taxable", countsForMinimum: true }] });
+    expect(result.earnings.some((line) => line.id === "minimum-supplement")).toBe(false);
+  });
+
+  it("stops the personal AFC deduction after eleven years", () => {
+    const active = calculateTeacherSalary({ ...baseInput, afcEnabled: true, contractType: "indefinite" });
+    const ended = calculateTeacherSalary({ ...baseInput, afcEnabled: true, contractType: "indefinite", afcContributionEnded: true });
+    expect(active.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
+    expect(ended.discounts.some((line) => line.id === "afc")).toBe(false);
+    expect(ended.warnings.some((warning) => warning.includes("11 años"))).toBe(true);
   });
 });

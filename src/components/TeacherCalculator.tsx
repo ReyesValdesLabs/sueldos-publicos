@@ -59,6 +59,7 @@ const initialInput: CalculationInput = {
   apvTaxDeductible: true,
   afcEnabled: false,
   contractType: "indefinite",
+  afcContributionEnded: false,
   manualItems: [],
 };
 
@@ -279,11 +280,12 @@ export default function TeacherCalculator() {
                 <div className="warning-inline"><AlertTriangle size={18} /><p>Los docentes municipales y SLEP tienen un régimen especial. Actívalo solo si tu liquidación real descuenta AFC.</p></div>
                 <CheckField id="afc" checked={input.afcEnabled} onChange={(value) => update("afcEnabled", value)} label="Mi liquidación descuenta AFC" />
                 {input.afcEnabled && <SelectField id="contract-type" label="Tipo de vínculo informado" value={input.contractType} onChange={(value) => update("contractType", value as CalculationInput["contractType"])}><option value="indefinite">Indefinido</option><option value="fixed">Plazo fijo</option></SelectField>}
+                {input.afcEnabled && input.contractType === "indefinite" && <CheckField id="afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Ya cumplí 11 años de cotizaciones AFC" help="Después de 11 años por la misma relación laboral deja de descontarse el aporte personal de 0,6%." />}
               </div>
             </details>
 
             <div className="border-t border-border pt-6">
-              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Para incentivos locales, asignación familiar, cuotas u otros ítems.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
+              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Para incentivos locales, asignación familiar, cuotas u otros ítems. Marca RTM solo si el haber es mensual, permanente y no está legalmente excluido.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
               <div className="mt-4 space-y-3">
                 {input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}
                 {input.manualItems.map((item) => <div key={item.id} className="manual-row">
@@ -292,6 +294,7 @@ export default function TeacherCalculator() {
                   <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}>
                     <option value="taxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible, no tributable</option><option value="nonImposable">No imponible</option><option value="discount">Descuento</option>
                   </select>
+                  {item.kind !== "discount" && <label className="manual-rtm-toggle"><input type="checkbox" checked={Boolean(item.countsForMinimum)} onChange={(event) => patchManualItem(item.id, { countsForMinimum: event.target.checked })} /><span>Computa para RTM</span></label>}
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button>
                 </div>)}
               </div>

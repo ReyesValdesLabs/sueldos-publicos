@@ -26,6 +26,7 @@ export interface CalculationInput {
   apvTaxDeductible: boolean;
   afcEnabled: boolean;
   contractType: "indefinite" | "fixed";
+  afcContributionEnded: boolean;
   manualItems: ManualItem[];
 }
 
