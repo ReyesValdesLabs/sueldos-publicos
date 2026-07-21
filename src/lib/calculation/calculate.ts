@@ -10,15 +10,22 @@ export function experiencePercentage(biennia: number) {
 }
 
 export function calculateTeacherSalary(input: CalculationInput, parameters: PeriodParameters = P): CalculationResult {
-  const hours = Math.min(44, Math.max(1, money(input.weeklyHours)));
+  const declaredBasicHours = money(input.basicHours);
+  const declaredSecondaryHours = money(input.secondaryHours);
+  const declaredHours = declaredBasicHours + declaredSecondaryHours;
+  const hours = Math.min(44, declaredHours);
+  const hourScale = declaredHours > 44 ? 44 / declaredHours : 1;
   const biennia = Math.min(15, Math.max(0, money(input.biennia)));
-  const legalRbmn = money(parameters.hourlyRate[input.educationLevel] * hours);
+  const legalRbmn = money(
+    (parameters.hourlyRate.basic * declaredBasicHours + parameters.hourlyRate.secondary * declaredSecondaryHours) * hourScale,
+  );
   const paidBase = input.paidBaseSalary == null ? legalRbmn : money(input.paidBaseSalary);
   const expPct = experiencePercentage(biennia);
   const experience = money(legalRbmn * expPct);
-  const trancheExperience = input.trancheSuspended ? 0 : experience;
-  const progression = input.trancheSuspended ? 0 : money(parameters.progression[input.tranche] * (hours / 44) * (biennia / 15));
-  const fixed = input.trancheSuspended ? 0 : money(parameters.fixedComponent[input.tranche] * (hours / 44));
+  const hasPayableTranche = input.tranche !== null && !input.trancheSuspended;
+  const trancheExperience = hasPayableTranche ? experience : 0;
+  const progression = input.tranche !== null && !input.trancheSuspended ? money(parameters.progression[input.tranche] * (hours / 44) * (biennia / 15)) : 0;
+  const fixed = input.tranche !== null && !input.trancheSuspended ? money(parameters.fixedComponent[input.tranche] * (hours / 44)) : 0;
   const trancheTotal = trancheExperience + progression + fixed;
   const brpHours = Math.min(30, hours);
 
@@ -40,7 +47,7 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
       priorityAmount = trancheTotal * 0.1;
     } else if (input.priorityPercentage >= 60) {
       priorityAmount = trancheTotal * 0.2 + parameters.priority.fixed * hours / 44;
-      if (input.priorityPercentage >= 80 && ["advanced", "expert1", "expert2"].includes(input.tranche)) priorityAmount += parameters.priority.additionalFixed * hours / 44;
+      if (input.priorityPercentage >= 80 && input.tranche !== null && ["advanced", "expert1", "expert2"].includes(input.tranche)) priorityAmount += parameters.priority.additionalFixed * hours / 44;
     }
     if (priorityAmount > 0) earnings.push({ id: "priority", label: "Alta concentración de alumnos prioritarios", amount: money(priorityAmount), imposable: true, taxable: true, countsForMinimum: false, legalSlug: "alumnos-prioritarios" });
   }
@@ -88,11 +95,12 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
   if (paidBase !== legalRbmn) warnings.push("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
-  if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
+  if (input.tranche === null) warnings.push("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
+  else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   if (input.priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
   if (input.afcEnabled && input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que ya se cumplió el máximo de 11 años de cotizaciones en esta relación laboral.");
   else if (input.afcEnabled) warnings.push("AFC es excepcional en este régimen. Confirma el descuento con tu liquidación o empleador.");
-  if (input.weeklyHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
+  if (declaredHours > 44) warnings.push("La jornada se limitó proporcionalmente a 44 horas para un mismo empleador.");
   if (minimumCounted < minimumTarget) warnings.push("Se agregó una planilla complementaria estimada para alcanzar la Remuneración Total Mínima.");
 
   return { legalRbmn, earnings, discounts, totalEarnings, totalDiscounts, netSalary: totalEarnings - totalDiscounts, imposableBase, taxableBase, minimumTarget, warnings };

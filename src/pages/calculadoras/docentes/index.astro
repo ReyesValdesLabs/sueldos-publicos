@@ -1,0 +1,10 @@
+---
+import AdSlot from "@/components/AdSlot.astro";
+import TeacherCalculator from "@/components/TeacherCalculator";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+<BaseLayout title="Calculadora de sueldo docente en Chile | Sueldos Públicos" description="Estima gratis tu liquidación como docente municipal o SLEP, con desglose de haberes, descuentos y respaldo legal.">
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Calculadora docente</span><h1>Liquidación para docentes municipales y SLEP</h1><p>Aplica Carrera Docente, RBMN por nivel de enseñanza y los beneficios propios de profesionales de la educación.</p></header>
+  <div class="page-shell calculator-page-content"><TeacherCalculator client:load /></div>
+  <AdSlot placement="después de la calculadora docente" />
+</BaseLayout>

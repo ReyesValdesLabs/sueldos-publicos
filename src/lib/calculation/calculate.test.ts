@@ -4,8 +4,8 @@ import { calculateTeacherSalary, experiencePercentage } from "./calculate";
 import type { CalculationInput } from "./types";
 
 const baseInput: CalculationInput = {
-  educationLevel: "basic",
-  weeklyHours: 44,
+  basicHours: 44,
+  secondaryHours: 0,
   biennia: 0,
   tranche: "access",
   trancheSuspended: false,
@@ -44,9 +44,15 @@ describe("calculateTeacherSalary", () => {
     expect(result.warnings).toContain("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
   });
 
+  it("weights the legal RBMN when the contract combines basic and secondary hours", () => {
+    const result = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24 });
+    expect(result.legalRbmn).toBe(P.hourlyRate.basic * 20 + P.hourlyRate.secondary * 24);
+    expect(result.earnings.find((line) => line.id === "base")?.amount).toBe(result.legalRbmn);
+  });
+
   it("caps BRP proportionality at 30 hours", () => {
-    const at30 = calculateTeacherSalary({ ...baseInput, weeklyHours: 30, hasBrpTitle: true });
-    const at44 = calculateTeacherSalary({ ...baseInput, weeklyHours: 44, hasBrpTitle: true });
+    const at30 = calculateTeacherSalary({ ...baseInput, basicHours: 12, secondaryHours: 18, hasBrpTitle: true });
+    const at44 = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, hasBrpTitle: true });
     expect(at30.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
     expect(at44.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
   });
@@ -66,8 +72,15 @@ describe("calculateTeacherSalary", () => {
     expect(withRural.earnings.find((line) => line.id === "priority")?.amount).toBeGreaterThan(0);
   });
 
+  it("does not invent a tranche assignment when no recognized tranche was selected", () => {
+    const result = calculateTeacherSalary({ ...baseInput, tranche: null, biennia: 5 });
+    expect(result.earnings.find((line) => line.id === "tranche-experience")?.amount).toBe(0);
+    expect(result.earnings.find((line) => line.id === "tranche-progression")?.amount).toBe(0);
+    expect(result.warnings).toContain("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
+  });
+
   it("adds a complementary amount when computable earnings are below RTM", () => {
-    const result = calculateTeacherSalary({ ...baseInput, weeklyHours: 1, paidBaseSalary: 0, trancheSuspended: true });
+    const result = calculateTeacherSalary({ ...baseInput, basicHours: 1, paidBaseSalary: 0, trancheSuspended: true });
     expect(result.earnings.find((line) => line.id === "minimum-supplement")?.amount).toBe(result.minimumTarget);
     expect(result.warnings.some((warning) => warning.includes("Remuneración Total Mínima"))).toBe(true);
   });
@@ -106,5 +119,12 @@ describe("calculateTeacherSalary", () => {
     expect(active.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
     expect(ended.discounts.some((line) => line.id === "afc")).toBe(false);
     expect(ended.warnings.some((warning) => warning.includes("11 años"))).toBe(true);
+  });
+
+  it("limits an excessive mixed contract proportionally to 44 hours", () => {
+    const result = calculateTeacherSalary({ ...baseInput, basicHours: 30, secondaryHours: 30 });
+    const expected = Math.round((P.hourlyRate.basic * 30 + P.hourlyRate.secondary * 30) * (44 / 60));
+    expect(result.legalRbmn).toBe(expected);
+    expect(result.warnings).toContain("La jornada se limitó proporcionalmente a 44 horas para un mismo empleador.");
   });
 });

@@ -1,4 +1,3 @@
-export type EducationLevel = "basic" | "secondary";
 export type Tranche = "access" | "initial" | "early" | "advanced" | "expert1" | "expert2";
 export type Afp = "capital" | "cuprum" | "habitat" | "modelo" | "planvital" | "provida" | "uno";
 export type HealthSystem = "fonasa" | "isapre";
@@ -7,11 +6,11 @@ export type ManualKind = "taxable" | "imposableNonTaxable" | "nonImposable" | "d
 export interface ManualItem { id: string; name: string; amount: number; kind: ManualKind; countsForMinimum?: boolean }
 
 export interface CalculationInput {
-  educationLevel: EducationLevel;
-  weeklyHours: number;
+  basicHours: number;
+  secondaryHours: number;
   paidBaseSalary?: number;
   biennia: number;
-  tranche: Tranche;
+  tranche: Tranche | null;
   trancheSuspended: boolean;
   hasBrpTitle: boolean;
   hasBrpMention: boolean;
