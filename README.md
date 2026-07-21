@@ -13,15 +13,17 @@ pnpm dev
 
 El sitio queda disponible en `http://localhost:4321`.
 
-## Demo en GitHub Pages
+## Despliegue en Cloudflare Pages
 
-Cada push a `main` ejecuta el workflow `Publicar demo en GitHub Pages` y publica
-el sitio en:
+El sitio se despliega como proyecto estático desde la rama `main` con esta configuración:
 
-`https://reyesvaldeslabs.github.io/sueldos-publicos/`
+- Comando de build: `pnpm build`
+- Directorio de salida: `dist`
+- Directorio raíz: vacío
+- Versión de Node: `22.16.0` o una versión 22 compatible con `package.json`
+- Versión de pnpm: `11.9.0`
 
-La ruta base de Pages se activa únicamente durante ese workflow. El desarrollo
-local y la imagen Docker continúan sirviendo el sitio desde `/`.
+No se requiere adaptador de Cloudflare porque Astro genera archivos completamente estáticos. El desarrollo local, Cloudflare Pages y la imagen Docker sirven el sitio desde `/`.
 
 ## Validación
 
