@@ -14,16 +14,22 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
     <div class="page-shell hero-grid">
       <div>
         <span class="eyebrow"><Sparkles size={16} /> Gratis, privado y transparente</span>
-        <h1>Entiende tu sueldo docente, peso por peso.</h1>
+        <h1>Entiende tu <span>sueldo docente</span>, peso por peso.</h1>
         <p class="hero-copy">Estima tu liquidación como docente municipal o SLEP y revisa de dónde sale cada asignación, descuento y resultado.</p>
         <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Calcular mi sueldo</a><a class="hero-button" href={sitePath("legal/")}><Scale size={18} /> Revisar respaldo legal</a></div>
       </div>
-      <aside class="trust-card" aria-label="Características de la calculadora">
-        <h2>Diseñada para darte claridad</h2>
-        <div class="trust-item"><CalendarClock size={22} /><div><strong>Actualizado el {sourceUpdatedLabel}</strong><span>Indicadores Previred para cotizaciones pagadas en {paymentPeriodLabel}.</span></div></div>
-        <div class="trust-item"><LockKeyhole size={22} /><div><strong>Tus datos quedan en tu equipo</strong><span>El cálculo ocurre completamente en tu navegador.</span></div></div>
-        <div class="trust-item"><BookOpenCheck size={22} /><div><strong>Resultado explicable</strong><span>Cada concepto automático enlaza a su respaldo.</span></div></div>
-      </aside>
+      <div class="hero-visual">
+        <div class="hero-brand-panel" aria-hidden="true">
+          <span class="hero-logo"><img src={sitePath("sueldospublicos-mark.png")} alt="" width="512" height="512" /></span>
+          <div><span>sueldospublicos.cl</span><strong>Claridad para tomar mejores decisiones</strong></div>
+        </div>
+        <aside class="trust-card" aria-label="Características de la calculadora">
+          <h2>Diseñada para darte claridad</h2>
+          <div class="trust-item"><CalendarClock size={22} /><div><strong>Actualizado el {sourceUpdatedLabel}</strong><span>Indicadores Previred para cotizaciones pagadas en {paymentPeriodLabel}.</span></div></div>
+          <div class="trust-item"><LockKeyhole size={22} /><div><strong>Tus datos quedan en tu equipo</strong><span>El cálculo ocurre completamente en tu navegador.</span></div></div>
+          <div class="trust-item"><BookOpenCheck size={22} /><div><strong>Resultado explicable</strong><span>Cada concepto automático enlaza a su respaldo.</span></div></div>
+        </aside>
+      </div>
     </div>
   </section>
 

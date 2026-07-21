@@ -1,16 +1,17 @@
 ---
-import { Calculator, ChevronDown, FileText, Landmark, Moon, Sun } from "lucide-react";
+import { Calculator, ChevronDown, FileText, Menu, Moon, Sun } from "lucide-react";
+import Brand from "@/components/Brand.astro";
 import { sitePath } from "@/lib/site-path";
 ---
 <header class="site-header print:hidden">
   <div class="page-shell header-inner">
-    <a href={sitePath()} class="brand" aria-label="Sueldos Públicos, inicio"><span class="brand-mark"><Landmark size={21} /></span><span>Sueldos <strong>Públicos</strong></span></a>
+    <a href={sitePath()} class="brand" aria-label="Sueldos Públicos, inicio"><Brand /></a>
     <nav class="desktop-nav" aria-label="Navegación principal">
       <details class="nav-dropdown"><summary>Calculadoras <ChevronDown size={15} /></summary><div><a href={sitePath("#calculadora")}><Calculator size={17} /> Liquidación docente</a></div></details>
       <a href={sitePath("legal/")}>Respaldo legal</a>
       <a href={sitePath("#metodologia")}>Cómo calculamos</a>
     </nav>
     <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar a tema oscuro" title="Cambiar tema"><Moon className="theme-icon theme-icon-moon" size={19} /><Sun className="theme-icon theme-icon-sun" size={19} /></button>
-    <details class="mobile-nav"><summary aria-label="Abrir menú">Menú</summary><nav aria-label="Navegación móvil"><a href={sitePath("#calculadora")}><Calculator size={17} /> Calculadora docente</a><a href={sitePath("legal/")}><FileText size={17} /> Respaldo legal</a><a href={sitePath("#metodologia")}>Cómo calculamos</a></nav></details>
+    <details class="mobile-nav"><summary aria-label="Abrir menú"><Menu size={20} /><span>Menú</span></summary><nav aria-label="Navegación móvil"><a href={sitePath("#calculadora")}><Calculator size={17} /> Calculadora docente</a><a href={sitePath("legal/")}><FileText size={17} /> Respaldo legal</a><a href={sitePath("#metodologia")}>Cómo calculamos</a></nav></details>
   </div>
 </header>
