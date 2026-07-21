@@ -1,6 +1,6 @@
 # Sueldos Públicos
 
-Calculadora estática de liquidaciones para docentes de establecimientos públicos municipales y SLEP en Chile. El cálculo se ejecuta completamente en el navegador y cada concepto automático enlaza a una página con su fórmula y fuentes.
+Calculadoras estáticas de liquidaciones para docentes de establecimientos públicos municipales o SLEP y para asistentes de la educación contratados por SLEP o DAEM/DEM en Chile. Cada cálculo se ejecuta completamente en el navegador y los conceptos automáticos enlazan a páginas con sus fórmulas y fuentes.
 
 ## Desarrollo
 
@@ -13,15 +13,17 @@ pnpm dev
 
 El sitio queda disponible en `http://localhost:4321`.
 
-## Demo en GitHub Pages
+## Despliegue en Cloudflare Pages
 
-Cada push a `main` ejecuta el workflow `Publicar demo en GitHub Pages` y publica
-el sitio en:
+El sitio se despliega como proyecto estático desde la rama `main` con esta configuración:
 
-`https://reyesvaldeslabs.github.io/sueldos-publicos/`
+- Comando de build: `pnpm build`
+- Directorio de salida: `dist`
+- Directorio raíz: vacío
+- Versión de Node: `22.16.0` o una versión 22 compatible con `package.json`
+- Versión de pnpm: `11.9.0`
 
-La ruta base de Pages se activa únicamente durante ese workflow. El desarrollo
-local y la imagen Docker continúan sirviendo el sitio desde `/`.
+No se requiere adaptador de Cloudflare porque Astro genera archivos completamente estáticos. El desarrollo local, Cloudflare Pages y la imagen Docker sirven el sitio desde `/`.
 
 ## Validación
 
@@ -93,8 +95,13 @@ visibilidad del paquete a pública desde su configuración en GitHub.
 
 ## Estructura relevante
 
-- `src/components/TeacherCalculator.tsx`: interfaz interactiva de la calculadora.
-- `src/lib/calculation/`: motor puro de cálculo y pruebas.
+- `src/components/TeacherCalculator.tsx`: interfaz interactiva para docentes.
+- `src/components/TechnicalAssistantCalculator.tsx`: selector único que dirige a la experiencia SLEP o DAEM/DEM según el empleador.
+- `src/components/AssistantCalculator.tsx`: interfaz para técnicos/as en educación parvularia SLEP.
+- `src/components/DaemAssistantCalculator.tsx`: interfaz para técnicos/as y asistentes contratados por DAEM/DEM.
+- `src/lib/calculation/`: motor puro docente y pruebas.
+- `src/lib/assistant-calculation/`: motor puro para categoría técnica SLEP y pruebas.
+- `src/lib/daem-assistant-calculation/`: motor puro para asistentes DAEM/DEM y pruebas.
 - `src/data/parameters/`: parámetros versionados por período.
 - `src/data/legal.ts`: conceptos legales y fuentes oficiales.
 - `src/pages/legal/`: biblioteca legal generada estáticamente.
@@ -110,6 +117,8 @@ Si la fuente no está disponible o el período queda atrasado, el sitio conserva
 Las asignaciones docentes y la tabla de Impuesto Único mantienen sus propias fuentes y revisiones. Los valores históricos deben preservarse para mantener trazabilidad.
 
 ## Alcance
+
+La calculadora docente acepta jornadas que combinen horas de enseñanza básica y media. La vista técnica pide elegir el empleador y mantiene dos motores separados: SLEP se limita a contratos SLEP en categoría técnica; DAEM/DEM cubre asistentes contratados por la administración educacional municipal y usa los haberes locales informados, sin trasladar el piso técnico ni los bienios SLEP. Ninguna debe usarse automáticamente para JUNJI, Integra o jardines VTF. Todas aplican un máximo de 44 horas semanales para un mismo empleador y estiman un mes completo, sin prorratear licencias, ausencias ni fracciones de mes.
 
 El resultado es informativo y no reemplaza la liquidación del empleador ni asesoría jurídica, previsional o tributaria. La primera versión no activa publicidad ni analítica; los espacios futuros están preparados pero ocultos.
 

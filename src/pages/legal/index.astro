@@ -27,9 +27,24 @@ const officialSources = [
       { title: "Superintendencia de Salud — Cotizaciones", description: "Reglas de cotización legal de salud para Fonasa e Isapres.", url: "https://www.superdesalud.gob.cl/tax-materias-isapres/cotizaciones-de-salud-3465/" },
     ],
   },
+  {
+    group: "Asistentes de la educación SLEP",
+    sources: [
+      { title: "Ley N.º 21.109 — Estatuto de Asistentes", description: "Define la categoría técnica, el mínimo, experiencia, asignaciones y Seguro de Cesantía de asistentes SLEP.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1123513" },
+      { title: "Ley N.º 21.806 — Beneficios 2026", description: "Fija el mínimo técnico de $668.412, el bono mensual de bajas remuneraciones y el desempeño difícil para 2026.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1221118" },
+    ],
+  },
+  {
+    group: "Asistentes de la educación DAEM/DEM",
+    sources: [
+      { title: "Ley N.º 19.464 — Asistentes municipales", description: "Regula el personal asistente de establecimientos municipales y el aumento de remuneraciones distribuido por el sostenedor.", url: "https://www.bcn.cl/leychile/navegar?idNorma=30831" },
+      { title: "Ley N.º 20.883 — Bono del artículo 59", description: "Establece el bono mensual y lo extiende a trabajadores de DAEM y DEM regidos por el Código del Trabajo.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1084822" },
+      { title: "Ley N.º 21.806 — Beneficios 2026", description: "Actualiza el bono del artículo 59 y regula el bono de bajas remuneraciones y desempeño difícil para 2026.", url: "https://www.bcn.cl/leychile/navegar?idNorma=1221118" },
+    ],
+  },
 ];
 ---
-<BaseLayout title="Respaldo legal de los cálculos | Sueldos Públicos" description="Consulta las fórmulas, criterios y fuentes oficiales utilizadas por la calculadora de liquidación docente.">
+<BaseLayout title="Respaldo legal de los cálculos | Sueldos Públicos" description="Consulta las fórmulas, criterios y fuentes oficiales utilizadas por nuestras calculadoras de remuneraciones públicas.">
   <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. La versión activa corresponde a julio de 2026.</p></header>
   <section class="page-shell official-sources" aria-labelledby="fuentes-principales">
     <div class="section-heading">

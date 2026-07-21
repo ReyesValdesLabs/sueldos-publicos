@@ -41,10 +41,10 @@ function currentChilePeriod() {
 }
 
 const initialInput: CalculationInput = {
-  educationLevel: "basic",
-  weeklyHours: 44,
+  basicHours: 44,
+  secondaryHours: 0,
   biennia: 5,
-  tranche: "advanced",
+  tranche: null,
   trancheSuspended: false,
   hasBrpTitle: true,
   hasBrpMention: false,
@@ -56,18 +56,20 @@ const initialInput: CalculationInput = {
   healthSystem: "fonasa",
   isaprePlanUf: 0,
   apv: 0,
-  apvTaxDeductible: true,
+  apvTaxDeductible: false,
   afcEnabled: false,
   contractType: "indefinite",
   afcContributionEnded: false,
   manualItems: [],
 };
 
-function SelectField({ id, label, value, onChange, children, help }: { id: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode; help?: string }) {
+function SelectField({ id, label, value, onChange, children, help, error }: { id: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode; help?: string; error?: string }) {
+  const describedBy = [help ? `${id}-help` : "", error ? `${id}-error` : ""].filter(Boolean).join(" ") || undefined;
   return <div className="field-group">
     <Label htmlFor={id}>{label}</Label>
-    <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="form-control">{children}</select>
-    {help && <p className="field-help">{help}</p>}
+    <select id={id} value={value} onChange={(event) => onChange(event.target.value)} className="form-control" aria-describedby={describedBy} aria-invalid={Boolean(error)}>{children}</select>
+    {help && <p id={`${id}-help`} className="field-help">{help}</p>}
+    {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
   </div>;
 }
 
@@ -143,12 +145,26 @@ export default function TeacherCalculator() {
     return manualParameters ? { ...calculated, warnings: [...calculated.warnings, "El cálculo usa parámetros previsionales ingresados manualmente. Verifica sus fuentes antes de usar el resultado."] } : calculated;
   }, [input, activeParameters, manualParameters]);
   const update = <K extends keyof CalculationInput>(key: K, value: CalculationInput[K]) => setInput((current) => ({ ...current, [key]: value }));
-  const appliedHours = Math.min(44, Math.max(0, Math.round(input.weeklyHours || 0)));
-  const legalBase = activeParameters.hourlyRate[input.educationLevel] * appliedHours;
+  const appliedBasicHours = Math.max(0, Math.round(input.basicHours || 0));
+  const appliedSecondaryHours = Math.max(0, Math.round(input.secondaryHours || 0));
+  const declaredHours = appliedBasicHours + appliedSecondaryHours;
+  const appliedHours = Math.min(44, declaredHours);
+  const hourScale = declaredHours > 44 ? 44 / declaredHours : 1;
+  const legalBase = Math.round(
+    (activeParameters.hourlyRate.basic * appliedBasicHours + activeParameters.hourlyRate.secondary * appliedSecondaryHours) * hourScale,
+  );
+  const hoursError = !Number.isInteger(input.basicHours) || !Number.isInteger(input.secondaryHours) || input.basicHours < 0 || input.secondaryHours < 0
+    ? "Ingresa horas completas iguales o mayores que cero."
+    : input.basicHours + input.secondaryHours === 0
+      ? "Ingresa al menos una hora de contrato."
+      : input.basicHours + input.secondaryHours > 44
+        ? "La suma no puede superar 44 horas con un mismo empleador."
+        : undefined;
   const bienniaError = input.biennia < 0 || input.biennia > 15 || !Number.isInteger(input.biennia)
     ? "Ingresa un número entero entre 0 y 15."
     : undefined;
-  const currentStepInvalid = step === 1 && Boolean(bienniaError);
+  const trancheError = input.tranche === null ? "Selecciona el tramo profesional que tienes reconocido." : undefined;
+  const currentStepInvalid = (step === 0 && Boolean(hoursError)) || (step === 1 && Boolean(bienniaError || trancheError));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -188,28 +204,29 @@ export default function TeacherCalculator() {
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
       <Card className="overflow-hidden">
         {step === 0 && <>
-          <CardHeader><CardTitle>Tu contrato</CardTitle><CardDescription>La RBMN cambia según el nivel y las horas contratadas.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Tu contrato</CardTitle><CardDescription>Separa las horas por nivel para calcular la RBMN con el valor legal que corresponde a cada una.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             <div className="form-grid">
-              <SelectField id="education-level" label="Nivel educativo" value={input.educationLevel} onChange={(value) => update("educationLevel", value as CalculationInput["educationLevel"])}>
-                <option value="basic">Prebásica, básica o especial</option><option value="secondary">Media o técnico-profesional</option>
-              </SelectField>
-              <NumberField id="weekly-hours" label="Horas de contrato semanales" value={input.weeklyHours} onChange={(value) => update("weeklyHours", value)} min={1} max={44} suffix="horas" help="Máximo legal con un mismo empleador: 44 horas." />
+              <NumberField id="basic-hours" label="Horas prebásica, básica o especial" value={input.basicHours} onChange={(value) => update("basicHours", value)} min={0} max={44} suffix="horas" />
+              <NumberField id="secondary-hours" label="Horas media o técnico-profesional" value={input.secondaryHours} onChange={(value) => update("secondaryHours", value)} min={0} max={44} suffix="horas" help={`Jornada total declarada: ${input.basicHours + input.secondaryHours} horas.`} error={hoursError} />
             </div>
             <div className="legal-value-card">
-              <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{currency.format(activeParameters.hourlyRate[input.educationLevel])} por hora × {appliedHours} horas</small></div>
+              <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{appliedBasicHours > 0 && `${appliedBasicHours} h básica × ${currency.format(activeParameters.hourlyRate.basic)}`}{appliedBasicHours > 0 && appliedSecondaryHours > 0 && " + "}{appliedSecondaryHours > 0 && `${appliedSecondaryHours} h media × ${currency.format(activeParameters.hourlyRate.secondary)}`} · total aplicado: {appliedHours} h</small></div>
               <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real sin alterar la base legal de las asignaciones." />
             </div>
             {editBase && <NumberField id="paid-base" label="Sueldo base pagado" value={input.paidBaseSalary ?? legalBase} onChange={(value) => update("paidBaseSalary", value)} suffix="$" />}
+            <div className="warning-inline"><Info size={18} /><p>Esta versión calcula una remuneración mensual completa. No prorratea ingresos, licencias ni ausencias por días.</p></div>
           </CardContent>
         </>}
 
         {step === 1 && <>
           <CardHeader><CardTitle>Carrera docente</CardTitle><CardDescription>Usa antecedentes acreditados. Si no conoces un beneficio, déjalo desactivado.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
+            <div className="warning-inline"><Info size={18} /><p>Selecciona el tramo que figure en tu resolución o Portal Docente. “Acceso” es un tramo transitorio reconocido; no equivale a estar sin tramo.</p></div>
             <div className="form-grid">
               <NumberField id="biennia" label="Bienios reconocidos" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="Cada bienio corresponde a dos años acreditados; máximo 15." error={bienniaError} />
-              <SelectField id="tranche" label="Tramo profesional" value={input.tranche} onChange={(value) => update("tranche", value as CalculationInput["tranche"])}>
+              <SelectField id="tranche" label="Tramo profesional" value={input.tranche ?? ""} onChange={(value) => update("tranche", value ? value as CalculationInput["tranche"] : null)} error={trancheError}>
+                <option value="" disabled>Selecciona tu tramo reconocido</option>
                 {Object.entries(trancheNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </SelectField>
             </div>
@@ -303,7 +320,7 @@ export default function TeacherCalculator() {
         </>}
 
         {step === 3 && <>
-          <CardHeader className="result-heading"><Badge className={manualParameters ? "border-destructive/30 bg-destructive/10 text-destructive" : ""}>{manualParameters ? "Parámetros manuales" : "Estimación lista"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Calculado con valores de {P.label.toLowerCase()}. Datos previsionales actualizados el {sourceUpdatedLabel}.</CardDescription></CardHeader>
+          <CardHeader className="result-heading"><Badge className={manualParameters ? "border-destructive/30 bg-destructive/10 text-destructive" : ""}>{manualParameters ? "Parámetros manuales" : "Estimación lista"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {P.label.toLowerCase()}. Datos previsionales actualizados el {sourceUpdatedLabel}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
             <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />

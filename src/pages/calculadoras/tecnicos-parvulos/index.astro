@@ -1,0 +1,10 @@
+---
+import AdSlot from "@/components/AdSlot.astro";
+import TechnicalAssistantCalculator from "@/components/TechnicalAssistantCalculator";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+<BaseLayout title="Calculadora para técnicos en párvulos | Sueldos Públicos" description="Estima la liquidación de técnicos y técnicas en educación parvularia según su empleador SLEP o DAEM/DEM, con reglas y fórmulas separadas.">
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p></header>
+  <div class="page-shell calculator-page-content"><TechnicalAssistantCalculator client:load /></div>
+  <AdSlot placement="después de la calculadora técnica" />
+</BaseLayout>
