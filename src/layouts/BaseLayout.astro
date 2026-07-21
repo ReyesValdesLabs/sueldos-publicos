@@ -35,13 +35,11 @@ const { title, description } = Astro.props;
     <Footer />
     <script>
       const themeButton = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-      const themeLabel = document.querySelector<HTMLElement>("[data-theme-label]");
       const applyTheme = (theme: string) => {
         const dark = theme === "dark";
         document.documentElement.classList.toggle("dark", dark);
         document.documentElement.dataset.theme = theme;
         localStorage.setItem("sp-theme", theme);
-        if (themeLabel) themeLabel.textContent = dark ? "Claro" : "Oscuro";
         if (themeButton) themeButton.setAttribute("aria-label", dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro");
       };
       themeButton?.addEventListener("click", () => {
