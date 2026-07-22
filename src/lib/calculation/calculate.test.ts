@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
-import { calculateTeacherSalary, experiencePercentage } from "./calculate";
+import { calculateTeacherSalary, directorPriorityResponsibilityPercentage, experiencePercentage, suggestedResponsibilityPercentage } from "./calculate";
 import type { CalculationInput } from "./types";
 
 const baseInput: CalculationInput = {
@@ -16,6 +16,9 @@ const baseInput: CalculationInput = {
   rural: false,
   priorityExpired: false,
   zonePercentage: 0,
+  responsibilityRole: "none",
+  responsibilityPercentage: 0,
+  establishmentEnrollment: 0,
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -33,6 +36,27 @@ describe("experiencePercentage", () => {
     expect(experiencePercentage(1)).toBeCloseTo(0.0338);
     expect(experiencePercentage(15)).toBe(0.5);
     expect(experiencePercentage(40)).toBe(0.5);
+  });
+});
+
+describe("responsibility percentages", () => {
+  it("suggests the statutory percentage for each role and director enrollment tier", () => {
+    expect(suggestedResponsibilityPercentage("none", 0)).toBe(0);
+    expect(suggestedResponsibilityPercentage("otherDirector", 0)).toBe(20);
+    expect(suggestedResponsibilityPercentage("utpHead", 0)).toBe(20);
+    expect(suggestedResponsibilityPercentage("otherUtp", 0)).toBe(15);
+    expect(suggestedResponsibilityPercentage("director", 399)).toBe(25);
+    expect(suggestedResponsibilityPercentage("director", 400)).toBe(37.5);
+    expect(suggestedResponsibilityPercentage("director", 800)).toBe(75);
+    expect(suggestedResponsibilityPercentage("director", 1200)).toBe(100);
+  });
+
+  it("adds the director priority percentage only from 400 students and 60% concentration", () => {
+    expect(directorPriorityResponsibilityPercentage(399, 80)).toBe(0);
+    expect(directorPriorityResponsibilityPercentage(400, 59)).toBe(0);
+    expect(directorPriorityResponsibilityPercentage(400, 60)).toBe(37.5);
+    expect(directorPriorityResponsibilityPercentage(800, 60)).toBe(75);
+    expect(directorPriorityResponsibilityPercentage(1200, 60)).toBe(100);
   });
 });
 
@@ -64,6 +88,44 @@ describe("calculateTeacherSalary", () => {
     expect(zone?.amount).toBe(Math.round(result.legalRbmn * 0.4));
     expect(zone?.imposable).toBe(true);
     expect(zone?.taxable).toBe(false);
+  });
+
+  it("calculates responsibility on the legal RBMN instead of an edited paid base", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      paidBaseSalary: 1_500_000,
+      tranche: "advanced",
+      responsibilityRole: "utpHead",
+      responsibilityPercentage: 20,
+    });
+    const responsibility = result.earnings.find((line) => line.id === "responsibility");
+    expect(responsibility?.amount).toBe(Math.round(result.legalRbmn * 0.2));
+    expect(responsibility?.amount).not.toBe(300_000);
+    expect(responsibility?.countsForMinimum).toBe(true);
+  });
+
+  it("adds the director enrollment percentage and its priority supplement as separate earnings", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      tranche: "advanced",
+      responsibilityRole: "director",
+      responsibilityPercentage: 75,
+      establishmentEnrollment: 800,
+      priorityPercentage: 60,
+    });
+    expect(result.earnings.find((line) => line.id === "responsibility")?.amount).toBe(Math.round(result.legalRbmn * 0.75));
+    expect(result.earnings.find((line) => line.id === "responsibility-priority")?.amount).toBe(Math.round(result.legalRbmn * 0.75));
+  });
+
+  it("omits responsibility for exceptional non-director appointments below Advanced", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      tranche: "early",
+      responsibilityRole: "otherDirector",
+      responsibilityPercentage: 20,
+    });
+    expect(result.earnings.some((line) => line.id === "responsibility")).toBe(false);
+    expect(result.warnings.some((warning) => warning.includes("designados excepcionalmente sin tramo Avanzado"))).toBe(true);
   });
 
   it("adds the rural priority benefit from 45% concentration", () => {

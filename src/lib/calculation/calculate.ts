@@ -1,5 +1,5 @@
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
-import type { CalculationInput, CalculationResult, ResultLine } from "./types";
+import type { CalculationInput, CalculationResult, ResponsibilityRole, ResultLine, Tranche } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
@@ -8,6 +8,28 @@ export function experiencePercentage(biennia: number) {
   if (biennia <= 0) return 0;
   return Math.min(0.5, 0.0338 + 0.0333 * (Math.min(15, biennia) - 1));
 }
+
+export function suggestedResponsibilityPercentage(role: ResponsibilityRole, enrollment: number) {
+  if (role === "director") {
+    if (enrollment >= 1200) return 100;
+    if (enrollment >= 800) return 75;
+    if (enrollment >= 400) return 37.5;
+    return 25;
+  }
+  if (role === "otherDirector" || role === "utpHead") return 20;
+  if (role === "otherUtp") return 15;
+  return 0;
+}
+
+export function directorPriorityResponsibilityPercentage(enrollment: number, priorityPercentage: number) {
+  if (priorityPercentage < 60) return 0;
+  if (enrollment >= 1200) return 100;
+  if (enrollment >= 800) return 75;
+  if (enrollment >= 400) return 37.5;
+  return 0;
+}
+
+const advancedTranches: Tranche[] = ["advanced", "expert1", "expert2"];
 
 export function calculateTeacherSalary(input: CalculationInput, parameters: PeriodParameters = P): CalculationResult {
   const declaredBasicHours = money(input.basicHours);
@@ -46,6 +68,24 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   if (input.hasBrpTitle) earnings.push({ id: "brp-title", label: "BRP · título", amount: money(parameters.brp.title * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
   if (input.hasBrpMention) earnings.push({ id: "brp-mention", label: "BRP · mención", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
   if (input.zonePercentage > 0) earnings.push({ id: "zone", label: "Asignación de zona", amount: money(legalRbmn * input.zonePercentage / 100), imposable: true, taxable: false, countsForMinimum: true, legalSlug: "asignacion-zona" });
+
+  const hasResponsibilityRole = input.responsibilityRole !== "none";
+  const isExceptionalAppointmentWithoutAdvancedTranche = hasResponsibilityRole
+    && input.responsibilityRole !== "director"
+    && (input.tranche === null || !advancedTranches.includes(input.tranche));
+  if (hasResponsibilityRole && !isExceptionalAppointmentWithoutAdvancedTranche && input.responsibilityPercentage > 0) {
+    const responsibilityLabel = input.responsibilityRole === "director" || input.responsibilityRole === "otherDirector"
+      ? "Asignación de responsabilidad directiva"
+      : "Asignación de responsabilidad técnico-pedagógica";
+    earnings.push({ id: "responsibility", label: responsibilityLabel, amount: money(legalRbmn * input.responsibilityPercentage / 100), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "responsabilidad-directiva" });
+  }
+
+  const directorPriorityPercentage = input.responsibilityRole === "director"
+    ? directorPriorityResponsibilityPercentage(input.establishmentEnrollment, input.priorityPercentage)
+    : 0;
+  if (directorPriorityPercentage > 0) {
+    earnings.push({ id: "responsibility-priority", label: "Responsabilidad directiva · adicional prioritarios", amount: money(legalRbmn * directorPriorityPercentage / 100), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "responsabilidad-directiva" });
+  }
 
   if (!input.priorityExpired) {
     let priorityAmount = 0;
@@ -105,6 +145,10 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   else if (input.trancheFixedComponentReduced && ["advanced", "expert1", "expert2"].includes(input.tranche)) warnings.push("El componente fijo se redujo al monto del tramo inmediatamente anterior por incumplimiento del ciclo de profundización.");
   if (input.priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
+  if (isExceptionalAppointmentWithoutAdvancedTranche) warnings.push("No se incluyó la asignación de responsabilidad: los cargos directivos distintos de director y los técnico-pedagógicos designados excepcionalmente sin tramo Avanzado no tienen derecho a percibirla.");
+  if (input.responsibilityRole === "director" && input.establishmentEnrollment > 150 && input.establishmentEnrollment < 400) warnings.push("Para una dirección con 151 a 399 estudiantes, confirma con el sostenedor el porcentaje anual entre 25% y 37,5%; depende también de la asistencia media del año anterior.");
+  const suggestedResponsibility = suggestedResponsibilityPercentage(input.responsibilityRole, input.establishmentEnrollment);
+  if (hasResponsibilityRole && input.responsibilityPercentage < suggestedResponsibility) warnings.push(`El porcentaje de responsabilidad informado (${input.responsibilityPercentage}%) es inferior al mínimo o valor legal de referencia (${suggestedResponsibility}%) para los datos seleccionados.`);
   if (input.afcEnabled && input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que ya se cumplió el máximo de 11 años de cotizaciones en esta relación laboral.");
   else if (input.afcEnabled) warnings.push("AFC es excepcional en este régimen. Confirma el descuento con tu liquidación o empleador.");
   if (declaredHours > 44) warnings.push("La jornada se limitó proporcionalmente a 44 horas para un mismo empleador.");

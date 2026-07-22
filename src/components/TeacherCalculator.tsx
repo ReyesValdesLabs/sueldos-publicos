@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, ExternalLink, FileText, Info, Plus, Printer, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_PARAMETERS as P, type AfpKey, type PeriodParameters } from "@/data/parameters/2026-07";
-import { calculateTeacherSalary } from "@/lib/calculation/calculate";
+import { calculateTeacherSalary, suggestedResponsibilityPercentage } from "@/lib/calculation/calculate";
 import { sitePath } from "@/lib/site-path";
 import type { CalculationInput, ManualItem, ManualKind } from "@/lib/calculation/types";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,13 @@ const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const decimalMoney = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const trancheNames = { access: "Acceso", initial: "Inicial", early: "Temprano", advanced: "Avanzado", expert1: "Experto I", expert2: "Experto II" } as const;
+const responsibilityRoleNames = {
+  none: "Docencia sin función superior",
+  director: "Director/a de establecimiento",
+  otherDirector: "Otro cargo directivo",
+  utpHead: "Jefe/a de unidad técnico-pedagógica",
+  otherUtp: "Otro personal de unidad técnico-pedagógica",
+} as const;
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Carrera docente", "Previsión y extras", "Resultado"];
 const date = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" });
@@ -53,6 +60,9 @@ const initialInput: CalculationInput = {
   rural: false,
   priorityExpired: false,
   zonePercentage: 0,
+  responsibilityRole: "none",
+  responsibilityPercentage: 0,
+  establishmentEnrollment: 0,
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -74,7 +84,7 @@ function SelectField({ id, label, value, onChange, children, help, error }: { id
   </div>;
 }
 
-function NumberField({ id, label, value, onChange, min = 0, max, suffix, help, error, moneyDecimals = 0 }: { id: string; label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; suffix?: string; help?: string; error?: string; moneyDecimals?: 0 | 2 }) {
+function NumberField({ id, label, value, onChange, min = 0, max, step = 1, suffix, help, error, moneyDecimals = 0 }: { id: string; label: string; value: number; onChange: (value: number) => void; min?: number; max?: number; step?: number; suffix?: string; help?: string; error?: string; moneyDecimals?: 0 | 2 }) {
   const isMoney = suffix === "$";
   const [draftValue, setDraftValue] = useState<string | null>(null);
   const displayValue = draftValue ?? (isMoney ? (moneyDecimals === 2 ? decimalMoney : integerMoney).format(value) : value);
@@ -98,6 +108,7 @@ function NumberField({ id, label, value, onChange, min = 0, max, suffix, help, e
         inputMode={isMoney ? "decimal" : undefined}
         min={isMoney ? undefined : min}
         max={isMoney ? undefined : max}
+        step={isMoney ? undefined : step}
         value={displayValue}
         aria-describedby={describedBy}
         aria-invalid={Boolean(error)}
@@ -124,6 +135,7 @@ export default function TeacherCalculator() {
   const [step, setStep] = useState(0);
   const [input, setInput] = useState<CalculationInput>(initialInput);
   const [editBase, setEditBase] = useState(false);
+  const [responsibilityPercentageEdited, setResponsibilityPercentageEdited] = useState(false);
   const [sourceStatus, setSourceStatus] = useState<"checking" | "available" | "unavailable">("checking");
   const [manualParameters, setManualParameters] = useState(false);
   const [manualValues, setManualValues] = useState({
@@ -146,6 +158,21 @@ export default function TeacherCalculator() {
     return manualParameters ? { ...calculated, warnings: [...calculated.warnings, "El cálculo usa parámetros previsionales ingresados manualmente. Verifica sus fuentes antes de usar el resultado."] } : calculated;
   }, [input, activeParameters, manualParameters]);
   const update = <K extends keyof CalculationInput>(key: K, value: CalculationInput[K]) => setInput((current) => ({ ...current, [key]: value }));
+  const updateResponsibilityRole = (role: CalculationInput["responsibilityRole"]) => {
+    setResponsibilityPercentageEdited(false);
+    setInput((current) => ({
+      ...current,
+      responsibilityRole: role,
+      responsibilityPercentage: suggestedResponsibilityPercentage(role, current.establishmentEnrollment),
+    }));
+  };
+  const updateEstablishmentEnrollment = (value: number) => setInput((current) => ({
+    ...current,
+    establishmentEnrollment: value,
+    responsibilityPercentage: current.responsibilityRole === "director" && !responsibilityPercentageEdited
+      ? suggestedResponsibilityPercentage("director", value)
+      : current.responsibilityPercentage,
+  }));
   const appliedBasicHours = Math.max(0, Math.round(input.basicHours || 0));
   const appliedSecondaryHours = Math.max(0, Math.round(input.secondaryHours || 0));
   const declaredHours = appliedBasicHours + appliedSecondaryHours;
@@ -154,6 +181,7 @@ export default function TeacherCalculator() {
   const legalBase = Math.round(
     (activeParameters.hourlyRate.basic * appliedBasicHours + activeParameters.hourlyRate.secondary * appliedSecondaryHours) * hourScale,
   );
+  const responsibilityEstimate = Math.round(legalBase * Math.max(0, input.responsibilityPercentage) / 100);
   const hoursError = !Number.isInteger(input.basicHours) || !Number.isInteger(input.secondaryHours) || input.basicHours < 0 || input.secondaryHours < 0
     ? "Ingresa horas completas iguales o mayores que cero."
     : input.basicHours + input.secondaryHours === 0
@@ -165,7 +193,13 @@ export default function TeacherCalculator() {
     ? "Ingresa un número entero entre 0 y 15."
     : undefined;
   const trancheError = input.tranche === null ? "Selecciona el tramo profesional que tienes reconocido." : undefined;
-  const currentStepInvalid = (step === 0 && Boolean(hoursError)) || (step === 1 && Boolean(bienniaError || trancheError));
+  const enrollmentError = input.responsibilityRole === "director" && (!Number.isInteger(input.establishmentEnrollment) || input.establishmentEnrollment < 1)
+    ? "Ingresa la matrícula total informada al inicio del año escolar."
+    : undefined;
+  const responsibilityPercentageError = input.responsibilityRole !== "none" && (input.responsibilityPercentage <= 0 || input.responsibilityPercentage > 200)
+    ? "Ingresa un porcentaje mayor que 0% y de hasta 200%."
+    : undefined;
+  const currentStepInvalid = (step === 0 && Boolean(hoursError || enrollmentError || responsibilityPercentageError)) || (step === 1 && Boolean(bienniaError || trancheError));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -216,6 +250,19 @@ export default function TeacherCalculator() {
               <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real sin alterar la base legal de las asignaciones." />
             </div>
             {editBase && <NumberField id="paid-base" label="Sueldo base pagado" value={input.paidBaseSalary ?? legalBase} onChange={(value) => update("paidBaseSalary", value)} suffix="$" />}
+            <section className="space-y-4 border-t border-border pt-6" aria-labelledby="responsibility-title">
+              <div><h3 id="responsibility-title" className="font-bold">Cargo y asignación de responsabilidad</h3><p className="mt-1 text-sm text-muted-foreground">Selecciona una función superior solo cuando conste en tu nombramiento o contrato. La jefatura de curso no corresponde a esta asignación.</p></div>
+              <SelectField id="responsibility-role" label="Función o cargo reconocido" value={input.responsibilityRole} onChange={(value) => updateResponsibilityRole(value as CalculationInput["responsibilityRole"])}>
+                {Object.entries(responsibilityRoleNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </SelectField>
+              {input.responsibilityRole !== "none" && <>
+                <div className="form-grid">
+                  {input.responsibilityRole === "director" && <NumberField id="establishment-enrollment" label="Matrícula total del establecimiento" value={input.establishmentEnrollment} onChange={updateEstablishmentEnrollment} min={1} max={10000} help="Usa la matrícula informada al inicio del año escolar. La concentración de prioritarios se ingresa en el paso siguiente." error={enrollmentError} />}
+                  <NumberField id="responsibility-percentage" label="Porcentaje reconocido" value={input.responsibilityPercentage} onChange={(value) => { setResponsibilityPercentageEdited(true); update("responsibilityPercentage", value); }} min={0.1} max={200} step={0.1} suffix="%" help={input.responsibilityRole === "director" && input.establishmentEnrollment > 150 && input.establishmentEnrollment < 400 ? "En este tramo el sostenedor fija anualmente entre 25% y 37,5%. Reemplaza el mínimo sugerido por el porcentaje reconocido." : "Se autocompleta con el porcentaje legal. Puedes reemplazarlo por el que figure en tu acto o liquidación."} error={responsibilityPercentageError} />
+                </div>
+                <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>Asignación de responsabilidad estimada</span><strong>{currency.format(responsibilityEstimate)}</strong><small>{input.responsibilityPercentage}% de la RBMN legal · no usa un sueldo base pagado distinto</small></div>
+              </>}
+            </section>
             <div className="warning-inline"><Info size={18} /><p>Esta versión calcula una remuneración mensual completa. No prorratea ingresos, licencias ni ausencias por días.</p></div>
           </CardContent>
         </>}
@@ -231,6 +278,7 @@ export default function TeacherCalculator() {
                 {Object.entries(trancheNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </SelectField>
             </div>
+            {input.responsibilityRole !== "none" && input.responsibilityRole !== "director" && input.tranche !== null && !["advanced", "expert1", "expert2"].includes(input.tranche) && <div className="warning-inline"><AlertTriangle size={18} /><p>Un nombramiento excepcional en este cargo sin tramo Avanzado no da derecho a la asignación de responsabilidad. La estimación la mostrará en $0.</p></div>}
             <div className="option-grid">
               <CheckField id="brp-title" checked={input.hasBrpTitle} onChange={(value) => update("hasBrpTitle", value)} label="Título acreditado para BRP" help="Se paga proporcionalmente hasta 30 horas." />
               <CheckField id="brp-mention" checked={input.hasBrpMention} onChange={(value) => update("hasBrpMention", value)} label="Mención acreditada" help="Solo se considera una mención." />
