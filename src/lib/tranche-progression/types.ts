@@ -13,16 +13,19 @@ export interface TrancheProgressionInput {
   renderedEcep: boolean;
   enteredEarlyWithA: boolean;
   enteredAdvancedWithDoubleA: boolean;
+  previousProcessWithoutAdvancement: boolean;
+  accessDeadlineExpired: boolean;
 }
 
 export interface TrancheProgressionResult {
-  resultTranche: Tranche;
+  resultTranche: Tranche | null;
   matrixCeiling: Exclude<Tranche, "access">;
   experienceCeiling: Exclude<Tranche, "access" | "early">;
   progressionCeiling: Exclude<Tranche, "access">;
   permanenceCeiling: Exclude<Tranche, "access">;
   hasCurrentInstrument: boolean;
   advances: boolean;
+  legalStatus: "active" | "access-reassigned" | "exit";
   reasons: string[];
 }
 
@@ -31,5 +34,6 @@ export interface GoalAssessment {
   results: boolean;
   progressionAndPermanence: boolean;
   currentInstrument: boolean;
+  legalContinuity: boolean;
   reachableNextProcess: boolean;
 }

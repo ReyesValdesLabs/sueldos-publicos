@@ -9,19 +9,38 @@ export interface AssistantPeriodParameters {
     upperThreshold44h: number;
     reductionFactor: number;
   };
+  zoneBonus: {
+    grade24Base: number;
+    calculationBaseFactor: number;
+    lowerGrossThreshold: number;
+    upperGrossThreshold: number;
+    fullImplementationUpToPercentage: number;
+    implementationFactorAbovePercentage: number;
+  };
   sources: ReadonlyArray<{ label: string; url: string }>;
 }
 
 export const JULY_2026_ASSISTANT_PARAMETERS: AssistantPeriodParameters = {
   id: "2026-07",
   label: "Julio de 2026",
-  reviewedAt: "2026-07-21",
+  reviewedAt: "2026-07-22",
   technicalMinimum44h: 668_412,
   lowIncomeBonus: {
     maximum44h: 62_903,
     lowerThreshold44h: 673_687,
     upperThreshold44h: 761_741,
     reductionFactor: 0.71437,
+  },
+  zoneBonus: {
+    // $179.647 (EUS, diciembre de 2022), reajustado y redondeado en cada vigencia:
+    // 4,3% (dic. 2023), 3% (dic. 2024), 1,2% (ene. 2025), 0,64% (jun. 2025),
+    // 2% (dic. 2025) y 1,4% (jun. 2026).
+    grade24Base: 203_297,
+    calculationBaseFactor: 0.617,
+    lowerGrossThreshold: 1_400_000,
+    upperGrossThreshold: 1_600_000,
+    fullImplementationUpToPercentage: 15,
+    implementationFactorAbovePercentage: 0.5,
   },
   sources: [
     {
@@ -31,6 +50,22 @@ export const JULY_2026_ASSISTANT_PARAMETERS: AssistantPeriodParameters = {
     {
       label: "Ley N.º 21.806 · Reajuste y beneficios 2026",
       url: "https://www.bcn.cl/leychile/navegar?idNorma=1221118",
+    },
+    {
+      label: "Ley N.º 21.819 · bonificación de zona para asistentes SLEP",
+      url: "https://www.bcn.cl/leychile/navegar?idNorma=1224471",
+    },
+    {
+      label: "Hacienda · escala EUS base a diciembre de 2022",
+      url: "https://www.hacienda.cl/transparencia/2023/per_remuneraciones.pdf",
+    },
+    {
+      label: "Ley N.º 21.647 · reajuste desde diciembre de 2023",
+      url: "https://www.bcn.cl/leychile/navegar?idNorma=1199483",
+    },
+    {
+      label: "Ley N.º 21.724 · reajustes de diciembre de 2024 a junio de 2025",
+      url: "https://www.bcn.cl/leychile/navegar?idNorma=1209939",
     },
   ],
 };

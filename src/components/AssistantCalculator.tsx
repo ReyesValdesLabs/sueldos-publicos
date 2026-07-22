@@ -27,6 +27,8 @@ const initialInput: AssistantCalculationInput = {
   biennia: 0,
   priorityAllowance: 0,
   difficultConditionsPercentage: 0,
+  zonePercentage: 0,
+  zonePreviousMonthGross: A.technicalMinimum44h,
   territorialAllowance: 0,
   academicExcellenceBonus: 0,
   law19464Increase: 0,
@@ -84,13 +86,16 @@ function CheckField({ id, checked, onChange, label, help }: { id: string; checke
 export default function AssistantCalculator({ embedded = false }: { embedded?: boolean }) {
   const [step, setStep] = useState(0);
   const [remunerationEdited, setRemunerationEdited] = useState(false);
+  const [zoneGrossEdited, setZoneGrossEdited] = useState(false);
   const [input, setInput] = useState<AssistantCalculationInput>(initialInput);
   const result = useMemo(() => calculateAssistantSalary(input), [input]);
   const update = <K extends keyof AssistantCalculationInput>(key: K, value: AssistantCalculationInput[K]) => setInput((current) => ({ ...current, [key]: value }));
   const hoursError = !Number.isInteger(input.weeklyHours) || input.weeklyHours < 1 || input.weeklyHours > 44 ? "Ingresa una jornada completa entre 1 y 44 horas." : undefined;
   const bienniaError = !Number.isInteger(input.biennia) || input.biennia < 0 || input.biennia > 15 ? "Ingresa un número entero entre 0 y 15." : undefined;
   const difficultError = input.difficultConditionsPercentage < 0 || input.difficultConditionsPercentage > 100 ? "Ingresa un porcentaje entre 0 y 100." : undefined;
-  const currentStepInvalid = (step === 0 && Boolean(hoursError)) || (step === 1 && Boolean(bienniaError || difficultError));
+  const zoneError = input.zonePercentage < 0 || input.zonePercentage > 600 ? "Ingresa un porcentaje entre 0 y 600." : undefined;
+  const zoneGrossError = input.zonePercentage > 0 && input.zonePreviousMonthGross <= 0 ? "Ingresa la remuneración bruta efectiva del mes anterior." : undefined;
+  const currentStepInvalid = (step === 0 && Boolean(hoursError)) || (step === 1 && Boolean(bienniaError || difficultError || zoneError || zoneGrossError));
   const minimumForHours = Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, input.weeklyHours || 0)) / 44);
 
   const updateHours = (value: number) => {
@@ -98,6 +103,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
       ...current,
       weeklyHours: value,
       countedRemuneration: remunerationEdited ? current.countedRemuneration : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
+      zonePreviousMonthGross: zoneGrossEdited ? current.zonePreviousMonthGross : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
     }));
   };
   const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "taxable" }]);
@@ -159,13 +165,15 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
               <div className="space-y-6 pt-5">
                 <div className="form-grid">
                   <NumberField id="assistant-difficult" label="Porcentaje de desempeño difícil 2026" value={input.difficultConditionsPercentage} onChange={(value) => update("difficultConditionsPercentage", value)} min={0} max={100} suffix="%" help="Solo si el establecimiento fue calificado y conoces el porcentaje oficial." error={difficultError} />
+                  <NumberField id="assistant-zone-percentage" label="Porcentaje de zona Ley N.º 21.819" value={input.zonePercentage} onChange={(value) => update("zonePercentage", value)} min={0} max={600} suffix="%" help="Usa el porcentaje oficial del artículo 7 del DL N.º 249 para la localidad." error={zoneError} />
+                  {input.zonePercentage > 0 && <NumberField id="assistant-zone-previous-gross" label="Bruto del mes anterior para zona" value={input.zonePreviousMonthGross} onChange={(value) => { setZoneGrossEdited(true); update("zonePreviousMonthGross", value); }} suffix="$" help="La bonificación completa llega hasta $1.400.000 y se reduce hasta desaparecer en $1.600.000." error={zoneGrossError} />}
                   <NumberField id="assistant-territorial" label="Beneficio territorial" value={input.territorialAllowance} onChange={(value) => update("territorialAllowance", value)} suffix="$" help="Ingresa el monto que figura en tu liquidación." />
                   <NumberField id="assistant-excellence" label="Bonificación de excelencia académica" value={input.academicExcellenceBonus} onChange={(value) => update("academicExcellenceBonus", value)} suffix="$" />
                   <NumberField id="assistant-law-19464" label="Aumento Ley N.º 19.464" value={input.law19464Increase} onChange={(value) => update("law19464Increase", value)} suffix="$" />
                 </div>
               </div>
             </details>
-            <div className="warning-inline"><Info size={18} /><p>La calculadora también evalúa automáticamente el bono mensual para bajas remuneraciones establecido solo para 2026.</p></div>
+            <div className="warning-inline"><Info size={18} /><p>La zona de la Ley N.º 21.819 se calcula aparte del beneficio territorial: no es imponible ni tributable y, sobre 15% de zona, aplica 50% durante sus primeros doce meses. También se evalúa automáticamente el bono mensual para bajas remuneraciones de 2026.</p></div>
           </CardContent>
         </>}
 

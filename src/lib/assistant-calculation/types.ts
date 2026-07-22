@@ -6,6 +6,8 @@ export interface AssistantCalculationInput {
   biennia: number;
   priorityAllowance: number;
   difficultConditionsPercentage: number;
+  zonePercentage: number;
+  zonePreviousMonthGross: number;
   territorialAllowance: number;
   academicExcellenceBonus: number;
   law19464Increase: number;
@@ -29,5 +31,6 @@ export interface AssistantCalculationResult {
   imposableBase: number;
   taxableBase: number;
   lowIncomeBonus: number;
+  zoneBonus: number;
   warnings: string[];
 }

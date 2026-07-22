@@ -5,6 +5,35 @@ import type { AssistantCalculationInput, AssistantCalculationResult } from "./ty
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
+const LOW_INCOME_GROSS_EXCLUDED_IDS = new Set([
+  "assistant-priority",
+  "assistant-zone-21819",
+  "territorial",
+  "academic-excellence",
+  "law-19464",
+]);
+
+export function calculateAssistantZoneBonus(
+  input: Pick<AssistantCalculationInput, "weeklyHours" | "zonePercentage" | "zonePreviousMonthGross">,
+  assistantParameters: AssistantPeriodParameters = A,
+) {
+  const hoursRatio = Math.min(44, money(input.weeklyHours)) / 44;
+  const percentage = Math.max(0, input.zonePercentage);
+  const previousGross = money(input.zonePreviousMonthGross);
+  if (percentage === 0 || previousGross >= assistantParameters.zoneBonus.upperGrossThreshold) return 0;
+
+  const incomeFactor = previousGross <= assistantParameters.zoneBonus.lowerGrossThreshold
+    ? 1
+    : (assistantParameters.zoneBonus.upperGrossThreshold - previousGross)
+      / (assistantParameters.zoneBonus.upperGrossThreshold - assistantParameters.zoneBonus.lowerGrossThreshold);
+  const implementationFactor = percentage <= assistantParameters.zoneBonus.fullImplementationUpToPercentage
+    ? 1
+    : assistantParameters.zoneBonus.implementationFactorAbovePercentage;
+  const maximum = assistantParameters.zoneBonus.grade24Base
+    * assistantParameters.zoneBonus.calculationBaseFactor
+    * (percentage / 100);
+  return money(maximum * hoursRatio * incomeFactor * implementationFactor);
+}
 
 export function calculateAssistantSalary(
   input: AssistantCalculationInput,
@@ -84,6 +113,17 @@ export function calculateAssistantSalary(
     legalSlug: "asistentes-asignaciones-establecimiento",
   });
 
+  const zoneBonus = calculateAssistantZoneBonus(input, assistantParameters);
+  if (zoneBonus > 0) earnings.push({
+    id: "assistant-zone-21819",
+    label: "Bonificación de zona Ley N.º 21.819",
+    amount: zoneBonus,
+    imposable: false,
+    taxable: false,
+    countsForMinimum: false,
+    legalSlug: "asistentes-asignaciones-establecimiento",
+  });
+
   const declaredBenefits = [
     { id: "territorial", label: "Beneficio territorial informado", amount: input.territorialAllowance, imposable: false, taxable: true },
     { id: "academic-excellence", label: "Bonificación de excelencia académica informada", amount: input.academicExcellenceBonus, imposable: true, taxable: true },
@@ -107,7 +147,8 @@ export function calculateAssistantSalary(
   const nonRemunerativeManualEarnings = input.manualItems
     .filter((item) => item.kind === "nonImposable" && item.amount > 0)
     .reduce((total, item) => total + money(item.amount), 0);
-  const grossBeforeLowIncomeBonus = sum(earnings) - nonRemunerativeManualEarnings;
+  const grossBeforeLowIncomeBonus = sum(earnings.filter((line) => !LOW_INCOME_GROSS_EXCLUDED_IDS.has(line.id)))
+    - nonRemunerativeManualEarnings;
   const lowIncomeLower = assistantParameters.lowIncomeBonus.lowerThreshold44h * hoursRatio;
   const lowIncomeUpper = assistantParameters.lowIncomeBonus.upperThreshold44h * hoursRatio;
   const lowIncomeMaximum = assistantParameters.lowIncomeBonus.maximum44h * hoursRatio;
@@ -159,6 +200,7 @@ export function calculateAssistantSalary(
   if (minimumCounted < minimumTarget) warnings.push("Se agregó un complemento estimado para alcanzar el mínimo bruto legal de la categoría técnica.");
   if (input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
   if (input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
+  if (input.zonePercentage > assistantParameters.zoneBonus.fullImplementationUpToPercentage) warnings.push("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   if (input.priorityAllowance || input.territorialAllowance || input.academicExcellenceBonus || input.law19464Increase) warnings.push("Las asignaciones ingresadas desde tu liquidación se usan tal como las declaraste; confirma su tratamiento imponible y tributario con el empleador.");
 
   return {
@@ -171,6 +213,7 @@ export function calculateAssistantSalary(
     imposableBase,
     taxableBase,
     lowIncomeBonus,
+    zoneBonus,
     warnings,
   };
 }

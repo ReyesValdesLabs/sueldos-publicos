@@ -23,9 +23,9 @@ export interface DaemAssistantPeriodParameters {
 export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters = {
   id: "2026-07",
   label: "Julio de 2026",
-  reviewedAt: "2026-07-21",
+  reviewedAt: "2026-07-22",
   minimumIncome: {
-    monthly: 539_000,
+    monthly: 553_553,
     maximumWeeklyHours: 44,
     proportionalUpToWeeklyHours: 30,
   },
@@ -41,8 +41,8 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
   },
   sources: [
     {
-      label: "Ley N.º 21.751 · ingreso mínimo mensual 2026",
-      url: "https://www.bcn.cl/leychile/navegar?idNorma=1214530",
+      label: "Ley N.º 21.830 · ingreso mínimo mensual desde mayo de 2026",
+      url: "https://www.bcn.cl/leychile/navegar?idNorma=1225354",
     },
     {
       label: "Dirección del Trabajo · ingreso mínimo de asistentes",

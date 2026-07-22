@@ -9,6 +9,7 @@ const baseInput: CalculationInput = {
   biennia: 0,
   tranche: "access",
   trancheSuspended: false,
+  trancheFixedComponentReduced: false,
   hasBrpTitle: false,
   hasBrpMention: false,
   priorityPercentage: 0,
@@ -70,6 +71,21 @@ describe("calculateTeacherSalary", () => {
     const withRural = calculateTeacherSalary({ ...baseInput, priorityPercentage: 50, rural: true, biennia: 15, tranche: "advanced" });
     expect(withoutRural.earnings.some((line) => line.id === "priority")).toBe(false);
     expect(withRural.earnings.find((line) => line.id === "priority")?.amount).toBeGreaterThan(0);
+  });
+
+  it("reduces only the fixed component after an unfulfilled four-year deepening cycle", () => {
+    const expertOne = calculateTeacherSalary({ ...baseInput, tranche: "expert1", biennia: 15, trancheFixedComponentReduced: true });
+    const expertTwo = calculateTeacherSalary({ ...baseInput, tranche: "expert2", biennia: 15, trancheFixedComponentReduced: true });
+    expect(expertOne.earnings.find((line) => line.id === "tranche-fixed")?.amount).toBe(P.fixedComponent.advanced);
+    expect(expertTwo.earnings.find((line) => line.id === "tranche-fixed")?.amount).toBe(P.fixedComponent.expert1);
+    expect(expertOne.earnings.find((line) => line.id === "tranche-progression")?.amount).toBe(P.progression.expert1);
+  });
+
+  it("removes the fixed component in Advanced and propagates the reduction to priority pay", () => {
+    const regular = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, priorityPercentage: 60 });
+    const reduced = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, priorityPercentage: 60, trancheFixedComponentReduced: true });
+    expect(reduced.earnings.find((line) => line.id === "tranche-fixed")?.amount).toBe(0);
+    expect((regular.earnings.find((line) => line.id === "priority")?.amount ?? 0) - (reduced.earnings.find((line) => line.id === "priority")?.amount ?? 0)).toBe(Math.round(P.fixedComponent.advanced * 0.2));
   });
 
   it("does not invent a tranche assignment when no recognized tranche was selected", () => {

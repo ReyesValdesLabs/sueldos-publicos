@@ -23,10 +23,10 @@ const baseInput: DaemAssistantCalculationInput = {
 
 describe("calculateDaemAssistantSalary", () => {
   it("uses the full legal minimum above 30 hours and prorates true part-time work", () => {
-    expect(calculateDaemMinimumIncome(44)).toBe(539_000);
-    expect(calculateDaemMinimumIncome(31)).toBe(539_000);
-    expect(calculateDaemMinimumIncome(30)).toBe(367_500);
-    expect(calculateDaemMinimumIncome(22)).toBe(269_500);
+    expect(calculateDaemMinimumIncome(44)).toBe(553_553);
+    expect(calculateDaemMinimumIncome(31)).toBe(553_553);
+    expect(calculateDaemMinimumIncome(30)).toBe(377_423);
+    expect(calculateDaemMinimumIncome(22)).toBe(276_777);
   });
 
   it("does not add the SLEP technical minimum or experience biennia", () => {

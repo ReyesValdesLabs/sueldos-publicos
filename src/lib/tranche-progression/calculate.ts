@@ -65,18 +65,29 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const tenureCeiling = permanenceCeiling(input);
   const hasCurrentInstrument = input.renderedPortfolio || input.renderedEcep;
   const calculated = minRecognized(matrixCeiling, expCeiling, linearCeiling, tenureCeiling);
+  const failsCurrentProcess = hasCurrentInstrument && (
+    (input.currentTranche === "initial" && rank(calculated) <= rank("initial"))
+    || (input.currentTranche === "early" && rank(calculated) < rank("advanced"))
+  );
+  const mustExit = input.previousProcessWithoutAdvancement && failsCurrentProcess;
+  const accessReassigned = input.currentTranche === "access" && input.accessDeadlineExpired && !hasCurrentInstrument;
 
-  let resultTranche: Tranche;
-  if (!hasCurrentInstrument) resultTranche = input.currentTranche;
+  let resultTranche: Tranche | null;
+  if (mustExit) resultTranche = null;
+  else if (accessReassigned) resultTranche = "initial";
+  else if (!hasCurrentInstrument) resultTranche = input.currentTranche;
   else if (input.currentTranche === "access") resultTranche = calculated;
   else resultTranche = rank(calculated) > rank(input.currentTranche) ? calculated : input.currentTranche;
+  const legalStatus = mustExit ? "exit" : accessReassigned ? "access-reassigned" : "active";
 
   const reasons: string[] = [];
-  if (!hasCurrentInstrument) reasons.push("Debes rendir al menos uno de los dos instrumentos en este proceso.");
+  if (mustExit) reasons.push(`Este es el segundo proceso consecutivo sin avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
+  else if (accessReassigned) reasons.push("Venció el plazo máximo de cuatro años en Acceso sin rendir los instrumentos disponibles; corresponde la asignación a Inicial.");
+  else if (!hasCurrentInstrument) reasons.push("Debes rendir al menos uno de los dos instrumentos en este proceso.");
   if (rank(expCeiling) < rank(matrixCeiling)) reasons.push(`La experiencia limita el resultado a ${TRANCHE_NAMES[expCeiling]}.`);
   if (rank(linearCeiling) < rank(matrixCeiling)) reasons.push(`La progresión permitida desde ${TRANCHE_NAMES[input.currentTranche]} limita el avance a ${TRANCHE_NAMES[linearCeiling]}.`);
   if (rank(tenureCeiling) < rank(matrixCeiling)) reasons.push(`La permanencia en ${TRANCHE_NAMES[input.currentTranche]} limita el avance a ${TRANCHE_NAMES[tenureCeiling]}.`);
-  if (input.currentTranche !== "access" && rank(calculated) < rank(input.currentTranche)) reasons.push("El sistema conserva el tramo ya reconocido: no hay retroceso.");
+  if (!mustExit && input.currentTranche !== "access" && rank(calculated) < rank(input.currentTranche)) reasons.push("El sistema conserva el tramo ya reconocido: no hay retroceso, salvo las causales de salida del artículo 19 S.");
 
   return {
     resultTranche,
@@ -85,7 +96,8 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
     progressionCeiling: linearCeiling,
     permanenceCeiling: tenureCeiling,
     hasCurrentInstrument,
-    advances: rank(resultTranche) > rank(input.currentTranche),
+    advances: legalStatus === "active" && resultTranche !== null && rank(resultTranche) > rank(input.currentTranche),
+    legalStatus,
     reasons,
   };
 }
@@ -96,12 +108,14 @@ export function assessGoal(input: TrancheProgressionInput, target: Exclude<Tranc
   const results = rank(RESULT_MATRIX[input.portfolioCategory][input.ecepCategory]) >= targetRank;
   const progressionAndPermanence = rank(progressionCeiling(input)) >= targetRank && rank(permanenceCeiling(input)) >= targetRank;
   const currentInstrument = input.renderedPortfolio || input.renderedEcep;
+  const legalContinuity = calculateTrancheProgression(input).legalStatus !== "exit";
   return {
     experience,
     results,
     progressionAndPermanence,
     currentInstrument,
-    reachableNextProcess: experience && results && progressionAndPermanence && currentInstrument,
+    legalContinuity,
+    reachableNextProcess: experience && results && progressionAndPermanence && currentInstrument && legalContinuity,
   };
 }
 

@@ -46,6 +46,7 @@ const initialInput: CalculationInput = {
   biennia: 5,
   tranche: null,
   trancheSuspended: false,
+  trancheFixedComponentReduced: false,
   hasBrpTitle: true,
   hasBrpMention: false,
   priorityPercentage: 0,
@@ -244,6 +245,7 @@ export default function TeacherCalculator() {
                 <div className="option-grid">
                   <CheckField id="rural" checked={input.rural} onChange={(value) => update("rural", value)} label="Establecimiento rural" />
                   <CheckField id="tranche-suspended" checked={input.trancheSuspended} onChange={(value) => update("trancheSuspended", value)} label="Asignación de tramo suspendida" help="Por aplicación del artículo 19 P." />
+                  {input.tranche !== null && ["advanced", "expert1", "expert2"].includes(input.tranche) && <CheckField id="tranche-fixed-reduced" checked={input.trancheFixedComponentReduced} onChange={(value) => update("trancheFixedComponentReduced", value)} label="Componente fijo reducido" help="Marca solo si venció el ciclo de profundización de cuatro años sin una acción aprobada. El tramo reconocido no cambia." />}
                   <CheckField id="priority-expired" checked={input.priorityExpired} onChange={(value) => update("priorityExpired", value)} label="Derecho a prioritarios suspendido" help="Por límite aplicable en tramo Inicial o Temprano." />
                 </div>
               </div>

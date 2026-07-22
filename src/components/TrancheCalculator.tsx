@@ -21,6 +21,8 @@ const initialInput: TrancheProgressionInput = {
   renderedEcep: true,
   enteredEarlyWithA: false,
   enteredAdvancedWithDoubleA: false,
+  previousProcessWithoutAdvancement: false,
+  accessDeadlineExpired: false,
 };
 
 function SelectField({ id, label, value, onChange, children, help }: { id: string; label: string; value: string; onChange: (value: string) => void; children: ReactNode; help?: string }) {
@@ -74,12 +76,18 @@ export default function TrancheCalculator() {
       yearsInCurrentTranche: 0,
       enteredEarlyWithA: false,
       enteredAdvancedWithDoubleA: false,
+      previousProcessWithoutAdvancement: false,
+      accessDeadlineExpired: false,
     }));
     if (rank(target) <= rank(value)) setTarget(nextGoal(value));
   };
 
-  const status = !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
-  const resultCopy = !result.hasCurrentInstrument
+  const status = result.legalStatus === "exit" ? "SALIDA DEL SISTEMA" : result.legalStatus === "access-reassigned" ? "REASIGNACIÓN LEGAL" : !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
+  const resultCopy = result.legalStatus === "exit"
+    ? "Los antecedentes declarados configuran la causal del artículo 19 S. El sostenedor y la resolución oficial determinan su aplicación."
+    : result.legalStatus === "access-reassigned"
+      ? "La proyección pasa a Inicial por el vencimiento del máximo de cuatro años en Acceso sin rendir instrumentos disponibles."
+      : !result.hasCurrentInstrument
     ? "No es posible proyectar un avance: debes rendir Portafolio o ECEP en este proceso."
     : result.advances
       ? `Desde ${TRANCHE_NAMES[input.currentTranche]}. La proyección queda limitada por el menor de los requisitos legales.`
@@ -108,6 +116,8 @@ export default function TrancheCalculator() {
 
           {input.currentTranche === "early" && <CheckField id="early-with-a" checked={input.enteredEarlyWithA} onChange={(value) => patch("enteredEarlyWithA", value)} label="Ingresé a Temprano con una A" help="Marca solo si en el proceso que te asignó Temprano obtuviste A en Portafolio o ECEP." />}
           {input.currentTranche === "advanced" && <CheckField id="advanced-double-a" checked={input.enteredAdvancedWithDoubleA} onChange={(value) => patch("enteredAdvancedWithDoubleA", value)} label="Ingresé a Avanzado con A + A" help="Esta excepción reduce a dos años la permanencia exigida para optar a Experto I." />}
+          {(input.currentTranche === "initial" || input.currentTranche === "early") && <CheckField id="previous-no-advance" checked={input.previousProcessWithoutAdvancement} onChange={(value) => patch("previousProcessWithoutAdvancement", value)} label="El proceso anterior tampoco me permitió avanzar" help="Si este proceso vuelve a ser insuficiente, el artículo 19 S dispone la desvinculación." />}
+          {input.currentTranche === "access" && <CheckField id="access-deadline" checked={input.accessDeadlineExpired} onChange={(value) => patch("accessDeadlineExpired", value)} label="Venció mi plazo máximo de cuatro años en Acceso" help="Marca solo si no rendiste instrumentos disponibles dentro del plazo informado por CPEIP o Portal Docente." />}
 
           <div>
             <h3 className="mb-3 font-bold">Resultados de los instrumentos</h3>
@@ -134,7 +144,7 @@ export default function TrancheCalculator() {
         <Card className={`tranche-result-card ${result.advances ? "is-advance" : ""}`}>
           <CardContent className="p-6 md:p-7">
             <span className="tranche-result-kicker">Tramo proyectado</span>
-            <div className="tranche-result-heading"><strong>{TRANCHE_NAMES[result.resultTranche]}</strong><span>{status}</span></div>
+            <div className="tranche-result-heading"><strong>{result.resultTranche === null ? "Sin tramo proyectado" : TRANCHE_NAMES[result.resultTranche]}</strong><span>{status}</span></div>
             <p>{resultCopy}</p>
             <div className="tranche-ceilings">
               <div><span>Instrumentos</span><strong>{TRANCHE_NAMES[result.matrixCeiling]}</strong></div>
@@ -177,6 +187,7 @@ export default function TrancheCalculator() {
           <Requirement met={goal.results} title="Resultados Portafolio + ECEP">Mínimo orientativo: {minimumCombinationFor(target)}. Tu combinación es {input.portfolioCategory} + {input.ecepCategory}.</Requirement>
           <Requirement met={goal.progressionAndPermanence} title="Progresión y permanencia">{goal.progressionAndPermanence ? "La trayectoria declarada permite llegar a este tramo en el próximo proceso." : "La linealidad, una excepción histórica o la permanencia todavía impiden llegar en un solo proceso."}</Requirement>
           <Requirement met={goal.currentInstrument} title="Instrumento rendido en este proceso">{goal.currentInstrument ? "Declaraste al menos un instrumento rendido actualmente." : "Debes rendir Portafolio o ECEP en este proceso."}</Requirement>
+          <Requirement met={goal.legalContinuity} title="Continuidad en el sistema">{goal.legalContinuity ? "No se configura una causal de salida con los antecedentes declarados." : "El segundo proceso consecutivo sin avance configura la causal del artículo 19 S."}</Requirement>
         </ul>
         <p className={`goal-summary ${goal.reachableNextProcess ? "is-reachable" : ""}`}>{goal.reachableNextProcess ? <CircleCheck size={20} /> : <X size={20} />}<span><strong>{goal.reachableNextProcess ? "Alcanzable en el próximo proceso" : "Aún no aparece alcanzable en el próximo proceso"}</strong> según los datos ingresados y sujeto a validación oficial.</span></p>
       </CardContent>

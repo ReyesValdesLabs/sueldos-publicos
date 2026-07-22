@@ -25,7 +25,13 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const hasPayableTranche = input.tranche !== null && !input.trancheSuspended;
   const trancheExperience = hasPayableTranche ? experience : 0;
   const progression = input.tranche !== null && !input.trancheSuspended ? money(parameters.progression[input.tranche] * (hours / 44) * (biennia / 15)) : 0;
-  const fixed = input.tranche !== null && !input.trancheSuspended ? money(parameters.fixedComponent[input.tranche] * (hours / 44)) : 0;
+  const reducedFixedTranche = input.tranche === "expert2" ? "expert1" : input.tranche === "expert1" ? "advanced" : "early";
+  const fixedParameter = input.tranche !== null && input.trancheFixedComponentReduced
+    ? parameters.fixedComponent[reducedFixedTranche]
+    : input.tranche !== null
+      ? parameters.fixedComponent[input.tranche]
+      : 0;
+  const fixed = hasPayableTranche ? money(fixedParameter * (hours / 44)) : 0;
   const trancheTotal = trancheExperience + progression + fixed;
   const brpHours = Math.min(30, hours);
 
@@ -97,6 +103,7 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   if (paidBase !== legalRbmn) warnings.push("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
   if (input.tranche === null) warnings.push("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
   else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
+  else if (input.trancheFixedComponentReduced && ["advanced", "expert1", "expert2"].includes(input.tranche)) warnings.push("El componente fijo se redujo al monto del tramo inmediatamente anterior por incumplimiento del ciclo de profundización.");
   if (input.priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
   if (input.afcEnabled && input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que ya se cumplió el máximo de 11 años de cotizaciones en esta relación laboral.");
   else if (input.afcEnabled) warnings.push("AFC es excepcional en este régimen. Confirma el descuento con tu liquidación o empleador.");

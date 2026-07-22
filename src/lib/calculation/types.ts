@@ -12,6 +12,7 @@ export interface CalculationInput {
   biennia: number;
   tranche: Tranche | null;
   trancheSuspended: boolean;
+  trancheFixedComponentReduced: boolean;
   hasBrpTitle: boolean;
   hasBrpMention: boolean;
   priorityPercentage: number;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_ASSISTANT_PARAMETERS as A } from "@/data/parameters/assistants-2026-07";
-import { calculateAssistantSalary } from "./calculate";
+import { calculateAssistantSalary, calculateAssistantZoneBonus } from "./calculate";
 import type { AssistantCalculationInput } from "./types";
 
 const baseInput: AssistantCalculationInput = {
@@ -9,6 +9,8 @@ const baseInput: AssistantCalculationInput = {
   biennia: 0,
   priorityAllowance: 0,
   difficultConditionsPercentage: 0,
+  zonePercentage: 0,
+  zonePreviousMonthGross: A.technicalMinimum44h,
   territorialAllowance: 0,
   academicExcellenceBonus: 0,
   law19464Increase: 0,
@@ -64,6 +66,34 @@ describe("calculateAssistantSalary", () => {
       manualItems: [{ id: "family", name: "Asignación familiar", amount: 100_000, kind: "nonImposable" }],
     });
     expect(result.lowIncomeBonus).toBe(62_903);
+  });
+
+  it("calculates the separate non-imposable and non-taxable zone bonus", () => {
+    expect(A.zoneBonus.grade24Base).toBe(203_297);
+    const result = calculateAssistantSalary({ ...baseInput, zonePercentage: 10 });
+    const zone = result.earnings.find((line) => line.id === "assistant-zone-21819");
+    expect(zone?.amount).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.1));
+    expect(zone).toMatchObject({ imposable: false, taxable: false, countsForMinimum: false });
+    expect(result.lowIncomeBonus).toBe(62_903);
+  });
+
+  it("excludes the statutory benefits from the gross used by the 2026 low-income bonus", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      priorityAllowance: 100_000,
+      territorialAllowance: 100_000,
+      academicExcellenceBonus: 100_000,
+      law19464Increase: 100_000,
+    });
+    expect(result.lowIncomeBonus).toBe(62_903);
+  });
+
+  it("applies income reduction, part-time proportionality and the first zone implementation stage", () => {
+    const full = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_400_000 });
+    const reducedPartTime = calculateAssistantZoneBonus({ weeklyHours: 22, zonePercentage: 20, zonePreviousMonthGross: 1_500_000 });
+    expect(full).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5));
+    expect(reducedPartTime).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5 * 0.5 * 0.5));
+    expect(calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 })).toBe(0);
   });
 
   it("applies the personal AFC contribution only to indefinite contracts", () => {

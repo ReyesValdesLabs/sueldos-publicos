@@ -12,6 +12,8 @@ const base: TrancheProgressionInput = {
   renderedEcep: true,
   enteredEarlyWithA: false,
   enteredAdvancedWithDoubleA: false,
+  previousProcessWithoutAdvancement: false,
+  accessDeadlineExpired: false,
 };
 
 describe("matriz oficial de resultados", () => {
@@ -59,6 +61,23 @@ describe("cálculo de progresión", () => {
     const noInstrument = calculateTrancheProgression({ ...base, renderedPortfolio: false, renderedEcep: false });
     expect(noInstrument.resultTranche).toBe("initial");
     expect(noInstrument.hasCurrentInstrument).toBe(false);
+  });
+
+  it("assigns Access to Initial when the four-year deadline expires without instruments", () => {
+    const result = calculateTrancheProgression({ ...base, currentTranche: "access", renderedPortfolio: false, renderedEcep: false, accessDeadlineExpired: true });
+    expect(result).toMatchObject({ resultTranche: "initial", legalStatus: "access-reassigned", advances: false });
+  });
+
+  it("reports the statutory exit on a second consecutive failed process in Initial or Early", () => {
+    const initialExit = calculateTrancheProgression({ ...base, portfolioCategory: "E", ecepCategory: "D", previousProcessWithoutAdvancement: true });
+    const earlyExit = calculateTrancheProgression({ ...base, currentTranche: "early", portfolioCategory: "D", ecepCategory: "D", previousProcessWithoutAdvancement: true });
+    expect(initialExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
+    expect(earlyExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
+    expect(assessGoal({ ...base, portfolioCategory: "E", ecepCategory: "D", previousProcessWithoutAdvancement: true }, "advanced").legalContinuity).toBe(false);
+  });
+
+  it("does not apply the exit when the current process advances", () => {
+    expect(calculateTrancheProgression({ ...base, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "advanced", legalStatus: "active" });
   });
 
   it("evalúa un tramo objetivo con los cuatro requisitos", () => {
