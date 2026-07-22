@@ -77,7 +77,7 @@ describe("calculateAssistantSalary", () => {
     expect(result.lowIncomeBonus).toBe(62_903);
   });
 
-  it("excludes the statutory benefits from the gross used by the 2026 low-income bonus", () => {
+  it("includes ordinary remunerative benefits in the gross used by the 2026 low-income bonus", () => {
     const result = calculateAssistantSalary({
       ...baseInput,
       priorityAllowance: 100_000,
@@ -85,7 +85,7 @@ describe("calculateAssistantSalary", () => {
       academicExcellenceBonus: 100_000,
       law19464Increase: 100_000,
     });
-    expect(result.lowIncomeBonus).toBe(62_903);
+    expect(result.lowIncomeBonus).toBe(0);
   });
 
   it("applies income reduction, part-time proportionality and the first zone implementation stage", () => {
@@ -94,6 +94,7 @@ describe("calculateAssistantSalary", () => {
     expect(full).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5));
     expect(reducedPartTime).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5 * 0.5 * 0.5));
     expect(calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 })).toBe(0);
+    expect(calculateAssistantSalary({ ...baseInput, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 }).warnings).not.toContain("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   });
 
   it("applies the personal AFC contribution only to indefinite contracts", () => {

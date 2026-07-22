@@ -66,8 +66,8 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const hasCurrentInstrument = input.renderedPortfolio || input.renderedEcep;
   const calculated = minRecognized(matrixCeiling, expCeiling, linearCeiling, tenureCeiling);
   const failsCurrentProcess = hasCurrentInstrument && (
-    (input.currentTranche === "initial" && rank(calculated) <= rank("initial"))
-    || (input.currentTranche === "early" && rank(calculated) < rank("advanced"))
+    (input.currentTranche === "initial" && rank(matrixCeiling) <= rank("initial"))
+    || (input.currentTranche === "early" && rank(matrixCeiling) < rank("advanced"))
   );
   const mustExit = input.previousProcessWithoutAdvancement && failsCurrentProcess;
   const accessReassigned = input.currentTranche === "access" && input.accessDeadlineExpired && !hasCurrentInstrument;
@@ -81,7 +81,7 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const legalStatus = mustExit ? "exit" : accessReassigned ? "access-reassigned" : "active";
 
   const reasons: string[] = [];
-  if (mustExit) reasons.push(`Este es el segundo proceso consecutivo sin avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
+  if (mustExit) reasons.push(`Este es el segundo proceso consecutivo cuyos resultados no permiten avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
   else if (accessReassigned) reasons.push("Venció el plazo máximo de cuatro años en Acceso sin rendir los instrumentos disponibles; corresponde la asignación a Inicial.");
   else if (!hasCurrentInstrument) reasons.push("Debes rendir al menos uno de los dos instrumentos en este proceso.");
   if (rank(expCeiling) < rank(matrixCeiling)) reasons.push(`La experiencia limita el resultado a ${TRANCHE_NAMES[expCeiling]}.`);

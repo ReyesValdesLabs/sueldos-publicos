@@ -5,13 +5,7 @@ import type { AssistantCalculationInput, AssistantCalculationResult } from "./ty
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
-const LOW_INCOME_GROSS_EXCLUDED_IDS = new Set([
-  "assistant-priority",
-  "assistant-zone-21819",
-  "territorial",
-  "academic-excellence",
-  "law-19464",
-]);
+const LOW_INCOME_GROSS_EXCLUDED_IDS = new Set(["assistant-zone-21819"]);
 
 export function calculateAssistantZoneBonus(
   input: Pick<AssistantCalculationInput, "weeklyHours" | "zonePercentage" | "zonePreviousMonthGross">,
@@ -200,7 +194,7 @@ export function calculateAssistantSalary(
   if (minimumCounted < minimumTarget) warnings.push("Se agregó un complemento estimado para alcanzar el mínimo bruto legal de la categoría técnica.");
   if (input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
   if (input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
-  if (input.zonePercentage > assistantParameters.zoneBonus.fullImplementationUpToPercentage) warnings.push("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
+  if (zoneBonus > 0 && input.zonePercentage > assistantParameters.zoneBonus.fullImplementationUpToPercentage) warnings.push("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   if (input.priorityAllowance || input.territorialAllowance || input.academicExcellenceBonus || input.law19464Increase) warnings.push("Las asignaciones ingresadas desde tu liquidación se usan tal como las declaraste; confirma su tratamiento imponible y tributario con el empleador.");
 
   return {

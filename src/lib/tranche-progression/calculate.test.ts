@@ -80,6 +80,10 @@ describe("cálculo de progresión", () => {
     expect(calculateTrancheProgression({ ...base, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "advanced", legalStatus: "active" });
   });
 
+  it("does not treat an experience ceiling as an insufficient professional result", () => {
+    expect(calculateTrancheProgression({ ...base, experienceYears: 3, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "initial", legalStatus: "active" });
+  });
+
   it("evalúa un tramo objetivo con los cuatro requisitos", () => {
     expect(assessGoal(base, "advanced")).toMatchObject({ experience: true, results: true, progressionAndPermanence: true, currentInstrument: true, reachableNextProcess: true });
   });
