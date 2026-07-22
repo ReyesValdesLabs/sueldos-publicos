@@ -99,7 +99,7 @@ a, button, input, select, summary { outline-offset: 3px; }
 .brand { display: inline-flex; align-items: center; color: inherit; text-decoration: none; white-space: nowrap; }
 .brand-lockup { display: inline-flex; align-items: center; gap: .7rem; }
 .brand-symbol { position: relative; display: block; flex: 0 0 3rem; width: 3rem; height: 3rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--brand-blue) 14%, var(--border)); border-radius: .95rem; background: #fff; box-shadow: 0 8px 22px rgb(13 71 161 / .12); }
-.brand-symbol img { position: absolute; left: 50%; top: 50%; width: 7.35rem; height: 7.35rem; max-width: none; transform: translate(-50%, -50%); }
+.brand-symbol img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand-wordmark { display: inline-flex; align-items: baseline; font-size: 1.12rem; font-weight: 700; letter-spacing: -.045em; }
 .brand-wordmark > span { color: var(--brand-navy); }
 .brand-wordmark strong { color: var(--brand-teal); font-weight: 700; }
@@ -139,7 +139,7 @@ html.dark .theme-icon-sun { display: block; }
 .hero-brand-panel { display: flex; min-height: 12rem; align-items: center; gap: 1.3rem; overflow: hidden; border: 1px solid color-mix(in srgb, var(--brand-blue) 24%, var(--border)); border-radius: 1.75rem; background: linear-gradient(135deg, #0d47a1 0%, #1466bb 54%, #009688 120%); padding: 1.7rem 1.7rem 4.5rem; color: #fff; box-shadow: 0 26px 70px rgb(13 71 161 / .24); }
 .hero-brand-panel::after { content: ""; position: absolute; width: 12rem; height: 12rem; right: -4rem; top: -5rem; border: 1px solid rgb(255 255 255 / .22); border-radius: 50%; box-shadow: 0 0 0 2rem rgb(255 255 255 / .035), 0 0 0 4rem rgb(255 255 255 / .025); }
 .hero-logo { position: relative; display: block; flex: 0 0 7.4rem; width: 7.4rem; height: 7.4rem; overflow: hidden; border-radius: 1.65rem; background: #fff; box-shadow: 0 18px 35px rgb(1 30 65 / .24); }
-.hero-logo img { position: absolute; left: 50%; top: 50%; width: 18rem; height: 18rem; max-width: none; transform: translate(-50%, -50%); }
+.hero-logo img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .hero-brand-panel > div { position: relative; z-index: 1; }
 .hero-brand-panel > div span, .hero-brand-panel > div strong { display: block; }
 .hero-brand-panel > div span { font-size: 1.05rem; font-weight: 700; letter-spacing: -.035em; }
@@ -374,7 +374,6 @@ html.dark .theme-icon-sun { display: block; }
   .page-shell { width: min(100% - 1.2rem, 1180px); }
   .header-inner { min-height: 4.5rem; gap: .55rem; }
   .brand-symbol { flex-basis: 2.65rem; width: 2.65rem; height: 2.65rem; border-radius: .82rem; }
-  .brand-symbol img { width: 6.55rem; height: 6.55rem; }
   .brand-wordmark { font-size: .9rem; }
   .theme-toggle { width: 2.55rem; min-height: 2.55rem; }
   .mobile-nav summary { min-height: 2.55rem; }
@@ -383,7 +382,6 @@ html.dark .theme-icon-sun { display: block; }
   .hero h1 { font-size: clamp(2.4rem, 12vw, 3.35rem); }
   .hero-brand-panel { min-height: 10.5rem; padding: 1.2rem 1.2rem 4.3rem; }
   .hero-logo { flex-basis: 5.8rem; width: 5.8rem; height: 5.8rem; border-radius: 1.3rem; }
-  .hero-logo img { width: 14.2rem; height: 14.2rem; }
   .hero-brand-panel > div span { font-size: .9rem; }
   .hero-brand-panel > div strong { font-size: .73rem; }
   .trust-card { width: calc(100% - 1rem); padding: 1.05rem; }

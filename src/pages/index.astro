@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, BookOpenCheck, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, LockKeyhole, Scale, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, LockKeyhole, Scale, ShieldCheck, Sparkles } from "lucide-react";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { sitePath } from "@/lib/site-path";
@@ -18,14 +18,13 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
       </div>
       <div class="hero-visual">
         <div class="hero-brand-panel" aria-hidden="true">
-          <span class="hero-logo"><img src={sitePath("sueldospublicos-mark.png")} alt="" width="512" height="512" /></span>
+          <span class="hero-logo"><img src={sitePath("sueldospublicos-mark-transparent.png")} alt="" width="512" height="512" /></span>
           <div><span>sueldospublicos.cl</span><strong>Claridad para tomar mejores decisiones</strong></div>
         </div>
         <aside class="trust-card" aria-label="Características de las calculadoras">
           <h2>Diseñadas para darte claridad</h2>
           <div class="trust-item"><CalendarClock size={22} /><div><strong>Actualizado el {sourceUpdatedLabel}</strong><span>Indicadores Previred para cotizaciones pagadas en {paymentPeriodLabel}.</span></div></div>
           <div class="trust-item"><LockKeyhole size={22} /><div><strong>Tus datos quedan en tu equipo</strong><span>Los cálculos ocurren completamente en tu navegador.</span></div></div>
-          <div class="trust-item"><BookOpenCheck size={22} /><div><strong>Regímenes separados</strong><span>Cada calculadora aplica las reglas propias del cargo y empleador indicado.</span></div></div>
         </aside>
       </div>
     </div>
