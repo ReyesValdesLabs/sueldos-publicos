@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, LockKeyhole, Scale, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { sitePath } from "@/lib/site-path";
@@ -11,10 +11,10 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
   <section class="hero">
     <div class="page-shell hero-grid">
       <div>
-        <span class="eyebrow"><Sparkles size={16} /> Gratis, privado y transparente</span>
+        <span class="eyebrow">Gratis, privado y transparente</span>
         <h1>Entiende tu <span>sueldo público</span>, peso por peso.</h1>
         <p class="hero-copy">Elige la calculadora que corresponde a tu función y revisa de dónde sale cada asignación, descuento y resultado.</p>
-        <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Elegir calculadora</a><a class="hero-button" href={sitePath("legal/")}><Scale size={18} /> Revisar respaldo legal</a></div>
+        <div class="hero-actions"><a class="hero-button primary" href="#calculadora"><Calculator size={18} /> Calculadoras</a><a class="hero-button" href={sitePath("legal/")}><Scale size={18} /> Revisar respaldo legal</a></div>
       </div>
       <div class="hero-visual">
         <div class="hero-brand-panel" aria-hidden="true">
@@ -24,26 +24,31 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
         <aside class="trust-card" aria-label="Características de las calculadoras">
           <h2>Diseñadas para darte claridad</h2>
           <div class="trust-item"><CalendarClock size={22} /><div><strong>Actualizado el {sourceUpdatedLabel}</strong><span>Indicadores Previred para cotizaciones pagadas en {paymentPeriodLabel}.</span></div></div>
-          <div class="trust-item"><LockKeyhole size={22} /><div><strong>Tus datos quedan en tu equipo</strong><span>Los cálculos ocurren completamente en tu navegador.</span></div></div>
         </aside>
       </div>
     </div>
   </section>
 
   <section id="calculadora" class="section page-shell scroll-mt-24">
-    <div class="section-heading"><span class="eyebrow">Calculadoras disponibles</span><h2>¿Cuál corresponde a tu contrato?</h2><p>La función profesional docente y los contratos técnicos bajo SLEP o DAEM/DEM usan estatutos y fórmulas diferentes.</p></div>
+    <div class="section-heading"><span class="eyebrow">Calculadoras disponibles</span><h2>¿Qué necesitas calcular?</h2><p>Estima una liquidación según tu régimen o proyecta un proceso de reconocimiento en Carrera Docente.</p></div>
     <div class="calculator-grid">
       <article class="calculator-card">
         <span class="calculator-icon"><GraduationCap size={27} /></span>
         <div><span class="calculator-audience">Docentes municipales y SLEP</span><h3>Liquidación docente</h3><p>RBMN por nivel, experiencia docente, tramo profesional, BRP, alumnos prioritarios y descuentos.</p></div>
         <ul><li>Profesional de la educación</li><li>Carrera Docente y tramo reconocido</li><li>Jornada básica, media o mixta</li></ul>
-        <a class="hero-button primary" href={sitePath("calculadoras/docentes/")}>Abrir calculadora docente <ArrowRight size={17} /></a>
+        <a class="hero-button primary" href={sitePath("calculadoras/docentes/")}>Calculadora docente <ArrowRight size={17} /></a>
       </article>
       <article class="calculator-card">
         <span class="calculator-icon"><BriefcaseBusiness size={27} /></span>
         <div><span class="calculator-audience">Categoría técnica · SLEP o DAEM/DEM</span><h3>Técnicos/as en educación parvularia</h3><p>Elige el empleador de tu contrato y aplicaremos el piso, beneficios y descuentos que correspondan a ese régimen.</p></div>
         <ul><li>Contrato directo con SLEP o municipalidad</li><li>Selección guiada por empleador</li><li>Fórmulas separadas para cada régimen</li></ul>
-        <a class="hero-button primary" href={sitePath("calculadoras/tecnicos-parvulos/")}>Abrir calculadora técnica <ArrowRight size={17} /></a>
+        <a class="hero-button primary" href={sitePath("calculadoras/tecnicos-parvulos/")}>Calculadora educación parvularia <ArrowRight size={17} /></a>
+      </article>
+      <article class="calculator-card">
+        <span class="calculator-icon"><TrendingUp size={27} /></span>
+        <div><span class="calculator-audience">Docentes municipales y SLEP</span><h3>Progresión de tramo</h3><p>Simula el proceso de reconocimiento con Portafolio, ECEP, experiencia, linealidad y permanencia.</p></div>
+        <ul><li>Matriz oficial de resultados</li><li>Excepciones legales de progresión</li><li>Modo objetivo para saber qué falta</li></ul>
+        <a class="hero-button primary" href={sitePath("calculadoras/tramos-docentes/")}>Simular progresión <ArrowRight size={17} /></a>
       </article>
     </div>
     <div class="scope-note"><ShieldCheck size={20} /><p><strong>¿Trabajas en JUNJI, Integra, VTF o con otro sostenedor?</strong> Estas calculadoras técnicas todavía no cubren tu régimen; no uses SLEP o DAEM/DEM como equivalentes.</p></div>

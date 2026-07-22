@@ -1,0 +1,10 @@
+---
+import AdSlot from "@/components/AdSlot.astro";
+import TrancheCalculator from "@/components/TrancheCalculator";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+<BaseLayout title="Calculadora de tramos de Carrera Docente | Sueldos Públicos" description="Simula tu progresión de tramo en Carrera Docente según Portafolio, ECEP, experiencia, linealidad y permanencia, con respaldo legal oficial.">
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p></header>
+  <div class="page-shell calculator-page-content"><TrancheCalculator client:load /></div>
+  <AdSlot placement="después de la calculadora de tramos" />
+</BaseLayout>

@@ -222,7 +222,7 @@ export default function TeacherCalculator() {
         {step === 1 && <>
           <CardHeader><CardTitle>Carrera docente</CardTitle><CardDescription>Usa antecedentes acreditados. Si no conoces un beneficio, déjalo desactivado.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
-            <div className="warning-inline"><Info size={18} /><p>Selecciona el tramo que figure en tu resolución o Portal Docente. “Acceso” es un tramo transitorio reconocido; no equivale a estar sin tramo.</p></div>
+            <div className="warning-inline"><Info size={18} /><p>Selecciona el tramo que figure en tu resolución o Portal Docente. “Acceso” es un tramo transitorio reconocido; no equivale a estar sin tramo. <a className="font-bold text-primary hover:underline" href={sitePath("calculadoras/tramos-docentes/")}>Simula aquí una futura progresión</a>, pero no la uses en esta liquidación hasta que sea oficial.</p></div>
             <div className="form-grid">
               <NumberField id="biennia" label="Bienios reconocidos" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="Cada bienio corresponde a dos años acreditados; máximo 15." error={bienniaError} />
               <SelectField id="tranche" label="Tramo profesional" value={input.tranche ?? ""} onChange={(value) => update("tranche", value ? value as CalculationInput["tranche"] : null)} error={trancheError}>

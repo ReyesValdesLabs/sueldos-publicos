@@ -136,7 +136,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
               </ol>
             </section>
             <div className="scope-exclusion"><Info size={18} /><p><strong>No uses esta calculadora</strong> si eres educadora de párvulos profesional en Carrera Docente o si trabajas para JUNJI, Integra, una municipalidad o en un jardín VTF.</p></div>
-            <div className="form-grid">
+            <div className="form-grid assistant-contract-fields">
               <NumberField id="assistant-hours" label="Horas semanales de contrato" value={input.weeklyHours} onChange={updateHours} min={1} max={44} suffix="horas" error={hoursError} />
               <NumberField id="assistant-counted-remuneration" label="Remuneración mensual que computa para el mínimo" value={input.countedRemuneration} onChange={(value) => { setRemunerationEdited(true); update("countedRemuneration", value); }} suffix="$" help="Suma del contrato y liquidación antes de las asignaciones que la ley excluye del piso." />
             </div>
@@ -220,9 +220,9 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
         </div>
       </Card>
 
-      <aside className="hidden lg:block print:hidden" aria-label="Resumen en vivo">
-        <div className="sticky top-24 space-y-4">
-          <Card className="overflow-hidden"><div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">Líquido estimado</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{currency.format(result.netSalary)}</p></div><CardContent className="space-y-4 pt-6"><SummaryRow label="Total haberes" value={result.totalEarnings} positive /><SummaryRow label="Total descuentos" value={result.totalDiscounts} /><SummaryRow label="Experiencia" value={result.earnings.find((line) => line.id === "assistant-experience")?.amount ?? 0} positive /><div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> Se actualiza mientras completas tus antecedentes.</div></CardContent></Card>
+      <aside className="order-first block print:hidden lg:order-none" aria-label="Resumen en vivo">
+        <div className="space-y-4 lg:sticky lg:top-24">
+          <Card className="overflow-hidden"><div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">Líquido estimado</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{currency.format(result.netSalary)}</p></div><CardContent className="space-y-4 pt-7 md:pt-7"><SummaryRow label="Total haberes" value={result.totalEarnings} positive /><SummaryRow label="Total descuentos" value={result.totalDiscounts} /><SummaryRow label="Experiencia" value={result.earnings.find((line) => line.id === "assistant-experience")?.amount ?? 0} positive /><div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> Se actualiza mientras completas tus antecedentes.</div></CardContent></Card>
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 text-sm"><div className="flex items-center gap-2 font-bold text-primary"><FileText size={17} /> Alcance acotado</div><p className="mt-2 leading-6 text-muted-foreground">Categoría técnica en establecimientos escolares dependientes de SLEP. Otros sostenedores usan reglas distintas.</p></div>
         </div>
       </aside>
