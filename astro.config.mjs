@@ -8,6 +8,7 @@ const technicalCalculatorPath = '/calculadoras/tecnicos-parvulos/';
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://sueldospublicos.cl',
   redirects: {
     '/calculadoras/tecnicos-parvulos-slep': `${technicalCalculatorPath}?regimen=slep`,
     '/calculadoras/tecnicos-parvulos-daem': `${technicalCalculatorPath}?regimen=daem`

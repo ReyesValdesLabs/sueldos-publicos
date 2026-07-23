@@ -6,8 +6,58 @@ import { sitePath } from "@/lib/site-path";
 
 const sourceUpdatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
 const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
+const homeStructuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://sueldospublicos.cl/#organization",
+    name: "Sueldos Públicos",
+    url: "https://sueldospublicos.cl/",
+    logo: "https://sueldospublicos.cl/sueldospublicos-mark.png",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://sueldospublicos.cl/#website",
+    name: "Sueldos Públicos",
+    url: "https://sueldospublicos.cl/",
+    inLanguage: "es-CL",
+    publisher: { "@id": "https://sueldospublicos.cl/#organization" },
+    description: "Calculadoras de sueldos públicos en Chile para docentes y asistentes de la educación.",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "¿El resultado reemplaza mi liquidación?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. Es una estimación informativa. Tu empleador puede incluir conceptos locales, retroactivos, licencias, descuentos u otras situaciones.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Una técnico en párvulos usa la calculadora docente?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No si su contrato la clasifica como asistente de la educación. Carrera Docente corresponde a profesionales de la educación.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Guardan mi sueldo o mis datos?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "No. El cálculo se ejecuta en tu navegador y el sitio no necesita una cuenta. Solo la preferencia de tema puede guardarse localmente.",
+        },
+      },
+    ],
+  },
+];
 ---
-<BaseLayout title="Calculadoras de sueldos públicos en Chile | Sueldos Públicos" description="Estima liquidaciones de docentes y asistentes de la educación SLEP o DAEM/DEM con fórmulas explicadas y respaldo legal.">
+<BaseLayout title="Calculadoras de sueldos públicos en Chile | Sueldos Públicos" description="Estima liquidaciones de docentes y asistentes de la educación SLEP o DAEM/DEM con fórmulas explicadas y respaldo legal." structuredData={homeStructuredData}>
   <section class="hero">
     <div class="page-shell hero-grid">
       <div>
