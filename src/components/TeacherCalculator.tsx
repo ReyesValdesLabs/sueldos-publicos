@@ -55,8 +55,7 @@ const initialInput: CalculationInput = {
   tranche: null,
   trancheSuspended: false,
   trancheFixedComponentReduced: false,
-  hasBrpTitle: true,
-  hasBrpMention: false,
+  brpEntitlement: "title",
   priorityPercentage: 0,
   rural: false,
   priorityExpired: false,
@@ -182,6 +181,7 @@ export default function TeacherCalculator() {
   const legalBase = Math.round(
     (activeParameters.hourlyRate.basic * appliedBasicHours + activeParameters.hourlyRate.secondary * appliedSecondaryHours) * hourScale,
   );
+  const paidBaseBelowLegal = editBase && Math.round(Math.max(0, input.paidBaseSalary ?? legalBase)) < legalBase;
   const responsibilityEstimate = Math.round(legalBase * Math.max(0, input.responsibilityPercentage) / 100);
   const hoursError = !Number.isInteger(input.basicHours) || !Number.isInteger(input.secondaryHours) || input.basicHours < 0 || input.secondaryHours < 0
     ? "Ingresa horas completas iguales o mayores que cero."
@@ -210,7 +210,7 @@ export default function TeacherCalculator() {
     return () => controller.abort();
   }, []);
 
-  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "taxable" }]);
+  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
   const patchManualItem = (id: string, patch: Partial<ManualItem>) => update("manualItems", input.manualItems.map((item) => item.id === id ? { ...item, ...patch } : item));
   const removeManualItem = (id: string) => update("manualItems", input.manualItems.filter((item) => item.id !== id));
   const goTo = (nextStep: number) => {
@@ -248,9 +248,10 @@ export default function TeacherCalculator() {
             </div>
             <div className="legal-value-card">
               <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{appliedBasicHours > 0 && `${appliedBasicHours} h básica × ${currency.format(activeParameters.hourlyRate.basic)}`}{appliedBasicHours > 0 && appliedSecondaryHours > 0 && " + "}{appliedSecondaryHours > 0 && `${appliedSecondaryHours} h media × ${currency.format(activeParameters.hourlyRate.secondary)}`} · total aplicado: {appliedHours} h</small></div>
-              <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real sin alterar la base legal de las asignaciones." />
+              <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real. Un valor superior no altera la base legal de las asignaciones; uno inferior se revisará contra la RBMN." />
             </div>
             {editBase && <NumberField id="paid-base" label="Sueldo base pagado" value={input.paidBaseSalary ?? legalBase} onChange={(value) => update("paidBaseSalary", value)} suffix="$" />}
+            {paidBaseBelowLegal && <div className="warning-inline" role="alert"><AlertTriangle size={18} /><p><strong>El monto ingresado está bajo la RBMN legal.</strong> Para el mes completo sin días no remunerados que calcula esta herramienta, el artículo 35 del Estatuto Docente exige al menos la RBMN indicada arriba. La planilla complementaria de RTM no reemplaza esta diferencia. Si tu liquidación corresponde a un mes parcial o incluye días sin derecho a remuneración, esta calculadora no prorratea ese caso. <a className="font-bold text-primary hover:underline" href={sitePath("legal/rbmn/")}>Ver fundamento legal</a>.</p></div>}
             <section className="space-y-4 border-t border-border pt-6" aria-labelledby="responsibility-title">
               <div><h3 id="responsibility-title" className="font-bold">Cargo y asignación de responsabilidad</h3><p className="mt-1 text-sm text-muted-foreground">Selecciona una función superior solo cuando conste en tu nombramiento o contrato. La jefatura de curso no corresponde a esta asignación.</p></div>
               <SelectField id="responsibility-role" label="Función o cargo reconocido" value={input.responsibilityRole} onChange={(value) => updateResponsibilityRole(value as CalculationInput["responsibilityRole"])}>
@@ -280,10 +281,19 @@ export default function TeacherCalculator() {
               </SelectField>
             </div>
             {input.responsibilityRole !== "none" && input.responsibilityRole !== "director" && input.tranche !== null && !["advanced", "expert1", "expert2"].includes(input.tranche) && <div className="warning-inline"><AlertTriangle size={18} /><p>Un nombramiento excepcional en este cargo sin tramo Avanzado no da derecho a la asignación de responsabilidad. La estimación la mostrará en $0.</p></div>}
-            <div className="option-grid">
-              <CheckField id="brp-title" checked={input.hasBrpTitle} onChange={(value) => update("hasBrpTitle", value)} label="Título acreditado para BRP" help="Se paga proporcionalmente hasta 30 horas." />
-              <CheckField id="brp-mention" checked={input.hasBrpMention} onChange={(value) => update("hasBrpMention", value)} label="Mención acreditada" help="Solo se considera una mención." />
-            </div>
+            <SelectField
+              id="brp-entitlement"
+              label="BRP acreditada por el sostenedor"
+              value={input.brpEntitlement}
+              onChange={(value) => update("brpEntitlement", value as CalculationInput["brpEntitlement"])}
+              help="Selecciona el beneficio que consta en tus antecedentes. La mención nunca se paga sin el componente base de título; los montos se prorratean hasta 30 horas."
+            >
+              <option value="none">No tengo BRP acreditada</option>
+              <option value="title">Solo componente de título</option>
+              <option value="titleAndMention">Título y una mención acreditada</option>
+              <option value="normalSchool">Título de Escuela Normal (100% de la BRP)</option>
+              <option value="historicalShortTitleAndMention">Excepción histórica: título corto 1991–28 dic 2006 y mención</option>
+            </SelectField>
             <section className="advanced-panel establishment-panel" aria-labelledby="establishment-special-title">
               <h3 id="establishment-special-title" className="establishment-panel-title">Establecimiento, % de alumnos prioritarios y situaciones especiales</h3>
               <div className="space-y-6 pt-5">
@@ -361,14 +371,14 @@ export default function TeacherCalculator() {
             </details>
 
             <div className="border-t border-border pt-6">
-              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Para incentivos locales, asignación familiar, cuotas u otros ítems. Marca RTM solo si el haber es mensual, permanente y no está legalmente excluido.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
+              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Para incentivos locales, asignación familiar, Red Maestros de Maestros, cuotas u otros ítems. Imponibilidad y tributación son calificaciones independientes; marca RTM solo si el haber es mensual, permanente y no está legalmente excluido.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
               <div className="mt-4 space-y-3">
                 {input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}
                 {input.manualItems.map((item) => <div key={item.id} className="manual-row">
                   <Input aria-label="Nombre del concepto" placeholder="Nombre del concepto" value={item.name} onChange={(event) => patchManualItem(item.id, { name: event.target.value })} />
                   <Input aria-label={`Monto de ${item.name || "concepto"}`} type="text" inputMode="numeric" placeholder="Monto" value={item.amount ? integerMoney.format(item.amount) : ""} onChange={(event) => patchManualItem(item.id, { amount: parseMoney(event.target.value) })} />
                   <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}>
-                    <option value="taxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible, no tributable</option><option value="nonImposable">No imponible</option><option value="discount">Descuento</option>
+                    <option value="imposableTaxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible y no tributable</option><option value="nonImposableTaxable">No imponible y tributable</option><option value="nonImposableNonTaxable">No imponible y no tributable</option><option value="discount">Descuento</option>
                   </select>
                   {item.kind !== "discount" && <label className="manual-rtm-toggle"><input type="checkbox" checked={Boolean(item.countsForMinimum)} onChange={(event) => patchManualItem(item.id, { countsForMinimum: event.target.checked })} /><span>Computa para RTM</span></label>}
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button>
@@ -421,7 +431,7 @@ function ResultTable({ title, lines, total, positive = false }: { title: string;
   return <section aria-labelledby={`result-${title}`}>
     <div className="mb-3 flex items-end justify-between"><h3 id={`result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div>
     <div className="overflow-hidden rounded-2xl border border-border">
-      {lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"}{line.taxable ? " · tributable" : ""}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`} title="Ver respaldo legal"><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}
+      {lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"} · {line.taxable ? "tributable" : "no tributable"}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`} title="Ver respaldo legal"><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}
     </div>
   </section>;
 }

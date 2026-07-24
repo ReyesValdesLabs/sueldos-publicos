@@ -10,8 +10,7 @@ const baseInput: CalculationInput = {
   tranche: "access",
   trancheSuspended: false,
   trancheFixedComponentReduced: false,
-  hasBrpTitle: false,
-  hasBrpMention: false,
+  brpEntitlement: "none",
   priorityPercentage: 0,
   rural: false,
   priorityExpired: false,
@@ -66,7 +65,23 @@ describe("calculateTeacherSalary", () => {
     expect(result.legalRbmn).toBe(P.hourlyRate.basic * 44);
     expect(result.earnings.find((line) => line.id === "base")?.amount).toBe(1_200_000);
     expect(result.earnings.find((line) => line.id === "experience")?.amount).toBe(Math.round(result.legalRbmn * 0.0338));
-    expect(result.warnings).toContain("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
+    expect(result.warnings).toContain("El sueldo base pagado es superior a la RBMN legal. Las asignaciones que la ley refiere a la RBMN siguen usando la base legal calculada.");
+  });
+
+  it("flags a paid base below RBMN without treating the RTM supplement as a replacement", () => {
+    const result = calculateTeacherSalary({ ...baseInput, paidBaseSalary: P.hourlyRate.basic * 44 - 100_000 });
+    const warning = result.warnings.find((candidate) => candidate.includes("artículo 35"));
+
+    expect(result.earnings.find((line) => line.id === "base")?.amount).toBe(result.legalRbmn - 100_000);
+    expect(result.earnings.find((line) => line.id === "minimum-supplement")?.amount).toBeGreaterThan(0);
+    expect(warning).toContain("mes completo sin días no remunerados");
+    expect(warning).toContain("La planilla complementaria de RTM no reemplaza esa diferencia");
+    expect(warning).toContain("mes parcial");
+  });
+
+  it("does not flag RBMN when the paid base equals the legal amount", () => {
+    const result = calculateTeacherSalary({ ...baseInput, paidBaseSalary: P.hourlyRate.basic * 44 });
+    expect(result.warnings.some((warning) => warning.includes("sueldo base pagado"))).toBe(false);
   });
 
   it("weights the legal RBMN when the contract combines basic and secondary hours", () => {
@@ -76,10 +91,40 @@ describe("calculateTeacherSalary", () => {
   });
 
   it("caps BRP proportionality at 30 hours", () => {
-    const at30 = calculateTeacherSalary({ ...baseInput, basicHours: 12, secondaryHours: 18, hasBrpTitle: true });
-    const at44 = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, hasBrpTitle: true });
+    const at30 = calculateTeacherSalary({ ...baseInput, basicHours: 12, secondaryHours: 18, brpEntitlement: "title" });
+    const at44 = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, brpEntitlement: "title" });
     expect(at30.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
     expect(at44.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+  });
+
+  it("pays the title component without creating a mention component", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "title" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.some((line) => line.id === "brp-mention")).toBe(false);
+    expect(result.earnings.some((line) => line.id === "brp-normal-school-complement")).toBe(false);
+  });
+
+  it("pays title and mention together when both are accredited", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "titleAndMention" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-mention")?.amount).toBe(P.brp.mention);
+  });
+
+  it("pays both components under the historical short-title exception", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "historicalShortTitleAndMention" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-mention")?.amount).toBe(P.brp.mention);
+  });
+
+  it("pays 100% of BRP to Escuela Normal graduates without inventing a mention", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "normalSchool" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-normal-school-complement")?.amount).toBe(P.brp.mention);
+    expect(result.earnings.some((line) => line.id === "brp-mention")).toBe(false);
   });
 
   it("treats zone as imposable but not taxable", () => {
@@ -175,11 +220,45 @@ describe("calculateTeacherSalary", () => {
     expect(result.warnings.some((warning) => warning.includes("Remuneración Total Mínima"))).toBe(true);
   });
 
-  it("keeps manual non-imposable earnings outside the pension base", () => {
+  it("represents all four combinations of imposability and taxation for manual earnings", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      paidBaseSalary: 3_000_000,
+      manualItems: [
+        { id: "it", name: "Imponible tributable", amount: 100_000, kind: "imposableTaxable" },
+        { id: "in", name: "Imponible no tributable", amount: 100_000, kind: "imposableNonTaxable" },
+        { id: "nt", name: "No imponible tributable", amount: 100_000, kind: "nonImposableTaxable" },
+        { id: "nn", name: "No imponible no tributable", amount: 100_000, kind: "nonImposableNonTaxable" },
+      ],
+    });
+
+    expect(result.earnings.find((line) => line.id === "it")).toMatchObject({ imposable: true, taxable: true });
+    expect(result.earnings.find((line) => line.id === "in")).toMatchObject({ imposable: true, taxable: false });
+    expect(result.earnings.find((line) => line.id === "nt")).toMatchObject({ imposable: false, taxable: true });
+    expect(result.earnings.find((line) => line.id === "nn")).toMatchObject({ imposable: false, taxable: false });
+  });
+
+  it("keeps a non-imposable and taxable manual earning out of contributions but includes it in IUSC", () => {
+    const regular = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 3_000_000 });
+    const withRmm = calculateTeacherSalary({
+      ...baseInput,
+      paidBaseSalary: 3_000_000,
+      manualItems: [{ id: "rmm", name: "Suma adicional Red Maestros de Maestros", amount: 500_000, kind: "nonImposableTaxable" }],
+    });
+    const bracket = P.taxBrackets.find((candidate) => withRmm.taxableBase <= candidate.upTo) ?? P.taxBrackets.at(-1)!;
+
+    expect(withRmm.imposableBase).toBe(regular.imposableBase);
+    expect(withRmm.taxableBase).toBe(regular.taxableBase + 500_000);
+    expect(withRmm.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(Math.max(0, withRmm.taxableBase * bracket.factor - bracket.rebate)));
+  });
+
+  it("keeps manual non-imposable and non-taxable earnings outside both bases", () => {
     const regular = calculateTeacherSalary(baseInput);
-    const withAllowance = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "family", name: "Asignación familiar", amount: 50_000, kind: "nonImposable" }] });
+    const withAllowance = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "family", name: "Asignación familiar", amount: 50_000, kind: "nonImposableNonTaxable" }] });
     expect(withAllowance.totalEarnings - regular.totalEarnings).toBe(50_000);
     expect(withAllowance.imposableBase).toBe(regular.imposableBase);
+    expect(withAllowance.taxableBase).toBe(regular.taxableBase);
   });
 
   it("accepts a verified or manual previsional parameter pack", () => {
@@ -199,7 +278,7 @@ describe("calculateTeacherSalary", () => {
   });
 
   it("counts declared permanent monthly earnings toward RTM", () => {
-    const result = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "local", name: "Incentivo local permanente", amount: 100_000, kind: "taxable", countsForMinimum: true }] });
+    const result = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "local", name: "Incentivo local permanente", amount: 100_000, kind: "imposableTaxable", countsForMinimum: true }] });
     expect(result.earnings.some((line) => line.id === "minimum-supplement")).toBe(false);
   });
 

@@ -1,5 +1,5 @@
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
-import type { CalculationInput, CalculationResult, ResponsibilityRole, ResultLine, Tranche } from "./types";
+import { isManualEarning, MANUAL_EARNING_TREATMENT, type CalculationInput, type CalculationResult, type ResponsibilityRole, type ResultLine, type Tranche } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
@@ -56,6 +56,10 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const fixed = hasPayableTranche ? money(fixedParameter * (hours / 44)) : 0;
   const trancheTotal = trancheExperience + progression + fixed;
   const brpHours = Math.min(30, hours);
+  const hasBrpTitle = input.brpEntitlement !== "none";
+  const hasBrpMention = input.brpEntitlement === "titleAndMention"
+    || input.brpEntitlement === "historicalShortTitleAndMention";
+  const hasNormalSchoolComplement = input.brpEntitlement === "normalSchool";
 
   const earnings: ResultLine[] = [
     { id: "base", label: "Sueldo base", amount: paidBase, imposable: true, taxable: true, countsForMinimum: true, legalSlug: "rbmn" },
@@ -65,8 +69,9 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
     { id: "tranche-fixed", label: "Tramo · componente fijo", amount: fixed, imposable: true, taxable: true, countsForMinimum: true, legalSlug: "asignacion-tramo" },
   ];
 
-  if (input.hasBrpTitle) earnings.push({ id: "brp-title", label: "BRP · título", amount: money(parameters.brp.title * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
-  if (input.hasBrpMention) earnings.push({ id: "brp-mention", label: "BRP · mención", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasBrpTitle) earnings.push({ id: "brp-title", label: "BRP · título", amount: money(parameters.brp.title * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasBrpMention) earnings.push({ id: "brp-mention", label: "BRP · mención", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasNormalSchoolComplement) earnings.push({ id: "brp-normal-school-complement", label: "BRP · complemento Escuela Normal", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
   if (input.zonePercentage > 0) earnings.push({ id: "zone", label: "Asignación de zona", amount: money(legalRbmn * input.zonePercentage / 100), imposable: true, taxable: false, countsForMinimum: true, legalSlug: "asignacion-zona" });
 
   const hasResponsibilityRole = input.responsibilityRole !== "none";
@@ -98,13 +103,13 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
     if (priorityAmount > 0) earnings.push({ id: "priority", label: "Alta concentración de alumnos prioritarios", amount: money(priorityAmount), imposable: true, taxable: true, countsForMinimum: false, legalSlug: "alumnos-prioritarios" });
   }
 
-  for (const item of input.manualItems.filter((item) => item.kind !== "discount" && item.amount > 0)) {
+  for (const item of input.manualItems.filter(isManualEarning).filter((item) => item.amount > 0)) {
+    const treatment = MANUAL_EARNING_TREATMENT[item.kind];
     earnings.push({
       id: item.id,
       label: item.name || "Otro haber",
       amount: money(item.amount),
-      imposable: item.kind !== "nonImposable",
-      taxable: item.kind === "taxable",
+      ...treatment,
       countsForMinimum: Boolean(item.countsForMinimum),
     });
   }
@@ -140,7 +145,8 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
-  if (paidBase !== legalRbmn) warnings.push("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
+  if (paidBase < legalRbmn) warnings.push("El sueldo base pagado es inferior a la RBMN legal. Para el mes completo sin días no remunerados que simula esta herramienta, el artículo 35 exige al menos la RBMN calculada. La planilla complementaria de RTM no reemplaza esa diferencia. Si la liquidación corresponde a un mes parcial o incluye días sin derecho a remuneración, esta calculadora no prorratea ese caso.");
+  else if (paidBase > legalRbmn) warnings.push("El sueldo base pagado es superior a la RBMN legal. Las asignaciones que la ley refiere a la RBMN siguen usando la base legal calculada.");
   if (input.tranche === null) warnings.push("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
   else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   else if (input.trancheFixedComponentReduced && ["advanced", "expert1", "expert2"].includes(input.tranche)) warnings.push("El componente fijo se redujo al monto del tramo inmediatamente anterior por incumplimiento del ciclo de profundización.");

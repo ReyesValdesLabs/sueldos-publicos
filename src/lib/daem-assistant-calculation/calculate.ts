@@ -1,6 +1,6 @@
 import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D, type DaemAssistantPeriodParameters } from "@/data/parameters/daem-assistants-2026-07";
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
-import type { ResultLine } from "@/lib/calculation/types";
+import { isManualEarning, MANUAL_EARNING_TREATMENT, type ResultLine } from "@/lib/calculation/types";
 import type { DaemAssistantCalculationInput, DaemAssistantCalculationResult } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
@@ -63,13 +63,13 @@ export function calculateDaemAssistantSalary(
     legalSlug: "asistentes-daem-bonos-2026",
   });
 
-  for (const item of input.manualItems.filter((item) => item.kind !== "discount" && item.amount > 0)) {
+  for (const item of input.manualItems.filter(isManualEarning).filter((item) => item.amount > 0)) {
+    const treatment = MANUAL_EARNING_TREATMENT[item.kind];
     earnings.push({
       id: item.id,
       label: item.name || "Otro haber",
       amount: money(item.amount),
-      imposable: item.kind !== "nonImposable",
-      taxable: item.kind === "taxable",
+      ...treatment,
       countsForMinimum: false,
     });
   }
@@ -89,7 +89,8 @@ export function calculateDaemAssistantSalary(
   });
 
   const nonRemunerativeManualEarnings = input.manualItems
-    .filter((item) => item.kind === "nonImposable" && item.amount > 0)
+    .filter(isManualEarning)
+    .filter((item) => item.kind === "nonImposableNonTaxable" && item.amount > 0)
     .reduce((total, item) => total + money(item.amount), 0);
   const grossBeforeLowIncomeBonus = sum(earnings) - nonRemunerativeManualEarnings;
   const lowIncomeLower = daemParameters.lowIncomeBonus.lowerThreshold44h * hoursRatio;

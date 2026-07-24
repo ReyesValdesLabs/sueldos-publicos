@@ -23,7 +23,7 @@ export interface AssistantPeriodParameters {
 export const JULY_2026_ASSISTANT_PARAMETERS: AssistantPeriodParameters = {
   id: "2026-07",
   label: "Julio de 2026",
-  reviewedAt: "2026-07-22",
+  reviewedAt: "2026-07-24",
   technicalMinimum44h: 668_412,
   lowIncomeBonus: {
     maximum44h: 62_903,
@@ -37,8 +37,10 @@ export const JULY_2026_ASSISTANT_PARAMETERS: AssistantPeriodParameters = {
     // 2% (dic. 2025) y 1,4% (jun. 2026).
     grade24Base: 203_297,
     calculationBaseFactor: 0.617,
-    lowerGrossThreshold: 1_400_000,
-    upperGrossThreshold: 1_600_000,
+    // Umbrales originales de $1.400.000 y $1.600.000 reajustados en 1,4%
+    // desde el 1 de junio de 2026, conforme al artículo 4 N.º 5 de la Ley 21.819.
+    lowerGrossThreshold: 1_419_600,
+    upperGrossThreshold: 1_622_400,
     fullImplementationUpToPercentage: 15,
     implementationFactorAbovePercentage: 0.5,
   },
@@ -48,7 +50,7 @@ export const JULY_2026_ASSISTANT_PARAMETERS: AssistantPeriodParameters = {
       url: "https://www.bcn.cl/leychile/navegar?idNorma=1123513",
     },
     {
-      label: "Ley N.º 21.806 · Reajuste y beneficios 2026",
+      label: "Ley N.º 21.806, artículo 1 · reajuste de 1,4% desde junio de 2026",
       url: "https://www.bcn.cl/leychile/navegar?idNorma=1221118",
     },
     {

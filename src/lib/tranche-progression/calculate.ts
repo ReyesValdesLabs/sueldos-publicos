@@ -1,5 +1,5 @@
 import type { Tranche } from "@/lib/calculation/types";
-import type { EcepCategory, GoalAssessment, PortfolioCategory, TrancheProgressionInput, TrancheProgressionResult } from "./types";
+import type { EcepCategory, EcepResult, GoalAssessment, PortfolioCategory, PortfolioResult, TrancheProgressionInput, TrancheProgressionResult } from "./types";
 
 export const TRANCHE_NAMES: Record<Tranche, string> = {
   access: "Acceso",
@@ -27,6 +27,17 @@ function rank(tranche: Tranche) {
 
 function minRecognized(...tranches: Exclude<Tranche, "access">[]) {
   return tranches.reduce((lowest, tranche) => rank(tranche) < rank(lowest) ? tranche : lowest);
+}
+
+export function isValidPortfolioResult(result: PortfolioResult): boolean {
+  return result.status === "rendered"
+    || (result.status === "retained-a-next-process" && result.category === "A")
+    || (result.status === "retained-consecutive-b-next-process" && result.category === "B");
+}
+
+export function isValidEcepResult(result: EcepResult): boolean {
+  return result.status === "rendered"
+    || (result.status === "retained-following-process" && (result.category === "A" || result.category === "B"));
 }
 
 export function experienceCeiling(years: number): TrancheProgressionResult["experienceCeiling"] {
@@ -59,11 +70,14 @@ export function permanenceCeiling(input: TrancheProgressionInput): TrancheProgre
 }
 
 export function calculateTrancheProgression(input: TrancheProgressionInput): TrancheProgressionResult {
-  const matrixCeiling = RESULT_MATRIX[input.portfolioCategory][input.ecepCategory];
+  const matrixCeiling = RESULT_MATRIX[input.portfolioResult.category][input.ecepResult.category];
   const expCeiling = experienceCeiling(Math.max(0, input.experienceYears));
   const linearCeiling = progressionCeiling(input);
   const tenureCeiling = permanenceCeiling(input);
-  const hasCurrentInstrument = input.renderedPortfolio || input.renderedEcep;
+  const instrumentResultsValid = isValidPortfolioResult(input.portfolioResult) && isValidEcepResult(input.ecepResult);
+  const hasCurrentInstrument = instrumentResultsValid && (
+    input.portfolioResult.status === "rendered" || input.ecepResult.status === "rendered"
+  );
   const calculated = minRecognized(matrixCeiling, expCeiling, linearCeiling, tenureCeiling);
   const failsCurrentProcess = hasCurrentInstrument && (
     (input.currentTranche === "initial" && rank(matrixCeiling) <= rank("initial"))
@@ -75,6 +89,7 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   let resultTranche: Tranche | null;
   if (mustExit) resultTranche = null;
   else if (accessReassigned) resultTranche = "initial";
+  else if (!instrumentResultsValid) resultTranche = input.currentTranche;
   else if (!hasCurrentInstrument) resultTranche = input.currentTranche;
   else if (input.currentTranche === "access") resultTranche = calculated;
   else resultTranche = rank(calculated) > rank(input.currentTranche) ? calculated : input.currentTranche;
@@ -83,6 +98,7 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const reasons: string[] = [];
   if (mustExit) reasons.push(`Este es el segundo proceso consecutivo cuyos resultados no permiten avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
   else if (accessReassigned) reasons.push("Venció el plazo máximo de cuatro años en Acceso sin rendir los instrumentos disponibles; corresponde la asignación a Inicial.");
+  else if (!instrumentResultsValid) reasons.push("La categoría declarada no habilita conservar este resultado según el artículo 19 Ñ.");
   else if (!hasCurrentInstrument) reasons.push("Debes rendir al menos uno de los dos instrumentos en este proceso.");
   if (rank(expCeiling) < rank(matrixCeiling)) reasons.push(`La experiencia limita el resultado a ${TRANCHE_NAMES[expCeiling]}.`);
   if (rank(linearCeiling) < rank(matrixCeiling)) reasons.push(`La progresión permitida desde ${TRANCHE_NAMES[input.currentTranche]} limita el avance a ${TRANCHE_NAMES[linearCeiling]}.`);
@@ -95,8 +111,9 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
     experienceCeiling: expCeiling,
     progressionCeiling: linearCeiling,
     permanenceCeiling: tenureCeiling,
+    instrumentResultsValid,
     hasCurrentInstrument,
-    advances: legalStatus === "active" && resultTranche !== null && rank(resultTranche) > rank(input.currentTranche),
+    advances: instrumentResultsValid && legalStatus === "active" && resultTranche !== null && rank(resultTranche) > rank(input.currentTranche),
     legalStatus,
     reasons,
   };
@@ -105,9 +122,12 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
 export function assessGoal(input: TrancheProgressionInput, target: Exclude<Tranche, "access">): GoalAssessment {
   const targetRank = rank(target);
   const experience = rank(experienceCeiling(input.experienceYears)) >= targetRank;
-  const results = rank(RESULT_MATRIX[input.portfolioCategory][input.ecepCategory]) >= targetRank;
+  const validResults = isValidPortfolioResult(input.portfolioResult) && isValidEcepResult(input.ecepResult);
+  const results = validResults && rank(RESULT_MATRIX[input.portfolioResult.category][input.ecepResult.category]) >= targetRank;
   const progressionAndPermanence = rank(progressionCeiling(input)) >= targetRank && rank(permanenceCeiling(input)) >= targetRank;
-  const currentInstrument = input.renderedPortfolio || input.renderedEcep;
+  const currentInstrument = validResults && (
+    input.portfolioResult.status === "rendered" || input.ecepResult.status === "rendered"
+  );
   const legalContinuity = calculateTrancheProgression(input).legalStatus !== "exit";
   return {
     experience,

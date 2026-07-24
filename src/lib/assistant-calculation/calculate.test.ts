@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_ASSISTANT_PARAMETERS as A } from "@/data/parameters/assistants-2026-07";
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { calculateAssistantSalary, calculateAssistantZoneBonus } from "./calculate";
 import type { AssistantCalculationInput } from "./types";
 
@@ -63,9 +64,17 @@ describe("calculateAssistantSalary", () => {
   it("does not treat a declared non-remunerative benefit as gross pay for the 2026 bonus", () => {
     const result = calculateAssistantSalary({
       ...baseInput,
-      manualItems: [{ id: "family", name: "Asignación familiar", amount: 100_000, kind: "nonImposable" }],
+      manualItems: [{ id: "family", name: "Asignación familiar", amount: 100_000, kind: "nonImposableNonTaxable" }],
     });
     expect(result.lowIncomeBonus).toBe(62_903);
+  });
+
+  it("does treat a non-imposable but taxable remuneration as gross pay for the 2026 bonus", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      manualItems: [{ id: "taxable", name: "Haber remuneracional", amount: 100_000, kind: "nonImposableTaxable" }],
+    });
+    expect(result.lowIncomeBonus).toBe(0);
   });
 
   it("calculates the separate non-imposable and non-taxable zone bonus", () => {
@@ -88,13 +97,60 @@ describe("calculateAssistantSalary", () => {
     expect(result.lowIncomeBonus).toBe(0);
   });
 
+  it("represents all four combinations of imposability and taxation for manual earnings", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      manualItems: [
+        { id: "it", name: "Imponible tributable", amount: 100_000, kind: "imposableTaxable" },
+        { id: "in", name: "Imponible no tributable", amount: 100_000, kind: "imposableNonTaxable" },
+        { id: "nt", name: "No imponible tributable", amount: 100_000, kind: "nonImposableTaxable" },
+        { id: "nn", name: "No imponible no tributable", amount: 100_000, kind: "nonImposableNonTaxable" },
+      ],
+    });
+
+    expect(result.earnings.find((line) => line.id === "it")).toMatchObject({ imposable: true, taxable: true });
+    expect(result.earnings.find((line) => line.id === "in")).toMatchObject({ imposable: true, taxable: false });
+    expect(result.earnings.find((line) => line.id === "nt")).toMatchObject({ imposable: false, taxable: true });
+    expect(result.earnings.find((line) => line.id === "nn")).toMatchObject({ imposable: false, taxable: false });
+  });
+
+  it("includes a non-imposable and taxable manual earning in the IUSC base only", () => {
+    const regular = calculateAssistantSalary({ ...baseInput, countedRemuneration: 3_000_000 });
+    const withTaxableAllowance = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      manualItems: [{ id: "manual-tax", name: "Haber no imponible tributable", amount: 500_000, kind: "nonImposableTaxable" }],
+    });
+    const bracket = P.taxBrackets.find((candidate) => withTaxableAllowance.taxableBase <= candidate.upTo) ?? P.taxBrackets.at(-1)!;
+
+    expect(withTaxableAllowance.imposableBase).toBe(regular.imposableBase);
+    expect(withTaxableAllowance.taxableBase).toBe(regular.taxableBase + 500_000);
+    expect(withTaxableAllowance.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(Math.max(0, withTaxableAllowance.taxableBase * bracket.factor - bracket.rebate)));
+  });
+
   it("applies income reduction, part-time proportionality and the first zone implementation stage", () => {
-    const full = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_400_000 });
-    const reducedPartTime = calculateAssistantZoneBonus({ weeklyHours: 22, zonePercentage: 20, zonePreviousMonthGross: 1_500_000 });
+    const full = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: A.zoneBonus.lowerGrossThreshold });
+    const reducedPartTime = calculateAssistantZoneBonus({ weeklyHours: 22, zonePercentage: 20, zonePreviousMonthGross: 1_521_000 });
     expect(full).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5));
     expect(reducedPartTime).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5 * 0.5 * 0.5));
-    expect(calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 })).toBe(0);
-    expect(calculateAssistantSalary({ ...baseInput, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 }).warnings).not.toContain("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
+  });
+
+  it("uses the June 2026 adjusted zone thresholds at their exact boundaries", () => {
+    expect(A.zoneBonus.lowerGrossThreshold).toBe(1_419_600);
+    expect(A.zoneBonus.upperGrossThreshold).toBe(1_622_400);
+
+    const atLower = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_419_600 });
+    const justAboveLower = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_419_601 });
+    const justBelowUpper = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_622_399 });
+    const atUpper = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_622_400 });
+
+    expect(atLower).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 6 * 0.5));
+    expect(justAboveLower).toBeLessThan(atLower);
+    expect(justBelowUpper).toBeGreaterThan(0);
+    expect(atUpper).toBe(0);
+    expect(calculateAssistantSalary({ ...baseInput, zonePercentage: 20, zonePreviousMonthGross: 1_622_400 }).warnings).not.toContain("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   });
 
   it("applies the personal AFC contribution only to indefinite contracts", () => {

@@ -15,6 +15,10 @@ const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Asignaciones", "Previsión y extras", "Resultado"];
+export const ASSISTANT_EXPERIENCE_FIELD = {
+  label: "Bienios reconocidos para esta asignación",
+  help: "Incluye los que el SLEP reconoce por servicios previos al traspaso como asistente con el sostenedor municipal; 2% del mínimo técnico por bienio, máximo 15.",
+} as const;
 
 function parseMoney(value: string) {
   const parsed = Number(value.replace(/\D/g, ""));
@@ -106,7 +110,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
       zonePreviousMonthGross: zoneGrossEdited ? current.zonePreviousMonthGross : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
     }));
   };
-  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "taxable" }]);
+  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
   const patchManualItem = (id: string, patch: Partial<ManualItem>) => update("manualItems", input.manualItems.map((item) => item.id === id ? { ...item, ...patch } : item));
   const removeManualItem = (id: string) => update("manualItems", input.manualItems.filter((item) => item.id !== id));
   const goTo = (nextStep: number) => {
@@ -157,7 +161,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
           <CardHeader><CardTitle>Experiencia y asignaciones</CardTitle><CardDescription>La experiencia se calcula automáticamente. Ingresa otros beneficios solo si están reconocidos en tu liquidación o establecimiento.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
             <div className="form-grid">
-              <NumberField id="assistant-biennia" label="Bienios reconocidos en el mismo SLEP" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="2% del mínimo técnico por bienio, máximo 15." error={bienniaError} />
+              <NumberField id="assistant-biennia" label={ASSISTANT_EXPERIENCE_FIELD.label} value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help={ASSISTANT_EXPERIENCE_FIELD.help} error={bienniaError} />
               <NumberField id="assistant-priority" label="Asignación por alta concentración" value={input.priorityAllowance} onChange={(value) => update("priorityAllowance", value)} suffix="$" help="Copia el monto mensual reconocido; depende del establecimiento y la jornada." />
             </div>
             <details className="advanced-panel" open>
@@ -166,7 +170,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
                 <div className="form-grid">
                   <NumberField id="assistant-difficult" label="Porcentaje de desempeño difícil 2026" value={input.difficultConditionsPercentage} onChange={(value) => update("difficultConditionsPercentage", value)} min={0} max={100} suffix="%" help="Solo si el establecimiento fue calificado y conoces el porcentaje oficial." error={difficultError} />
                   <NumberField id="assistant-zone-percentage" label="Porcentaje de zona Ley N.º 21.819" value={input.zonePercentage} onChange={(value) => update("zonePercentage", value)} min={0} max={600} suffix="%" help="Usa el porcentaje oficial del artículo 7 del DL N.º 249 para la localidad." error={zoneError} />
-                  {input.zonePercentage > 0 && <NumberField id="assistant-zone-previous-gross" label="Bruto del mes anterior para zona" value={input.zonePreviousMonthGross} onChange={(value) => { setZoneGrossEdited(true); update("zonePreviousMonthGross", value); }} suffix="$" help="La bonificación completa llega hasta $1.400.000 y se reduce hasta desaparecer en $1.600.000." error={zoneGrossError} />}
+                  {input.zonePercentage > 0 && <NumberField id="assistant-zone-previous-gross" label="Bruto del mes anterior para zona" value={input.zonePreviousMonthGross} onChange={(value) => { setZoneGrossEdited(true); update("zonePreviousMonthGross", value); }} suffix="$" help={`La bonificación completa llega hasta $${integerMoney.format(A.zoneBonus.lowerGrossThreshold)} y se reduce hasta desaparecer en $${integerMoney.format(A.zoneBonus.upperGrossThreshold)}.`} error={zoneGrossError} />}
                   <NumberField id="assistant-territorial" label="Beneficio territorial" value={input.territorialAllowance} onChange={(value) => update("territorialAllowance", value)} suffix="$" help="Ingresa el monto que figura en tu liquidación." />
                   <NumberField id="assistant-excellence" label="Bonificación de excelencia académica" value={input.academicExcellenceBonus} onChange={(value) => update("academicExcellenceBonus", value)} suffix="$" />
                   <NumberField id="assistant-law-19464" label="Aumento Ley N.º 19.464" value={input.law19464Increase} onChange={(value) => update("law19464Increase", value)} suffix="$" />
@@ -195,13 +199,13 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
             </div>
 
             <div className="border-t border-border pt-6">
-              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Agrega asignación familiar, incentivos locales, cuotas u otros ítems de tu liquidación.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
+              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Agrega asignación familiar, incentivos locales, cuotas u otros ítems de tu liquidación. Imponibilidad y tributación se clasifican por separado.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
               <div className="mt-4 space-y-3">
                 {input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}
                 {input.manualItems.map((item) => <div key={item.id} className="manual-row">
                   <Input aria-label="Nombre del concepto" placeholder="Nombre del concepto" value={item.name} onChange={(event) => patchManualItem(item.id, { name: event.target.value })} />
                   <Input aria-label={`Monto de ${item.name || "concepto"}`} type="text" inputMode="numeric" placeholder="Monto" value={item.amount ? integerMoney.format(item.amount) : ""} onChange={(event) => patchManualItem(item.id, { amount: parseMoney(event.target.value) })} />
-                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}><option value="taxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible, no tributable</option><option value="nonImposable">No imponible</option><option value="discount">Descuento</option></select>
+                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}><option value="imposableTaxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible y no tributable</option><option value="nonImposableTaxable">No imponible y tributable</option><option value="nonImposableNonTaxable">No imponible y no tributable</option><option value="discount">Descuento</option></select>
                   {item.kind !== "discount" && <label className="manual-rtm-toggle"><input type="checkbox" checked={Boolean(item.countsForMinimum)} onChange={(event) => patchManualItem(item.id, { countsForMinimum: event.target.checked })} /><span>Computa para mínimo</span></label>}
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button>
                 </div>)}
@@ -243,5 +247,5 @@ function SummaryRow({ label, value, positive = false }: { label: string; value: 
 }
 
 function ResultTable({ title, lines, total, positive = false }: { title: string; lines: ReturnType<typeof calculateAssistantSalary>["earnings"]; total: number; positive?: boolean }) {
-  return <section aria-labelledby={`assistant-result-${title}`}><div className="mb-3 flex items-end justify-between"><h3 id={`assistant-result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div><div className="overflow-hidden rounded-2xl border border-border">{lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"}{line.taxable ? " · tributable" : ""}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`}><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}</div></section>;
+  return <section aria-labelledby={`assistant-result-${title}`}><div className="mb-3 flex items-end justify-between"><h3 id={`assistant-result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div><div className="overflow-hidden rounded-2xl border border-border">{lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"} · {line.taxable ? "tributable" : "no tributable"}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`}><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}</div></section>;
 }
