@@ -145,7 +145,8 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
-  if (paidBase !== legalRbmn) warnings.push("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
+  if (paidBase < legalRbmn) warnings.push("El sueldo base pagado es inferior a la RBMN legal. Para el mes completo sin días no remunerados que simula esta herramienta, el artículo 35 exige al menos la RBMN calculada. La planilla complementaria de RTM no reemplaza esa diferencia. Si la liquidación corresponde a un mes parcial o incluye días sin derecho a remuneración, esta calculadora no prorratea ese caso.");
+  else if (paidBase > legalRbmn) warnings.push("El sueldo base pagado es superior a la RBMN legal. Las asignaciones que la ley refiere a la RBMN siguen usando la base legal calculada.");
   if (input.tranche === null) warnings.push("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
   else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   else if (input.trancheFixedComponentReduced && ["advanced", "expert1", "expert2"].includes(input.tranche)) warnings.push("El componente fijo se redujo al monto del tramo inmediatamente anterior por incumplimiento del ciclo de profundización.");

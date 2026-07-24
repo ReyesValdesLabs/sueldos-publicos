@@ -65,7 +65,23 @@ describe("calculateTeacherSalary", () => {
     expect(result.legalRbmn).toBe(P.hourlyRate.basic * 44);
     expect(result.earnings.find((line) => line.id === "base")?.amount).toBe(1_200_000);
     expect(result.earnings.find((line) => line.id === "experience")?.amount).toBe(Math.round(result.legalRbmn * 0.0338));
-    expect(result.warnings).toContain("El sueldo base fue editado. Las asignaciones legales siguen usando la RBMN oficial.");
+    expect(result.warnings).toContain("El sueldo base pagado es superior a la RBMN legal. Las asignaciones que la ley refiere a la RBMN siguen usando la base legal calculada.");
+  });
+
+  it("flags a paid base below RBMN without treating the RTM supplement as a replacement", () => {
+    const result = calculateTeacherSalary({ ...baseInput, paidBaseSalary: P.hourlyRate.basic * 44 - 100_000 });
+    const warning = result.warnings.find((candidate) => candidate.includes("artículo 35"));
+
+    expect(result.earnings.find((line) => line.id === "base")?.amount).toBe(result.legalRbmn - 100_000);
+    expect(result.earnings.find((line) => line.id === "minimum-supplement")?.amount).toBeGreaterThan(0);
+    expect(warning).toContain("mes completo sin días no remunerados");
+    expect(warning).toContain("La planilla complementaria de RTM no reemplaza esa diferencia");
+    expect(warning).toContain("mes parcial");
+  });
+
+  it("does not flag RBMN when the paid base equals the legal amount", () => {
+    const result = calculateTeacherSalary({ ...baseInput, paidBaseSalary: P.hourlyRate.basic * 44 });
+    expect(result.warnings.some((warning) => warning.includes("sueldo base pagado"))).toBe(false);
   });
 
   it("weights the legal RBMN when the contract combines basic and secondary hours", () => {

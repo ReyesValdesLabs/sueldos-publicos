@@ -181,6 +181,7 @@ export default function TeacherCalculator() {
   const legalBase = Math.round(
     (activeParameters.hourlyRate.basic * appliedBasicHours + activeParameters.hourlyRate.secondary * appliedSecondaryHours) * hourScale,
   );
+  const paidBaseBelowLegal = editBase && Math.round(Math.max(0, input.paidBaseSalary ?? legalBase)) < legalBase;
   const responsibilityEstimate = Math.round(legalBase * Math.max(0, input.responsibilityPercentage) / 100);
   const hoursError = !Number.isInteger(input.basicHours) || !Number.isInteger(input.secondaryHours) || input.basicHours < 0 || input.secondaryHours < 0
     ? "Ingresa horas completas iguales o mayores que cero."
@@ -247,9 +248,10 @@ export default function TeacherCalculator() {
             </div>
             <div className="legal-value-card">
               <div className="legal-value-summary" aria-live="polite" aria-atomic="true"><span>RBMN legal calculada</span><strong>{currency.format(legalBase)}</strong><small>{appliedBasicHours > 0 && `${appliedBasicHours} h básica × ${currency.format(activeParameters.hourlyRate.basic)}`}{appliedBasicHours > 0 && appliedSecondaryHours > 0 && " + "}{appliedSecondaryHours > 0 && `${appliedSecondaryHours} h media × ${currency.format(activeParameters.hourlyRate.secondary)}`} · total aplicado: {appliedHours} h</small></div>
-              <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real sin alterar la base legal de las asignaciones." />
+              <CheckField id="edit-base" checked={editBase} onChange={(checked) => { setEditBase(checked); update("paidBaseSalary", checked ? legalBase : undefined); }} label="Mi sueldo base pagado es distinto" help="Podrás ingresar el monto real. Un valor superior no altera la base legal de las asignaciones; uno inferior se revisará contra la RBMN." />
             </div>
             {editBase && <NumberField id="paid-base" label="Sueldo base pagado" value={input.paidBaseSalary ?? legalBase} onChange={(value) => update("paidBaseSalary", value)} suffix="$" />}
+            {paidBaseBelowLegal && <div className="warning-inline" role="alert"><AlertTriangle size={18} /><p><strong>El monto ingresado está bajo la RBMN legal.</strong> Para el mes completo sin días no remunerados que calcula esta herramienta, el artículo 35 del Estatuto Docente exige al menos la RBMN indicada arriba. La planilla complementaria de RTM no reemplaza esta diferencia. Si tu liquidación corresponde a un mes parcial o incluye días sin derecho a remuneración, esta calculadora no prorratea ese caso. <a className="font-bold text-primary hover:underline" href={sitePath("legal/rbmn/")}>Ver fundamento legal</a>.</p></div>}
             <section className="space-y-4 border-t border-border pt-6" aria-labelledby="responsibility-title">
               <div><h3 id="responsibility-title" className="font-bold">Cargo y asignación de responsabilidad</h3><p className="mt-1 text-sm text-muted-foreground">Selecciona una función superior solo cuando conste en tu nombramiento o contrato. La jefatura de curso no corresponde a esta asignación.</p></div>
               <SelectField id="responsibility-role" label="Función o cargo reconocido" value={input.responsibilityRole} onChange={(value) => updateResponsibilityRole(value as CalculationInput["responsibilityRole"])}>
