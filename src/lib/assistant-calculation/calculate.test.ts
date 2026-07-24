@@ -89,12 +89,26 @@ describe("calculateAssistantSalary", () => {
   });
 
   it("applies income reduction, part-time proportionality and the first zone implementation stage", () => {
-    const full = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_400_000 });
-    const reducedPartTime = calculateAssistantZoneBonus({ weeklyHours: 22, zonePercentage: 20, zonePreviousMonthGross: 1_500_000 });
+    const full = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: A.zoneBonus.lowerGrossThreshold });
+    const reducedPartTime = calculateAssistantZoneBonus({ weeklyHours: 22, zonePercentage: 20, zonePreviousMonthGross: 1_521_000 });
     expect(full).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5));
     expect(reducedPartTime).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.2 * 0.5 * 0.5 * 0.5));
-    expect(calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 })).toBe(0);
-    expect(calculateAssistantSalary({ ...baseInput, zonePercentage: 20, zonePreviousMonthGross: 1_600_000 }).warnings).not.toContain("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
+  });
+
+  it("uses the June 2026 adjusted zone thresholds at their exact boundaries", () => {
+    expect(A.zoneBonus.lowerGrossThreshold).toBe(1_419_600);
+    expect(A.zoneBonus.upperGrossThreshold).toBe(1_622_400);
+
+    const atLower = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_419_600 });
+    const justAboveLower = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_419_601 });
+    const justBelowUpper = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_622_399 });
+    const atUpper = calculateAssistantZoneBonus({ weeklyHours: 44, zonePercentage: 600, zonePreviousMonthGross: 1_622_400 });
+
+    expect(atLower).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 6 * 0.5));
+    expect(justAboveLower).toBeLessThan(atLower);
+    expect(justBelowUpper).toBeGreaterThan(0);
+    expect(atUpper).toBe(0);
+    expect(calculateAssistantSalary({ ...baseInput, zonePercentage: 20, zonePreviousMonthGross: 1_622_400 }).warnings).not.toContain("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   });
 
   it("applies the personal AFC contribution only to indefinite contracts", () => {
