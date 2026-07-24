@@ -90,7 +90,7 @@ export function calculateDaemAssistantSalary(
 
   const nonRemunerativeManualEarnings = input.manualItems
     .filter(isManualEarning)
-    .filter((item) => !MANUAL_EARNING_TREATMENT[item.kind].imposable && item.amount > 0)
+    .filter((item) => item.kind === "nonImposableNonTaxable" && item.amount > 0)
     .reduce((total, item) => total + money(item.amount), 0);
   const grossBeforeLowIncomeBonus = sum(earnings) - nonRemunerativeManualEarnings;
   const lowIncomeLower = daemParameters.lowIncomeBonus.lowerThreshold44h * hoursRatio;

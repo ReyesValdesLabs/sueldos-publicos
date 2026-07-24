@@ -140,7 +140,7 @@ export function calculateAssistantSalary(
 
   const nonRemunerativeManualEarnings = input.manualItems
     .filter(isManualEarning)
-    .filter((item) => !MANUAL_EARNING_TREATMENT[item.kind].imposable && item.amount > 0)
+    .filter((item) => item.kind === "nonImposableNonTaxable" && item.amount > 0)
     .reduce((total, item) => total + money(item.amount), 0);
   const grossBeforeLowIncomeBonus = sum(earnings.filter((line) => !LOW_INCOME_GROSS_EXCLUDED_IDS.has(line.id)))
     - nonRemunerativeManualEarnings;

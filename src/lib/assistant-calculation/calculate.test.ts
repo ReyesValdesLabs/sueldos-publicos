@@ -69,6 +69,14 @@ describe("calculateAssistantSalary", () => {
     expect(result.lowIncomeBonus).toBe(62_903);
   });
 
+  it("does treat a non-imposable but taxable remuneration as gross pay for the 2026 bonus", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      manualItems: [{ id: "taxable", name: "Haber remuneracional", amount: 100_000, kind: "nonImposableTaxable" }],
+    });
+    expect(result.lowIncomeBonus).toBe(0);
+  });
+
   it("calculates the separate non-imposable and non-taxable zone bonus", () => {
     expect(A.zoneBonus.grade24Base).toBe(203_297);
     const result = calculateAssistantSalary({ ...baseInput, zonePercentage: 10 });

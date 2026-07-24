@@ -61,6 +61,14 @@ describe("calculateDaemAssistantSalary", () => {
     expect(result.earnings.find((line) => line.id === "local-seniority")?.amount).toBe(40_000);
   });
 
+  it("treats a non-imposable but taxable remuneration as gross pay for the 2026 bonus", () => {
+    const result = calculateDaemAssistantSalary({
+      ...baseInput,
+      manualItems: [{ id: "taxable", name: "Haber remuneracional", amount: 250_000, kind: "nonImposableTaxable" }],
+    });
+    expect(result.lowIncomeBonus).toBe(0);
+  });
+
   it("represents all four combinations of imposability and taxation for manual earnings", () => {
     const result = calculateDaemAssistantSalary({
       ...baseInput,
