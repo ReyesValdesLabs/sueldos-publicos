@@ -11,7 +11,7 @@
     "check": "astro check",
     "build": "astro build",
     "test": "vitest run",
-    "test:automation": "node --test scripts/verify-previred-parser.mjs scripts/verify-priority-schools-parser.mjs scripts/verify-school-zones-parser.mjs",
+    "test:automation": "node --test scripts/verify-previred-parser.mjs scripts/verify-previred-update.mjs scripts/verify-priority-schools-parser.mjs scripts/verify-school-zones-parser.mjs",
     "update:previred": "node scripts/update-previred.mjs",
     "update:priority-schools": "node scripts/update-priority-schools.mjs",
     "update:school-zones": "node scripts/update-school-zones.mjs",

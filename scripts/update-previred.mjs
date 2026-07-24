@@ -5,19 +5,26 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { parsePreviredText, sourceCandidates } from "./lib/parse-previred.mjs";
+import {
+  parseGeneratedParameters,
+  validateOfficialPreviredUrl,
+  validatePreviredUpdate,
+} from "./lib/validate-previred-update.mjs";
 
 const outputPath = fileURLToPath(new URL("../src/data/parameters/previred.generated.ts", import.meta.url));
 
 async function downloadSource() {
   const explicit = process.env.PREVIRED_SOURCE_URL?.trim();
+  if (explicit) validateOfficialPreviredUrl(explicit);
   const candidates = explicit ? [explicit] : sourceCandidates();
   for (const url of candidates) {
     try {
-      const response = await fetch(url, { redirect: "follow" });
+      const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(30_000) });
       if (!response.ok) continue;
+      const finalUrl = validateOfficialPreviredUrl(response.url);
       const bytes = Buffer.from(await response.arrayBuffer());
-      if (bytes.length < 10_000 || bytes.subarray(0, 4).toString() !== "%PDF") continue;
-      return { bytes, response, url };
+      if (bytes.length < 10_000 || bytes.length > 25_000_000 || bytes.subarray(0, 4).toString() !== "%PDF") continue;
+      return { bytes, response, url: finalUrl };
     } catch {
       // La búsqueda continúa con el siguiente nombre posible publicado por Previred.
     }
@@ -51,8 +58,11 @@ try {
     sourceHash,
     values: parsed.values,
   };
+  const current = await readFile(outputPath, "utf8").catch(() => {
+    throw new Error("No existe una copia previsional vigente contra la cual validar la actualización.");
+  });
+  validatePreviredUpdate(parseGeneratedParameters(current), generated);
   const next = renderGenerated(generated);
-  const current = await readFile(outputPath, "utf8").catch(() => "");
   if (current === next) {
     console.log(`Sin cambios: ${parsed.remunerationPeriod} ya está actualizado.`);
   } else {

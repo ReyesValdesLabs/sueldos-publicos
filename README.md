@@ -108,9 +108,11 @@ visibilidad del paquete a pública desde su configuración en GitHub.
 
 ## Actualización mensual
 
-Los indicadores previsionales se actualizan con `pnpm update:previred`. El proceso busca el PDF mensual de Previred, extrae UF, UTM, topes y comisiones AFP, valida rangos y genera `src/data/parameters/previred.generated.ts`.
+Los indicadores previsionales se actualizan con `pnpm update:previred`. El proceso busca el PDF mensual de Previred, extrae UF, UTM, topes y comisiones AFP, valida el origen oficial, la continuidad de los períodos, rangos absolutos y variaciones respecto de la copia vigente, y genera `src/data/parameters/previred.generated.ts`.
 
-El workflow `.github/workflows/update-previred.yml` ejecuta esa revisión diariamente. Solo si encuentra un período nuevo o una versión corregida ejecuta las pruebas, compila el sitio y publica el archivo actualizado. Para funcionar automáticamente, este proyecto debe estar alojado en un repositorio GitHub con permisos de escritura para Actions.
+El workflow `.github/workflows/update-previred.yml` ejecuta esa revisión diariamente. Solo si encuentra un período nuevo o una versión corregida ejecuta las pruebas, compila el sitio, actualiza la rama administrada `automation/update-previred` y crea o actualiza una pull request hacia `main`. Nunca hace push directo a `main` ni activa auto-merge: la actualización llega a producción únicamente después de revisar y fusionar la PR.
+
+Para que `GITHUB_TOKEN` pueda crear la PR, el repositorio debe tener habilitado `Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests`. El workflow solicita solamente `contents: write` y `pull-requests: write`.
 
 Si la fuente no está disponible o el período queda atrasado, el sitio conserva la última copia verificada, muestra una advertencia y permite ingresar los parámetros previsionales manualmente para la simulación actual.
 
