@@ -10,8 +10,21 @@ export function getStaticPaths() {
 
 interface Props { entry: LegalEntry }
 const { entry } = Astro.props;
+const legalStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: entry.title,
+  description: entry.summary,
+  inLanguage: "es-CL",
+  publisher: {
+    "@type": "Organization",
+    name: "Sueldos Públicos",
+    url: "https://sueldospublicos.cl/",
+    logo: "https://sueldospublicos.cl/sueldospublicos-mark.png",
+  },
+};
 ---
-<BaseLayout title={`${entry.title} | Respaldo legal | Sueldos Públicos`} description={entry.summary}>
+<BaseLayout title={`${entry.title} | Respaldo legal | Sueldos Públicos`} description={entry.summary} type="article" structuredData={legalStructuredData}>
   <header class="page-header page-shell"><a href={sitePath("legal/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p></header>
   <div class="page-shell legal-detail">
     <article class="legal-content">
