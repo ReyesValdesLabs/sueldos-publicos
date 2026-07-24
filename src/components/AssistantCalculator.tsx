@@ -15,6 +15,10 @@ const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Asignaciones", "Previsión y extras", "Resultado"];
+export const ASSISTANT_EXPERIENCE_FIELD = {
+  label: "Bienios reconocidos para esta asignación",
+  help: "Incluye los que el SLEP reconoce por servicios previos al traspaso como asistente con el sostenedor municipal; 2% del mínimo técnico por bienio, máximo 15.",
+} as const;
 
 function parseMoney(value: string) {
   const parsed = Number(value.replace(/\D/g, ""));
@@ -157,7 +161,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
           <CardHeader><CardTitle>Experiencia y asignaciones</CardTitle><CardDescription>La experiencia se calcula automáticamente. Ingresa otros beneficios solo si están reconocidos en tu liquidación o establecimiento.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
             <div className="form-grid">
-              <NumberField id="assistant-biennia" label="Bienios reconocidos en el mismo SLEP" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="2% del mínimo técnico por bienio, máximo 15." error={bienniaError} />
+              <NumberField id="assistant-biennia" label={ASSISTANT_EXPERIENCE_FIELD.label} value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help={ASSISTANT_EXPERIENCE_FIELD.help} error={bienniaError} />
               <NumberField id="assistant-priority" label="Asignación por alta concentración" value={input.priorityAllowance} onChange={(value) => update("priorityAllowance", value)} suffix="$" help="Copia el monto mensual reconocido; depende del establecimiento y la jornada." />
             </div>
             <details className="advanced-panel" open>
