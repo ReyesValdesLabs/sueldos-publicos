@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { RESULT_MATRIX, assessGoal, calculateTrancheProgression, experienceCeiling, minimumExperienceFor } from "./calculate";
+import { RESULT_MATRIX, assessGoal, calculateTrancheProgression, experienceCeiling, isValidEcepResult, isValidPortfolioResult, minimumExperienceFor } from "./calculate";
 import type { TrancheProgressionInput } from "./types";
 
 const base: TrancheProgressionInput = {
   currentTranche: "initial",
   experienceYears: 4,
   yearsInCurrentTranche: 0,
-  portfolioCategory: "A",
-  ecepCategory: "B",
-  renderedPortfolio: true,
-  renderedEcep: true,
+  portfolioResult: { category: "A", status: "rendered" },
+  ecepResult: { category: "B", status: "rendered" },
   enteredEarlyWithA: false,
   enteredAdvancedWithDoubleA: false,
   previousProcessWithoutAdvancement: false,
@@ -57,23 +55,48 @@ describe("cálculo de progresión", () => {
   });
 
   it("no retrocede y exige rendir al menos un instrumento", () => {
-    expect(calculateTrancheProgression({ ...base, currentTranche: "advanced", portfolioCategory: "E", ecepCategory: "D" }).resultTranche).toBe("advanced");
-    const noInstrument = calculateTrancheProgression({ ...base, renderedPortfolio: false, renderedEcep: false });
+    expect(calculateTrancheProgression({
+      ...base,
+      currentTranche: "advanced",
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+    }).resultTranche).toBe("advanced");
+    expect(calculateTrancheProgression({
+      ...base,
+      currentTranche: "advanced",
+      portfolioResult: { category: "B", status: "retained-consecutive-b-next-process" },
+      ecepResult: { category: "D", status: "rendered" },
+    })).toMatchObject({ resultTranche: "advanced", hasCurrentInstrument: true });
+    const noInstrument = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "A", status: "retained-a-next-process" },
+      ecepResult: { category: "B", status: "retained-following-process" },
+    });
     expect(noInstrument.resultTranche).toBe("initial");
     expect(noInstrument.hasCurrentInstrument).toBe(false);
   });
 
   it("assigns Access to Initial when the four-year deadline expires without instruments", () => {
-    const result = calculateTrancheProgression({ ...base, currentTranche: "access", renderedPortfolio: false, renderedEcep: false, accessDeadlineExpired: true });
+    const result = calculateTrancheProgression({
+      ...base,
+      currentTranche: "access",
+      portfolioResult: { category: "A", status: "retained-a-next-process" },
+      ecepResult: { category: "B", status: "retained-following-process" },
+      accessDeadlineExpired: true,
+    });
     expect(result).toMatchObject({ resultTranche: "initial", legalStatus: "access-reassigned", advances: false });
   });
 
   it("reports the statutory exit on a second consecutive failed process in Initial or Early", () => {
-    const initialExit = calculateTrancheProgression({ ...base, portfolioCategory: "E", ecepCategory: "D", previousProcessWithoutAdvancement: true });
-    const earlyExit = calculateTrancheProgression({ ...base, currentTranche: "early", portfolioCategory: "D", ecepCategory: "D", previousProcessWithoutAdvancement: true });
+    const insufficientResults = {
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+    } as const;
+    const initialExit = calculateTrancheProgression({ ...base, ...insufficientResults, previousProcessWithoutAdvancement: true });
+    const earlyExit = calculateTrancheProgression({ ...base, ...insufficientResults, currentTranche: "early", previousProcessWithoutAdvancement: true });
     expect(initialExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
     expect(earlyExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
-    expect(assessGoal({ ...base, portfolioCategory: "E", ecepCategory: "D", previousProcessWithoutAdvancement: true }, "advanced").legalContinuity).toBe(false);
+    expect(assessGoal({ ...base, ...insufficientResults, previousProcessWithoutAdvancement: true }, "advanced").legalContinuity).toBe(false);
   });
 
   it("does not apply the exit when the current process advances", () => {
@@ -82,6 +105,50 @@ describe("cálculo de progresión", () => {
 
   it("does not treat an experience ceiling as an insufficient professional result", () => {
     expect(calculateTrancheProgression({ ...base, experienceYears: 3, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "initial", legalStatus: "active" });
+  });
+
+  it("solo conserva Portafolio A o dos B consecutivas para el proceso siguiente", () => {
+    const retainedA = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "A", status: "retained-a-next-process" },
+      ecepResult: { category: "B", status: "rendered" },
+    });
+    const retainedConsecutiveB = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "B", status: "retained-consecutive-b-next-process" },
+      ecepResult: { category: "A", status: "rendered" },
+    });
+
+    expect(retainedA).toMatchObject({ instrumentResultsValid: true, hasCurrentInstrument: true, resultTranche: "advanced" });
+    expect(retainedConsecutiveB).toMatchObject({ instrumentResultsValid: true, hasCurrentInstrument: true, resultTranche: "advanced" });
+  });
+
+  it("solo conserva ECEP A o B en procesos posteriores", () => {
+    const retainedEcep = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "C", status: "rendered" },
+      ecepResult: { category: "B", status: "retained-following-process" },
+    });
+
+    expect(retainedEcep).toMatchObject({ instrumentResultsValid: true, hasCurrentInstrument: true, resultTranche: "advanced" });
+  });
+
+  it("rechaza resultados conservados incompatibles aunque se fuerce un input externo inválido", () => {
+    const invalidPortfolio = { category: "C", status: "retained-a-next-process" } as unknown as TrancheProgressionInput["portfolioResult"];
+    const invalidEcep = { category: "C", status: "retained-following-process" } as unknown as TrancheProgressionInput["ecepResult"];
+
+    expect(isValidPortfolioResult(invalidPortfolio)).toBe(false);
+    expect(isValidEcepResult(invalidEcep)).toBe(false);
+    expect(calculateTrancheProgression({ ...base, portfolioResult: invalidPortfolio })).toMatchObject({
+      instrumentResultsValid: false,
+      resultTranche: "initial",
+      advances: false,
+    });
+    expect(assessGoal({ ...base, ecepResult: invalidEcep }, "advanced")).toMatchObject({
+      results: false,
+      currentInstrument: false,
+      reachableNextProcess: false,
+    });
   });
 
   it("evalúa un tramo objetivo con los cuatro requisitos", () => {

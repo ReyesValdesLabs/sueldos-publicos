@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, Check, CircleAlert, CircleCheck, ExternalLink, Flag, Grid3X3, Info, Scale, SlidersHorizontal, X } from "lucide-react";
 import type { Tranche } from "@/lib/calculation/types";
 import { assessGoal, calculateTrancheProgression, minimumCombinationFor, minimumExperienceFor, nextGoal, RESULT_MATRIX, TRANCHE_NAMES, TRANCHE_ORDER } from "@/lib/tranche-progression/calculate";
-import type { EcepCategory, PortfolioCategory, TrancheProgressionInput } from "@/lib/tranche-progression/types";
+import type { EcepCategory, EcepResult, PortfolioCategory, PortfolioResult, TrancheProgressionInput } from "@/lib/tranche-progression/types";
 import { sitePath } from "@/lib/site-path";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const portfolioCategories: PortfolioCategory[] = ["A", "B", "C", "D", "E"];
 const ecepCategories: EcepCategory[] = ["A", "B", "C", "D"];
 const goalOptions: Exclude<Tranche, "access">[] = ["initial", "early", "advanced", "expert1", "expert2"];
+const renderedPortfolioOption = { value: "rendered", label: "Lo rendí en este proceso" } as const;
+const renderedEcepOption = { value: "rendered", label: "La rendí en este proceso" } as const;
 
 const initialInput: TrancheProgressionInput = {
   currentTranche: "initial",
   experienceYears: 4,
   yearsInCurrentTranche: 0,
-  portfolioCategory: "A",
-  ecepCategory: "B",
-  renderedPortfolio: true,
-  renderedEcep: true,
+  portfolioResult: { category: "A", status: "rendered" },
+  ecepResult: { category: "B", status: "rendered" },
   enteredEarlyWithA: false,
   enteredAdvancedWithDoubleA: false,
   previousProcessWithoutAdvancement: false,
@@ -53,6 +53,28 @@ function rank(tranche: Tranche) {
   return TRANCHE_ORDER.indexOf(tranche);
 }
 
+export function availablePortfolioStatuses(category: PortfolioCategory) {
+  if (category === "A") return [renderedPortfolioOption, { value: "retained-a-next-process", label: "Conservo A para el proceso siguiente" } as const];
+  if (category === "B") return [renderedPortfolioOption, { value: "retained-consecutive-b-next-process", label: "Conservo B tras dos B consecutivas" } as const];
+  return [renderedPortfolioOption];
+}
+
+export function availableEcepStatuses(category: EcepCategory) {
+  if (category === "A" || category === "B") return [renderedEcepOption, { value: "retained-following-process", label: "Conservo este resultado A/B vigente" } as const];
+  return [renderedEcepOption];
+}
+
+export function buildPortfolioResult(category: PortfolioCategory, status: PortfolioResult["status"]): PortfolioResult {
+  if (status === "retained-a-next-process" && category === "A") return { category, status };
+  if (status === "retained-consecutive-b-next-process" && category === "B") return { category, status };
+  return { category, status: "rendered" };
+}
+
+export function buildEcepResult(category: EcepCategory, status: EcepResult["status"]): EcepResult {
+  if (status === "retained-following-process" && (category === "A" || category === "B")) return { category, status };
+  return { category, status: "rendered" };
+}
+
 function Requirement({ met, title, children }: { met: boolean; title: string; children: ReactNode }) {
   return <li className={met ? "is-met" : "is-missing"}>
     <span aria-hidden="true">{met ? <CircleCheck size={22} /> : <CircleAlert size={22} />}</span>
@@ -67,6 +89,8 @@ export default function TrancheCalculator() {
   const goal = useMemo(() => assessGoal(input, target), [input, target]);
   const availableGoals = goalOptions.filter((tranche) => rank(tranche) > rank(input.currentTranche));
   const displayedGoals = availableGoals.length > 0 ? availableGoals : ["expert2" as const];
+  const portfolioRetained = input.portfolioResult.status !== "rendered";
+  const ecepRetained = input.ecepResult.status !== "rendered";
   const patch = <K extends keyof TrancheProgressionInput>(key: K, value: TrancheProgressionInput[K]) => setInput((current) => ({ ...current, [key]: value }));
 
   const changeCurrentTranche = (value: Tranche) => {
@@ -82,11 +106,13 @@ export default function TrancheCalculator() {
     if (rank(target) <= rank(value)) setTarget(nextGoal(value));
   };
 
-  const status = result.legalStatus === "exit" ? "SALIDA DEL SISTEMA" : result.legalStatus === "access-reassigned" ? "REASIGNACIÓN LEGAL" : !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
+  const status = result.legalStatus === "exit" ? "SALIDA DEL SISTEMA" : result.legalStatus === "access-reassigned" ? "REASIGNACIÓN LEGAL" : !result.instrumentResultsValid ? "RESULTADO NO VÁLIDO" : !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
   const resultCopy = result.legalStatus === "exit"
     ? "Los antecedentes declarados configuran la causal del artículo 19 S. El sostenedor y la resolución oficial determinan su aplicación."
     : result.legalStatus === "access-reassigned"
       ? "La proyección pasa a Inicial por el vencimiento del máximo de cuatro años en Acceso sin rendir instrumentos disponibles."
+      : !result.instrumentResultsValid
+        ? "No es posible proyectar un avance con una categoría que no habilita conservar ese instrumento."
       : !result.hasCurrentInstrument
     ? "No es posible proyectar un avance: debes rendir Portafolio o ECEP en este proceso."
     : result.advances
@@ -122,21 +148,43 @@ export default function TrancheCalculator() {
           <div>
             <h3 className="mb-3 font-bold">Resultados de los instrumentos</h3>
             <div className="form-grid">
-              <SelectField id="portfolio-result" label="Portafolio" value={input.portfolioCategory} onChange={(value) => patch("portfolioCategory", value as PortfolioCategory)}>
+              <SelectField id="portfolio-result" label="Portafolio" value={input.portfolioResult.category} onChange={(value) => patch("portfolioResult", buildPortfolioResult(value as PortfolioCategory, input.portfolioResult.status))}>
                 {portfolioCategories.map((category) => <option key={category} value={category}>Categoría {category}</option>)}
               </SelectField>
-              <SelectField id="ecep-result" label="ECEP" value={input.ecepCategory} onChange={(value) => patch("ecepCategory", value as EcepCategory)}>
+              <SelectField id="ecep-result" label="ECEP" value={input.ecepResult.category} onChange={(value) => patch("ecepResult", buildEcepResult(value as EcepCategory, input.ecepResult.status))}>
                 {ecepCategories.map((category) => <option key={category} value={category}>Categoría {category}</option>)}
               </SelectField>
             </div>
           </div>
 
-          <div className="option-grid">
-            <CheckField id="rendered-portfolio" checked={input.renderedPortfolio} onChange={(value) => patch("renderedPortfolio", value)} label="Rendí Portafolio en este proceso" help={!input.renderedPortfolio ? "El resultado informado se considera conservado de un proceso anterior." : undefined} />
-            <CheckField id="rendered-ecep" checked={input.renderedEcep} onChange={(value) => patch("renderedEcep", value)} label="Rendí ECEP en este proceso" help={!input.renderedEcep ? "El resultado informado se considera conservado de un proceso anterior." : undefined} />
+          <div className="form-grid">
+            <SelectField
+              id="portfolio-status"
+              label="Uso del resultado de Portafolio"
+              value={input.portfolioResult.status}
+              onChange={(value) => patch("portfolioResult", buildPortfolioResult(input.portfolioResult.category, value as PortfolioResult["status"]))}
+              help={input.portfolioResult.category === "A"
+                ? "La A puede conservarse solo para el proceso siguiente."
+                : input.portfolioResult.category === "B"
+                  ? "La B puede conservarse solo para el proceso siguiente y tras dos B consecutivas."
+                  : "Esta categoría no habilita exención de Portafolio."}
+            >
+              {availablePortfolioStatuses(input.portfolioResult.category).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </SelectField>
+            <SelectField
+              id="ecep-status"
+              label="Uso del resultado de ECEP"
+              value={input.ecepResult.status}
+              onChange={(value) => patch("ecepResult", buildEcepResult(input.ecepResult.category, value as EcepResult["status"]))}
+              help={input.ecepResult.category === "A" || input.ecepResult.category === "B"
+                ? "El último resultado A o B puede mantenerse en procesos posteriores."
+                : "Esta categoría no habilita exención de ECEP."}
+            >
+              {availableEcepStatuses(input.ecepResult.category).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </SelectField>
           </div>
-          {(!input.renderedPortfolio || !input.renderedEcep) && result.hasCurrentInstrument && <div className="warning-inline"><Info size={18} /><p>La herramienta supone que el resultado anterior que declaras puede conservarse. Verifica su vigencia en Portal Docente o con CPEIP.</p></div>}
-          {!result.hasCurrentInstrument && <div className="warning-inline" role="alert"><CircleAlert size={18} /><p>La ley exige rendir al menos un instrumento en el proceso. Marca Portafolio o ECEP para obtener una proyección.</p></div>}
+          {(portfolioRetained || ecepRetained) && result.hasCurrentInstrument && <div className="warning-inline"><Info size={18} /><p>Usa la exención solo si CPEIP o Portal Docente confirmó que está vigente para este proceso.</p></div>}
+          {!result.hasCurrentInstrument && <div className="warning-inline" role="alert"><CircleAlert size={18} /><p>La ley exige rendir al menos un instrumento en el proceso. Declara Portafolio o ECEP como rendido para obtener una proyección.</p></div>}
         </CardContent>
       </Card>
 
@@ -168,7 +216,7 @@ export default function TrancheCalculator() {
             <thead><tr><th scope="col">Portafolio ↓</th>{ecepCategories.map((ecep) => <th key={ecep} scope="col">ECEP {ecep}</th>)}</tr></thead>
             <tbody>{portfolioCategories.map((portfolio) => <tr key={portfolio}><th scope="row">Port. {portfolio}</th>{ecepCategories.map((ecep) => {
               const tranche = RESULT_MATRIX[portfolio][ecep];
-              const selected = portfolio === input.portfolioCategory && ecep === input.ecepCategory;
+              const selected = portfolio === input.portfolioResult.category && ecep === input.ecepResult.category;
               return <td key={ecep} className={selected ? "is-selected" : ""}><span className={`matrix-tranche matrix-${tranche}`}>{TRANCHE_NAMES[tranche]}</span></td>;
             })}</tr>)}</tbody>
           </table>
@@ -184,7 +232,7 @@ export default function TrancheCalculator() {
         </SelectField>
         <ul className="goal-requirements">
           <Requirement met={goal.experience} title={`Experiencia: ${minimumExperienceFor(target)} años`}>{goal.experience ? `Cumples con ${input.experienceYears} años acreditados.` : `Tienes ${input.experienceYears}; aún no alcanzas el mínimo al 1 de mayo aplicable.`}</Requirement>
-          <Requirement met={goal.results} title="Resultados Portafolio + ECEP">Mínimo orientativo: {minimumCombinationFor(target)}. Tu combinación es {input.portfolioCategory} + {input.ecepCategory}.</Requirement>
+          <Requirement met={goal.results} title="Resultados Portafolio + ECEP">Mínimo orientativo: {minimumCombinationFor(target)}. Tu combinación es {input.portfolioResult.category} + {input.ecepResult.category}.</Requirement>
           <Requirement met={goal.progressionAndPermanence} title="Progresión y permanencia">{goal.progressionAndPermanence ? "La trayectoria declarada permite llegar a este tramo en el próximo proceso." : "La linealidad, una excepción histórica o la permanencia todavía impiden llegar en un solo proceso."}</Requirement>
           <Requirement met={goal.currentInstrument} title="Instrumento rendido en este proceso">{goal.currentInstrument ? "Declaraste al menos un instrumento rendido actualmente." : "Debes rendir Portafolio o ECEP en este proceso."}</Requirement>
           <Requirement met={goal.legalContinuity} title="Continuidad en el sistema">{goal.legalContinuity ? "No se configura una causal de salida con los antecedentes declarados." : "El segundo proceso consecutivo con resultados insuficientes configura la causal del artículo 19 S."}</Requirement>
