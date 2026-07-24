@@ -55,8 +55,7 @@ const initialInput: CalculationInput = {
   tranche: null,
   trancheSuspended: false,
   trancheFixedComponentReduced: false,
-  hasBrpTitle: true,
-  hasBrpMention: false,
+  brpEntitlement: "title",
   priorityPercentage: 0,
   rural: false,
   priorityExpired: false,
@@ -280,10 +279,19 @@ export default function TeacherCalculator() {
               </SelectField>
             </div>
             {input.responsibilityRole !== "none" && input.responsibilityRole !== "director" && input.tranche !== null && !["advanced", "expert1", "expert2"].includes(input.tranche) && <div className="warning-inline"><AlertTriangle size={18} /><p>Un nombramiento excepcional en este cargo sin tramo Avanzado no da derecho a la asignación de responsabilidad. La estimación la mostrará en $0.</p></div>}
-            <div className="option-grid">
-              <CheckField id="brp-title" checked={input.hasBrpTitle} onChange={(value) => update("hasBrpTitle", value)} label="Título acreditado para BRP" help="Se paga proporcionalmente hasta 30 horas." />
-              <CheckField id="brp-mention" checked={input.hasBrpMention} onChange={(value) => update("hasBrpMention", value)} label="Mención acreditada" help="Solo se considera una mención." />
-            </div>
+            <SelectField
+              id="brp-entitlement"
+              label="BRP acreditada por el sostenedor"
+              value={input.brpEntitlement}
+              onChange={(value) => update("brpEntitlement", value as CalculationInput["brpEntitlement"])}
+              help="Selecciona el beneficio que consta en tus antecedentes. La mención nunca se paga sin el componente base de título; los montos se prorratean hasta 30 horas."
+            >
+              <option value="none">No tengo BRP acreditada</option>
+              <option value="title">Solo componente de título</option>
+              <option value="titleAndMention">Título y una mención acreditada</option>
+              <option value="normalSchool">Título de Escuela Normal (100% de la BRP)</option>
+              <option value="historicalShortTitleAndMention">Excepción histórica: título corto 1991–28 dic 2006 y mención</option>
+            </SelectField>
             <section className="advanced-panel establishment-panel" aria-labelledby="establishment-special-title">
               <h3 id="establishment-special-title" className="establishment-panel-title">Establecimiento, % de alumnos prioritarios y situaciones especiales</h3>
               <div className="space-y-6 pt-5">

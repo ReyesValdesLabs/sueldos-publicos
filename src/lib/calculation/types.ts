@@ -3,6 +3,7 @@ export type Afp = "capital" | "cuprum" | "habitat" | "modelo" | "planvital" | "p
 export type HealthSystem = "fonasa" | "isapre";
 export type ManualKind = "taxable" | "imposableNonTaxable" | "nonImposable" | "discount";
 export type ResponsibilityRole = "none" | "director" | "otherDirector" | "utpHead" | "otherUtp";
+export type BrpEntitlement = "none" | "title" | "titleAndMention" | "normalSchool" | "historicalShortTitleAndMention";
 
 export interface ManualItem { id: string; name: string; amount: number; kind: ManualKind; countsForMinimum?: boolean }
 
@@ -14,8 +15,7 @@ export interface CalculationInput {
   tranche: Tranche | null;
   trancheSuspended: boolean;
   trancheFixedComponentReduced: boolean;
-  hasBrpTitle: boolean;
-  hasBrpMention: boolean;
+  brpEntitlement: BrpEntitlement;
   priorityPercentage: number;
   rural: boolean;
   priorityExpired: boolean;

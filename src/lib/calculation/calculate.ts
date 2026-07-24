@@ -56,6 +56,10 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const fixed = hasPayableTranche ? money(fixedParameter * (hours / 44)) : 0;
   const trancheTotal = trancheExperience + progression + fixed;
   const brpHours = Math.min(30, hours);
+  const hasBrpTitle = input.brpEntitlement !== "none";
+  const hasBrpMention = input.brpEntitlement === "titleAndMention"
+    || input.brpEntitlement === "historicalShortTitleAndMention";
+  const hasNormalSchoolComplement = input.brpEntitlement === "normalSchool";
 
   const earnings: ResultLine[] = [
     { id: "base", label: "Sueldo base", amount: paidBase, imposable: true, taxable: true, countsForMinimum: true, legalSlug: "rbmn" },
@@ -65,8 +69,9 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
     { id: "tranche-fixed", label: "Tramo · componente fijo", amount: fixed, imposable: true, taxable: true, countsForMinimum: true, legalSlug: "asignacion-tramo" },
   ];
 
-  if (input.hasBrpTitle) earnings.push({ id: "brp-title", label: "BRP · título", amount: money(parameters.brp.title * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
-  if (input.hasBrpMention) earnings.push({ id: "brp-mention", label: "BRP · mención", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasBrpTitle) earnings.push({ id: "brp-title", label: "BRP · título", amount: money(parameters.brp.title * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasBrpMention) earnings.push({ id: "brp-mention", label: "BRP · mención", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
+  if (hasNormalSchoolComplement) earnings.push({ id: "brp-normal-school-complement", label: "BRP · complemento Escuela Normal", amount: money(parameters.brp.mention * brpHours / 30), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "brp" });
   if (input.zonePercentage > 0) earnings.push({ id: "zone", label: "Asignación de zona", amount: money(legalRbmn * input.zonePercentage / 100), imposable: true, taxable: false, countsForMinimum: true, legalSlug: "asignacion-zona" });
 
   const hasResponsibilityRole = input.responsibilityRole !== "none";

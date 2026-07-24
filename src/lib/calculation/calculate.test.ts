@@ -10,8 +10,7 @@ const baseInput: CalculationInput = {
   tranche: "access",
   trancheSuspended: false,
   trancheFixedComponentReduced: false,
-  hasBrpTitle: false,
-  hasBrpMention: false,
+  brpEntitlement: "none",
   priorityPercentage: 0,
   rural: false,
   priorityExpired: false,
@@ -76,10 +75,40 @@ describe("calculateTeacherSalary", () => {
   });
 
   it("caps BRP proportionality at 30 hours", () => {
-    const at30 = calculateTeacherSalary({ ...baseInput, basicHours: 12, secondaryHours: 18, hasBrpTitle: true });
-    const at44 = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, hasBrpTitle: true });
+    const at30 = calculateTeacherSalary({ ...baseInput, basicHours: 12, secondaryHours: 18, brpEntitlement: "title" });
+    const at44 = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, brpEntitlement: "title" });
     expect(at30.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
     expect(at44.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+  });
+
+  it("pays the title component without creating a mention component", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "title" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.some((line) => line.id === "brp-mention")).toBe(false);
+    expect(result.earnings.some((line) => line.id === "brp-normal-school-complement")).toBe(false);
+  });
+
+  it("pays title and mention together when both are accredited", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "titleAndMention" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-mention")?.amount).toBe(P.brp.mention);
+  });
+
+  it("pays both components under the historical short-title exception", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "historicalShortTitleAndMention" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-mention")?.amount).toBe(P.brp.mention);
+  });
+
+  it("pays 100% of BRP to Escuela Normal graduates without inventing a mention", () => {
+    const result = calculateTeacherSalary({ ...baseInput, brpEntitlement: "normalSchool" });
+
+    expect(result.earnings.find((line) => line.id === "brp-title")?.amount).toBe(P.brp.title);
+    expect(result.earnings.find((line) => line.id === "brp-normal-school-complement")?.amount).toBe(P.brp.mention);
+    expect(result.earnings.some((line) => line.id === "brp-mention")).toBe(false);
   });
 
   it("treats zone as imposable but not taxable", () => {
