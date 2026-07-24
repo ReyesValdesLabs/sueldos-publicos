@@ -135,6 +135,18 @@ describe("calculateTeacherSalary", () => {
     expect(withRural.earnings.find((line) => line.id === "priority")?.amount).toBeGreaterThan(0);
   });
 
+  it("adds the extra fixed priority amount at 80% only from the Advanced tranche", () => {
+    const advancedBelowThreshold = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, priorityPercentage: 79.99 });
+    const advancedAtThreshold = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, priorityPercentage: 80 });
+    const earlyBelowThreshold = calculateTeacherSalary({ ...baseInput, tranche: "early", biennia: 15, priorityPercentage: 79.99 });
+    const earlyAtThreshold = calculateTeacherSalary({ ...baseInput, tranche: "early", biennia: 15, priorityPercentage: 80 });
+
+    expect((advancedAtThreshold.earnings.find((line) => line.id === "priority")?.amount ?? 0)
+      - (advancedBelowThreshold.earnings.find((line) => line.id === "priority")?.amount ?? 0)).toBe(P.priority.additionalFixed);
+    expect(earlyAtThreshold.earnings.find((line) => line.id === "priority")?.amount)
+      .toBe(earlyBelowThreshold.earnings.find((line) => line.id === "priority")?.amount);
+  });
+
   it("reduces only the fixed component after an unfulfilled four-year deepening cycle", () => {
     const expertOne = calculateTeacherSalary({ ...baseInput, tranche: "expert1", biennia: 15, trancheFixedComponentReduced: true });
     const expertTwo = calculateTeacherSalary({ ...baseInput, tranche: "expert2", biennia: 15, trancheFixedComponentReduced: true });

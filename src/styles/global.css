@@ -278,6 +278,36 @@ html.dark .theme-icon-sun { display: block; }
 .advanced-panel { border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--secondary) 38%, var(--card)); padding: 1rem; }
 .advanced-panel[open] { border-color: color-mix(in srgb, var(--brand-blue) 30%, var(--border)); }
 .advanced-panel summary { color: var(--brand-navy); cursor: pointer; font-weight: 700; }
+.establishment-panel { border-color: color-mix(in srgb, var(--brand-blue) 48%, var(--border)); }
+.establishment-panel-title { margin: 0; color: var(--brand-navy); font-size: 1rem; font-weight: 750; line-height: 1.4; }
+.priority-school-search { position: relative; }
+.priority-school-input { position: relative; }
+.priority-school-input > svg:first-child { position: absolute; z-index: 1; left: .85rem; top: 50%; transform: translateY(-50%); color: var(--muted-foreground); pointer-events: none; }
+.priority-school-input .form-control { padding-inline: 2.6rem; }
+.priority-school-loader { position: absolute; right: .9rem; top: 50%; color: var(--brand-blue); animation: priority-school-spin .9s linear infinite; }
+.priority-school-clear { position: absolute; right: .55rem; top: 50%; display: grid; width: 2rem; height: 2rem; place-items: center; transform: translateY(-50%); border: 0; border-radius: .55rem; background: transparent; color: var(--muted-foreground); cursor: pointer; }
+.priority-school-clear:hover { background: var(--muted); color: var(--foreground); }
+.priority-school-results { position: absolute; z-index: 30; top: calc(100% - 1.1rem); left: 0; right: 0; overflow: hidden; border: 1px solid var(--border); border-radius: .9rem; background: var(--card); box-shadow: 0 18px 48px rgb(var(--shadow-color) / .18); }
+.priority-school-results button { display: flex; width: 100%; min-height: 3.65rem; align-items: center; justify-content: space-between; gap: 1rem; border: 0; border-top: 1px solid var(--border); background: transparent; padding: .7rem .85rem; color: inherit; text-align: left; cursor: pointer; }
+.priority-school-results button:first-child { border-top: 0; }
+.priority-school-results button:hover, .priority-school-results button.is-active { background: var(--muted); }
+.priority-school-results button > span { min-width: 0; }
+.priority-school-results strong, .priority-school-results small { display: block; }
+.priority-school-results strong { overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.priority-school-results small { margin-top: .2rem; color: var(--muted-foreground); font-size: .7rem; }
+.priority-school-results b { flex: 0 0 auto; color: var(--brand-teal); font-size: .88rem; }
+.priority-school-empty { margin: .5rem 0 0; border: 1px solid var(--border); border-radius: .75rem; background: var(--muted); padding: .75rem; color: var(--muted-foreground); font-size: .78rem; line-height: 1.5; }
+.priority-school-selected { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; margin-top: 1rem; border: 1px solid color-mix(in srgb, var(--brand-teal) 34%, var(--border)); border-radius: .95rem; background: color-mix(in srgb, var(--accent) 54%, var(--card)); padding: 1rem; }
+.priority-school-selected-icon { display: grid; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: .7rem; background: var(--card); color: var(--brand-teal); box-shadow: 0 5px 14px rgb(var(--shadow-color) / .08); }
+.priority-school-selected-kicker { display: flex; align-items: center; gap: .3rem; color: var(--brand-teal); font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.priority-school-selected strong { display: block; margin-top: .25rem; font-size: .9rem; }
+.priority-school-selected p { margin: .2rem 0 0; color: var(--muted-foreground); font-size: .72rem; line-height: 1.45; }
+.priority-school-selected .priority-school-override { color: var(--brand-orange); font-weight: 700; }
+.priority-school-selected .priority-school-zone { margin-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--brand-teal) 26%, transparent); padding-top: .65rem; }
+.priority-school-selected .priority-school-zone-warning { margin-top: .65rem; border-top: 1px solid color-mix(in srgb, var(--brand-orange) 34%, transparent); padding-top: .65rem; color: var(--brand-orange); font-weight: 700; }
+.priority-school-selected a { display: inline-flex; align-items: center; gap: .3rem; margin-top: .55rem; color: var(--brand-blue); font-size: .7rem; font-weight: 700; text-decoration: none; }
+.priority-school-selected a:hover { text-decoration: underline; }
+@keyframes priority-school-spin { to { transform: translateY(-50%) rotate(360deg); } }
 .parameter-panel { border: 1px solid var(--border); border-radius: 1rem; background: linear-gradient(135deg, var(--muted), color-mix(in srgb, var(--secondary) 44%, var(--muted))); padding: 1rem; }
 .parameter-panel.is-manual { border-color: color-mix(in srgb, var(--destructive) 45%, var(--border)); }
 .parameter-panel-heading, .parameter-panel-heading > div, .parameter-actions { display: flex; align-items: center; gap: .7rem; }

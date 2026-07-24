@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PrioritySchoolSearch } from "@/components/PrioritySchoolSearch";
 
 const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
@@ -283,21 +284,29 @@ export default function TeacherCalculator() {
               <CheckField id="brp-title" checked={input.hasBrpTitle} onChange={(value) => update("hasBrpTitle", value)} label="Título acreditado para BRP" help="Se paga proporcionalmente hasta 30 horas." />
               <CheckField id="brp-mention" checked={input.hasBrpMention} onChange={(value) => update("hasBrpMention", value)} label="Mención acreditada" help="Solo se considera una mención." />
             </div>
-            <details className="advanced-panel">
-              <summary>Establecimiento y situaciones especiales</summary>
+            <section className="advanced-panel establishment-panel" aria-labelledby="establishment-special-title">
+              <h3 id="establishment-special-title" className="establishment-panel-title">Establecimiento, % de alumnos prioritarios y situaciones especiales</h3>
               <div className="space-y-6 pt-5">
+                <PrioritySchoolSearch
+                  value={input.priorityPercentage}
+                  onChange={(value) => update("priorityPercentage", value)}
+                  zonePercentage={input.zonePercentage}
+                  onZoneChange={(value) => update("zonePercentage", value)}
+                  rural={input.rural}
+                  onRuralChange={(value) => update("rural", value)}
+                />
                 <div className="form-grid">
-                  <NumberField id="priority" label="Concentración de alumnos prioritarios" value={input.priorityPercentage} onChange={(value) => update("priorityPercentage", value)} min={0} max={100} suffix="%" />
-                  <NumberField id="zone" label="Porcentaje de asignación de zona" value={input.zonePercentage} onChange={(value) => update("zonePercentage", value)} min={0} max={200} suffix="%" help="Ingresa el porcentaje reconocido al establecimiento." />
+                  <NumberField id="priority" label="Concentración de alumnos prioritarios" value={input.priorityPercentage} onChange={(value) => update("priorityPercentage", value)} min={0} max={100} step={0.01} suffix="%" help="Se completa al seleccionar tu establecimiento. Puedes reemplazarlo por el porcentaje oficial que tengas reconocido." />
+                  <NumberField id="zone" label="Porcentaje de asignación de zona" value={input.zonePercentage} onChange={(value) => update("zonePercentage", value)} min={0} max={600} suffix="%" help="Se completa con el último dato anual disponible de Mineduc (2025). Puedes reemplazarlo por el porcentaje oficial vigente que tengas reconocido." />
                 </div>
                 <div className="option-grid">
-                  <CheckField id="rural" checked={input.rural} onChange={(value) => update("rural", value)} label="Establecimiento rural" />
-                  <CheckField id="tranche-suspended" checked={input.trancheSuspended} onChange={(value) => update("trancheSuspended", value)} label="Asignación de tramo suspendida" help="Por aplicación del artículo 19 P." />
+                  <CheckField id="rural" checked={input.rural} onChange={(value) => update("rural", value)} label="Establecimiento rural" help="Se completa desde la misma base oficial de Mineduc cuando hay un dato consistente para el RBD." />
+                  <CheckField id="tranche-suspended" checked={input.trancheSuspended} onChange={(value) => update("trancheSuspended", value)} label="Asignación de tramo suspendida" help="Marca solo si te aplicaron el artículo 19 P por no rendir ni suspender una convocatoria obligatoria. No corresponde solo por permanecer en el mismo tramo." />
                   {input.tranche !== null && ["advanced", "expert1", "expert2"].includes(input.tranche) && <CheckField id="tranche-fixed-reduced" checked={input.trancheFixedComponentReduced} onChange={(value) => update("trancheFixedComponentReduced", value)} label="Componente fijo reducido" help="Marca solo si venció el ciclo de profundización de cuatro años sin una acción aprobada. El tramo reconocido no cambia." />}
-                  <CheckField id="priority-expired" checked={input.priorityExpired} onChange={(value) => update("priorityExpired", value)} label="Derecho a prioritarios suspendido" help="Por límite aplicable en tramo Inicial o Temprano." />
+                  <CheckField id="priority-expired" checked={input.priorityExpired} onChange={(value) => update("priorityExpired", value)} label="Límite de 4 años del beneficio de prioritarios" help="Marca solo si pasaron cuatro años desde que nació este derecho y todavía estás en tramo Inicial o Temprano. Vuelve a ser exigible al alcanzar Avanzado." />
                 </div>
               </div>
-            </details>
+            </section>
           </CardContent>
         </>}
 

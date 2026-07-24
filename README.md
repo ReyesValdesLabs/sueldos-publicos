@@ -116,6 +116,32 @@ Si la fuente no está disponible o el período queda atrasado, el sitio conserva
 
 Las asignaciones docentes y la tabla de Impuesto Único mantienen sus propias fuentes y revisiones. Los valores históricos deben preservarse para mantener trazabilidad.
 
+## Porcentaje de alumnos prioritarios por establecimiento
+
+El buscador docente usa `public/data/priority-schools-2026.json`, generado desde la Resolución Exenta N.º 1.522 de 25 de marzo de 2026 publicada por Mineduc/CPEIP. La fuente contiene el proceso 2026 calculado con matrícula 2025; la copia del sitio incluye solamente establecimientos SLEP, DAEM y de corporaciones municipales.
+
+Para volver a descargar el PDF oficial, extraer la tabla y regenerar el JSON:
+
+```sh
+pnpm update:priority-schools
+```
+
+El proceso requiere `pdftotext` de Poppler, valida años, porcentajes, RBD únicos y cantidad mínima de filas, y guarda en el JSON la URL, fecha y huella SHA-256 de la fuente.
+
+## Porcentaje de zona y ruralidad por establecimiento
+
+El mismo selector consulta `public/data/school-zones-2025.json`, generado desde la base oficial de Subvenciones a Establecimientos Educacionales del Centro de Estudios Mineduc. Para cada RBD público conserva `PORC_ZONA`, `RURAL_RBD`, los meses observados, el año de datos y la referencia exacta de descarga.
+
+La interfaz completa automáticamente zona y ruralidad solo cuando todos los meses publicados para el RBD son consistentes. Los establecimientos sin filas en la fuente quedan explícitamente con valor desconocido: la ausencia de información nunca se transforma en 0%.
+
+Para descargar la publicación anual y regenerar el JSON:
+
+```sh
+pnpm update:school-zones
+```
+
+El proceso requiere Python 3 y `bsdtar`/libarchive. El extractor de XLSX usa únicamente la biblioteca estándar de Python. Si el ejecutable tiene otro nombre, puede indicarse mediante `SCHOOL_ZONES_PYTHON`.
+
 ## Alcance
 
 La calculadora docente acepta jornadas que combinen horas de enseñanza básica y media. La vista técnica pide elegir el empleador y mantiene dos motores separados: SLEP se limita a contratos SLEP en categoría técnica; DAEM/DEM cubre asistentes contratados por la administración educacional municipal y usa los haberes locales informados, sin trasladar el piso técnico ni los bienios SLEP. Ninguna debe usarse automáticamente para JUNJI, Integra o jardines VTF. Todas aplican un máximo de 44 horas semanales para un mismo empleador y estiman un mes completo, sin prorratear licencias, ausencias ni fracciones de mes.
