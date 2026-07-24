@@ -110,7 +110,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
       zonePreviousMonthGross: zoneGrossEdited ? current.zonePreviousMonthGross : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
     }));
   };
-  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "taxable" }]);
+  const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
   const patchManualItem = (id: string, patch: Partial<ManualItem>) => update("manualItems", input.manualItems.map((item) => item.id === id ? { ...item, ...patch } : item));
   const removeManualItem = (id: string) => update("manualItems", input.manualItems.filter((item) => item.id !== id));
   const goTo = (nextStep: number) => {
@@ -199,13 +199,13 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
             </div>
 
             <div className="border-t border-border pt-6">
-              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Agrega asignación familiar, incentivos locales, cuotas u otros ítems de tu liquidación.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
+              <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Agrega asignación familiar, incentivos locales, cuotas u otros ítems de tu liquidación. Imponibilidad y tributación se clasifican por separado.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div>
               <div className="mt-4 space-y-3">
                 {input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}
                 {input.manualItems.map((item) => <div key={item.id} className="manual-row">
                   <Input aria-label="Nombre del concepto" placeholder="Nombre del concepto" value={item.name} onChange={(event) => patchManualItem(item.id, { name: event.target.value })} />
                   <Input aria-label={`Monto de ${item.name || "concepto"}`} type="text" inputMode="numeric" placeholder="Monto" value={item.amount ? integerMoney.format(item.amount) : ""} onChange={(event) => patchManualItem(item.id, { amount: parseMoney(event.target.value) })} />
-                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}><option value="taxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible, no tributable</option><option value="nonImposable">No imponible</option><option value="discount">Descuento</option></select>
+                  <select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}><option value="imposableTaxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible y no tributable</option><option value="nonImposableTaxable">No imponible y tributable</option><option value="nonImposableNonTaxable">No imponible y no tributable</option><option value="discount">Descuento</option></select>
                   {item.kind !== "discount" && <label className="manual-rtm-toggle"><input type="checkbox" checked={Boolean(item.countsForMinimum)} onChange={(event) => patchManualItem(item.id, { countsForMinimum: event.target.checked })} /><span>Computa para mínimo</span></label>}
                   <Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button>
                 </div>)}
@@ -247,5 +247,5 @@ function SummaryRow({ label, value, positive = false }: { label: string; value: 
 }
 
 function ResultTable({ title, lines, total, positive = false }: { title: string; lines: ReturnType<typeof calculateAssistantSalary>["earnings"]; total: number; positive?: boolean }) {
-  return <section aria-labelledby={`assistant-result-${title}`}><div className="mb-3 flex items-end justify-between"><h3 id={`assistant-result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div><div className="overflow-hidden rounded-2xl border border-border">{lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"}{line.taxable ? " · tributable" : ""}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`}><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}</div></section>;
+  return <section aria-labelledby={`assistant-result-${title}`}><div className="mb-3 flex items-end justify-between"><h3 id={`assistant-result-${title}`} className="text-lg font-bold">{title}</h3><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : "text-destructive"}>{currency.format(total)}</strong></div><div className="overflow-hidden rounded-2xl border border-border">{lines.filter((line) => line.amount > 0).map((line) => <div key={line.id} className="result-row"><div><span>{line.label}</span><small>{line.imposable ? "Imponible" : "No imponible"} · {line.taxable ? "tributable" : "no tributable"}</small></div><div className="flex items-center gap-2">{line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)} aria-label={`Ver respaldo legal de ${line.label}`}><FileText size={15} /></a>}<strong>{currency.format(line.amount)}</strong></div></div>)}</div></section>;
 }

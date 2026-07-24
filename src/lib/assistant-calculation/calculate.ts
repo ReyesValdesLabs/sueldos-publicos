@@ -1,6 +1,6 @@
 import { JULY_2026_ASSISTANT_PARAMETERS as A, type AssistantPeriodParameters } from "@/data/parameters/assistants-2026-07";
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
-import type { ResultLine } from "@/lib/calculation/types";
+import { isManualEarning, MANUAL_EARNING_TREATMENT, type ResultLine } from "@/lib/calculation/types";
 import type { AssistantCalculationInput, AssistantCalculationResult } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
@@ -52,13 +52,13 @@ export function calculateAssistantSalary(
     },
   ];
 
-  for (const item of input.manualItems.filter((item) => item.kind !== "discount" && item.amount > 0 && item.countsForMinimum)) {
+  for (const item of input.manualItems.filter(isManualEarning).filter((item) => item.amount > 0 && item.countsForMinimum)) {
+    const treatment = MANUAL_EARNING_TREATMENT[item.kind];
     earnings.push({
       id: item.id,
       label: item.name || "Otro haber computable",
       amount: money(item.amount),
-      imposable: item.kind !== "nonImposable",
-      taxable: item.kind === "taxable",
+      ...treatment,
       countsForMinimum: true,
     });
   }
@@ -127,19 +127,20 @@ export function calculateAssistantSalary(
     if (benefit.amount > 0) earnings.push({ ...benefit, amount: money(benefit.amount), countsForMinimum: false, legalSlug: "asistentes-asignaciones-establecimiento" });
   }
 
-  for (const item of input.manualItems.filter((item) => item.kind !== "discount" && item.amount > 0 && !item.countsForMinimum)) {
+  for (const item of input.manualItems.filter(isManualEarning).filter((item) => item.amount > 0 && !item.countsForMinimum)) {
+    const treatment = MANUAL_EARNING_TREATMENT[item.kind];
     earnings.push({
       id: item.id,
       label: item.name || "Otro haber",
       amount: money(item.amount),
-      imposable: item.kind !== "nonImposable",
-      taxable: item.kind === "taxable",
+      ...treatment,
       countsForMinimum: false,
     });
   }
 
   const nonRemunerativeManualEarnings = input.manualItems
-    .filter((item) => item.kind === "nonImposable" && item.amount > 0)
+    .filter(isManualEarning)
+    .filter((item) => !MANUAL_EARNING_TREATMENT[item.kind].imposable && item.amount > 0)
     .reduce((total, item) => total + money(item.amount), 0);
   const grossBeforeLowIncomeBonus = sum(earnings.filter((line) => !LOW_INCOME_GROSS_EXCLUDED_IDS.has(line.id)))
     - nonRemunerativeManualEarnings;

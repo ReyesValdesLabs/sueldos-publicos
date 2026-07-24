@@ -1,5 +1,5 @@
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
-import type { CalculationInput, CalculationResult, ResponsibilityRole, ResultLine, Tranche } from "./types";
+import { isManualEarning, MANUAL_EARNING_TREATMENT, type CalculationInput, type CalculationResult, type ResponsibilityRole, type ResultLine, type Tranche } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
@@ -103,13 +103,13 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
     if (priorityAmount > 0) earnings.push({ id: "priority", label: "Alta concentración de alumnos prioritarios", amount: money(priorityAmount), imposable: true, taxable: true, countsForMinimum: false, legalSlug: "alumnos-prioritarios" });
   }
 
-  for (const item of input.manualItems.filter((item) => item.kind !== "discount" && item.amount > 0)) {
+  for (const item of input.manualItems.filter(isManualEarning).filter((item) => item.amount > 0)) {
+    const treatment = MANUAL_EARNING_TREATMENT[item.kind];
     earnings.push({
       id: item.id,
       label: item.name || "Otro haber",
       amount: money(item.amount),
-      imposable: item.kind !== "nonImposable",
-      taxable: item.kind === "taxable",
+      ...treatment,
       countsForMinimum: Boolean(item.countsForMinimum),
     });
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_ASSISTANT_PARAMETERS as A } from "@/data/parameters/assistants-2026-07";
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { calculateAssistantSalary, calculateAssistantZoneBonus } from "./calculate";
 import type { AssistantCalculationInput } from "./types";
 
@@ -63,7 +64,7 @@ describe("calculateAssistantSalary", () => {
   it("does not treat a declared non-remunerative benefit as gross pay for the 2026 bonus", () => {
     const result = calculateAssistantSalary({
       ...baseInput,
-      manualItems: [{ id: "family", name: "Asignación familiar", amount: 100_000, kind: "nonImposable" }],
+      manualItems: [{ id: "family", name: "Asignación familiar", amount: 100_000, kind: "nonImposableNonTaxable" }],
     });
     expect(result.lowIncomeBonus).toBe(62_903);
   });
@@ -86,6 +87,39 @@ describe("calculateAssistantSalary", () => {
       law19464Increase: 100_000,
     });
     expect(result.lowIncomeBonus).toBe(0);
+  });
+
+  it("represents all four combinations of imposability and taxation for manual earnings", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      manualItems: [
+        { id: "it", name: "Imponible tributable", amount: 100_000, kind: "imposableTaxable" },
+        { id: "in", name: "Imponible no tributable", amount: 100_000, kind: "imposableNonTaxable" },
+        { id: "nt", name: "No imponible tributable", amount: 100_000, kind: "nonImposableTaxable" },
+        { id: "nn", name: "No imponible no tributable", amount: 100_000, kind: "nonImposableNonTaxable" },
+      ],
+    });
+
+    expect(result.earnings.find((line) => line.id === "it")).toMatchObject({ imposable: true, taxable: true });
+    expect(result.earnings.find((line) => line.id === "in")).toMatchObject({ imposable: true, taxable: false });
+    expect(result.earnings.find((line) => line.id === "nt")).toMatchObject({ imposable: false, taxable: true });
+    expect(result.earnings.find((line) => line.id === "nn")).toMatchObject({ imposable: false, taxable: false });
+  });
+
+  it("includes a non-imposable and taxable manual earning in the IUSC base only", () => {
+    const regular = calculateAssistantSalary({ ...baseInput, countedRemuneration: 3_000_000 });
+    const withTaxableAllowance = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      manualItems: [{ id: "manual-tax", name: "Haber no imponible tributable", amount: 500_000, kind: "nonImposableTaxable" }],
+    });
+    const bracket = P.taxBrackets.find((candidate) => withTaxableAllowance.taxableBase <= candidate.upTo) ?? P.taxBrackets.at(-1)!;
+
+    expect(withTaxableAllowance.imposableBase).toBe(regular.imposableBase);
+    expect(withTaxableAllowance.taxableBase).toBe(regular.taxableBase + 500_000);
+    expect(withTaxableAllowance.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(Math.max(0, withTaxableAllowance.taxableBase * bracket.factor - bracket.rebate)));
   });
 
   it("applies income reduction, part-time proportionality and the first zone implementation stage", () => {

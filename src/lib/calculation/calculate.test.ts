@@ -220,11 +220,45 @@ describe("calculateTeacherSalary", () => {
     expect(result.warnings.some((warning) => warning.includes("Remuneración Total Mínima"))).toBe(true);
   });
 
-  it("keeps manual non-imposable earnings outside the pension base", () => {
+  it("represents all four combinations of imposability and taxation for manual earnings", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      paidBaseSalary: 3_000_000,
+      manualItems: [
+        { id: "it", name: "Imponible tributable", amount: 100_000, kind: "imposableTaxable" },
+        { id: "in", name: "Imponible no tributable", amount: 100_000, kind: "imposableNonTaxable" },
+        { id: "nt", name: "No imponible tributable", amount: 100_000, kind: "nonImposableTaxable" },
+        { id: "nn", name: "No imponible no tributable", amount: 100_000, kind: "nonImposableNonTaxable" },
+      ],
+    });
+
+    expect(result.earnings.find((line) => line.id === "it")).toMatchObject({ imposable: true, taxable: true });
+    expect(result.earnings.find((line) => line.id === "in")).toMatchObject({ imposable: true, taxable: false });
+    expect(result.earnings.find((line) => line.id === "nt")).toMatchObject({ imposable: false, taxable: true });
+    expect(result.earnings.find((line) => line.id === "nn")).toMatchObject({ imposable: false, taxable: false });
+  });
+
+  it("keeps a non-imposable and taxable manual earning out of contributions but includes it in IUSC", () => {
+    const regular = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 3_000_000 });
+    const withRmm = calculateTeacherSalary({
+      ...baseInput,
+      paidBaseSalary: 3_000_000,
+      manualItems: [{ id: "rmm", name: "Suma adicional Red Maestros de Maestros", amount: 500_000, kind: "nonImposableTaxable" }],
+    });
+    const bracket = P.taxBrackets.find((candidate) => withRmm.taxableBase <= candidate.upTo) ?? P.taxBrackets.at(-1)!;
+
+    expect(withRmm.imposableBase).toBe(regular.imposableBase);
+    expect(withRmm.taxableBase).toBe(regular.taxableBase + 500_000);
+    expect(withRmm.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(Math.max(0, withRmm.taxableBase * bracket.factor - bracket.rebate)));
+  });
+
+  it("keeps manual non-imposable and non-taxable earnings outside both bases", () => {
     const regular = calculateTeacherSalary(baseInput);
-    const withAllowance = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "family", name: "Asignación familiar", amount: 50_000, kind: "nonImposable" }] });
+    const withAllowance = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "family", name: "Asignación familiar", amount: 50_000, kind: "nonImposableNonTaxable" }] });
     expect(withAllowance.totalEarnings - regular.totalEarnings).toBe(50_000);
     expect(withAllowance.imposableBase).toBe(regular.imposableBase);
+    expect(withAllowance.taxableBase).toBe(regular.taxableBase);
   });
 
   it("accepts a verified or manual previsional parameter pack", () => {
@@ -244,7 +278,7 @@ describe("calculateTeacherSalary", () => {
   });
 
   it("counts declared permanent monthly earnings toward RTM", () => {
-    const result = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "local", name: "Incentivo local permanente", amount: 100_000, kind: "taxable", countsForMinimum: true }] });
+    const result = calculateTeacherSalary({ ...baseInput, manualItems: [{ id: "local", name: "Incentivo local permanente", amount: 100_000, kind: "imposableTaxable", countsForMinimum: true }] });
     expect(result.earnings.some((line) => line.id === "minimum-supplement")).toBe(false);
   });
 
