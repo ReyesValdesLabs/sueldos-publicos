@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, ExternalLink, FileText, Info, Plus, Printer, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_PARAMETERS as P, type AfpKey, type PeriodParameters } from "@/data/parameters/2026-07";
 import { calculateTeacherSalary, suggestedResponsibilityPercentage } from "@/lib/calculation/calculate";
@@ -133,6 +133,8 @@ function CheckField({ id, checked, onChange, label, help }: { id: string; checke
 
 export default function TeacherCalculator() {
   const [step, setStep] = useState(0);
+  const calculatorRef = useRef<HTMLElement>(null);
+  const scrollAfterStepChange = useRef(false);
   const [input, setInput] = useState<CalculationInput>(initialInput);
   const [editBase, setEditBase] = useState(false);
   const [responsibilityPercentageEdited, setResponsibilityPercentageEdited] = useState(false);
@@ -210,15 +212,26 @@ export default function TeacherCalculator() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    if (!scrollAfterStepChange.current) return;
+    scrollAfterStepChange.current = false;
+    calculatorRef.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+  }, [step]);
+
   const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
   const patchManualItem = (id: string, patch: Partial<ManualItem>) => update("manualItems", input.manualItems.map((item) => item.id === id ? { ...item, ...patch } : item));
   const removeManualItem = (id: string) => update("manualItems", input.manualItems.filter((item) => item.id !== id));
   const goTo = (nextStep: number) => {
-    setStep(Math.min(3, Math.max(0, nextStep)));
-    document.querySelector("#calculadora")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const clampedStep = Math.min(3, Math.max(0, nextStep));
+    if (clampedStep === step) return;
+    scrollAfterStepChange.current = true;
+    setStep(clampedStep);
   };
 
-  return <section id="calculadora" className="scroll-mt-24" aria-labelledby="calculator-title">
+  return <section ref={calculatorRef} id="calculadora" className="scroll-mt-24" aria-labelledby="calculator-title">
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <Badge>Valores vigentes · {P.label}</Badge>

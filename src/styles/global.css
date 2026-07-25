@@ -402,10 +402,22 @@ html.dark .theme-icon-sun { display: block; }
 .page-header p { max-width: 47rem; color: var(--muted-foreground); font-size: 1.08rem; line-height: 1.7; }
 .legal-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding-bottom: 5rem; }
 .legal-detail { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 3rem; padding-bottom: 5rem; }
-.legal-content { max-width: 48rem; }
+.legal-content { min-width: 0; max-width: 48rem; }
 .legal-content h2 { margin-top: 2.2rem; font-size: 1.5rem; }
 .legal-content p, .legal-content li { color: var(--muted-foreground); line-height: 1.75; }
 .formula { overflow-x: auto; border-left: 4px solid var(--brand-teal); border-radius: .3rem 1rem 1rem .3rem; background: linear-gradient(135deg, var(--accent), var(--muted)); padding: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.6; }
+.legal-amount-section { margin-top: 2.2rem; }
+.legal-amount-section > h2 { margin-top: 0; }
+.legal-amount-table-scroll { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
+.legal-amount-table { width: 100%; min-width: 34rem; border-collapse: collapse; }
+.legal-amount-table th, .legal-amount-table td { border-bottom: 1px solid var(--border); padding: .8rem 1rem; text-align: left; }
+.legal-amount-table thead th { background: color-mix(in srgb, var(--brand-blue) 9%, var(--card)); color: var(--foreground); font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; }
+.legal-amount-table tbody th[scope="rowgroup"] { width: 42%; background: color-mix(in srgb, var(--brand-teal) 8%, var(--card)); color: var(--foreground); font-size: .84rem; vertical-align: top; }
+.legal-amount-table tbody th[scope="row"] { color: var(--foreground); font-size: .88rem; }
+.legal-amount-table td { color: var(--foreground); font-variant-numeric: tabular-nums; font-weight: 800; text-align: right; white-space: nowrap; }
+.legal-amount-table tbody:last-child tr:last-child th, .legal-amount-table tbody:last-child tr:last-child td { border-bottom: 0; }
+.legal-amount-notes { margin-block: .9rem 0; padding-left: 1.2rem; font-size: .83rem; }
+.legal-amount-source { display: inline-flex; align-items: center; gap: .35rem; margin-top: .8rem; color: var(--brand-blue); font-size: .86rem; font-weight: 800; }
 .source-box { position: sticky; top: 6rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: 1.1rem; box-shadow: 0 14px 34px rgb(var(--shadow-color) / .07); }
 .source-box a { display: block; margin-top: .8rem; color: var(--brand-blue); font-weight: 700; overflow-wrap: anywhere; }
 .official-sources { display: grid; gap: 1.5rem; padding-bottom: 1rem; }
@@ -473,6 +485,10 @@ html.dark .theme-icon-sun { display: block; }
   .manual-row.daem-manual-row { grid-template-columns: 1fr 1fr auto; }
   .manual-row > :first-child { grid-column: 1 / -1; }
   .manual-rtm-toggle { grid-column: 1 / 3; }
+  .legal-amount-table { min-width: 0; table-layout: fixed; }
+  .legal-amount-table th, .legal-amount-table td { padding: .7rem .45rem; }
+  .legal-amount-table tbody th[scope="rowgroup"] { width: 39%; }
+  .legal-amount-table thead th, .legal-amount-table tbody th, .legal-amount-table td { font-size: .72rem; }
   .step-item small { font-size: .65rem; }
   .data-alert { grid-template-columns: auto 1fr; }
   .data-alert button { grid-column: 1 / -1; }

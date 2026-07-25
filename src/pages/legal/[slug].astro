@@ -10,6 +10,11 @@ export function getStaticPaths() {
 
 interface Props { entry: LegalEntry }
 const { entry } = Astro.props;
+const currency = new Intl.NumberFormat("es-CL", {
+  style: "currency",
+  currency: "CLP",
+  maximumFractionDigits: 0,
+});
 const legalStructuredData = {
   "@context": "https://schema.org",
   "@type": "Article",
@@ -31,6 +36,40 @@ const legalStructuredData = {
       <h2>A quién se aplica</h2><p>{entry.appliesTo}</p>
       <h2>Cómo lo calcula esta herramienta</h2>{entry.explanation.map((paragraph) => <p>{paragraph}</p>)}
       <div class="formula" aria-label="Fórmula utilizada">{entry.formula}</div>
+      {entry.amountTable && (
+        <section class="legal-amount-section" aria-labelledby="official-values-title">
+          <h2 id="official-values-title">{entry.amountTable.title}</h2>
+          <p>{entry.amountTable.description}</p>
+          <div class="legal-amount-table-scroll">
+            <table class="legal-amount-table">
+              <thead>
+                <tr>
+                  <th scope="col">Componente</th>
+                  <th scope="col">Tramo o nivel</th>
+                  <th scope="col">Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entry.amountTable.groups.map((group) =>
+                  group.rows.map((row, index) => (
+                    <tr>
+                      {index === 0 && <th scope="rowgroup" rowspan={group.rows.length}>{group.component}</th>}
+                      <th scope="row">{row.label}</th>
+                      <td>{currency.format(row.amount)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <ul class="legal-amount-notes">
+            {entry.amountTable.notes.map((note) => <li>{note}</li>)}
+          </ul>
+          <a class="legal-amount-source" href={entry.amountTable.source.url} target="_blank" rel="noopener noreferrer">
+            {entry.amountTable.source.label} <ExternalLink size={14} />
+          </a>
+        </section>
+      )}
       <h2>Consideraciones</h2><ul>{entry.notes.map((note) => <li>{note}</li>)}</ul>
       <p class="mt-8 rounded-xl bg-muted p-4 text-sm">Esta página explica la implementación de la calculadora y no reemplaza una interpretación jurídica aplicada a un caso particular.</p>
     </article>
