@@ -1,30 +1,18 @@
 ---
+import { Image } from "astro:assets";
 import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
+import brandMark from "@/assets/sueldospublicos-mark-transparent.png";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { sitePath } from "@/lib/site-path";
+import { webPageStructuredData } from "@/lib/structured-data";
 
 const sourceUpdatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
 const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
+const homeTitle = "Calculadoras de sueldos públicos en Chile | Sueldos Públicos";
+const homeDescription = "Estima liquidaciones de docentes y asistentes de la educación SLEP o DAEM/DEM con fórmulas explicadas y respaldo legal.";
 const homeStructuredData = [
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": "https://sueldospublicos.cl/#organization",
-    name: "Sueldos Públicos",
-    url: "https://sueldospublicos.cl/",
-    logo: "https://sueldospublicos.cl/sueldospublicos-mark.png",
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": "https://sueldospublicos.cl/#website",
-    name: "Sueldos Públicos",
-    url: "https://sueldospublicos.cl/",
-    inLanguage: "es-CL",
-    publisher: { "@id": "https://sueldospublicos.cl/#organization" },
-    description: "Calculadoras de sueldos públicos en Chile para docentes y asistentes de la educación.",
-  },
+  webPageStructuredData({ name: homeTitle, description: homeDescription, path: "" }),
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -57,7 +45,7 @@ const homeStructuredData = [
   },
 ];
 ---
-<BaseLayout title="Calculadoras de sueldos públicos en Chile | Sueldos Públicos" description="Estima liquidaciones de docentes y asistentes de la educación SLEP o DAEM/DEM con fórmulas explicadas y respaldo legal." structuredData={homeStructuredData}>
+<BaseLayout title={homeTitle} description={homeDescription} structuredData={homeStructuredData}>
   <section class="hero">
     <div class="page-shell hero-grid">
       <div>
@@ -68,7 +56,7 @@ const homeStructuredData = [
       </div>
       <div class="hero-visual">
         <div class="hero-brand-panel" aria-hidden="true">
-          <span class="hero-logo"><img src={sitePath("sueldospublicos-mark-transparent.png")} alt="" width="512" height="512" /></span>
+          <span class="hero-logo"><Image src={brandMark} alt="" width={240} height={240} format="webp" quality={84} loading="eager" /></span>
           <div><span>sueldospublicos.cl</span><strong>Claridad para tomar mejores decisiones</strong></div>
         </div>
         <aside class="trust-card" aria-label="Características de las calculadoras">
@@ -111,6 +99,7 @@ const homeStructuredData = [
         <article class="feature-card"><ShieldCheck size={25} /><h3>Fuentes oficiales</h3><p>Las fórmulas se documentan con normas y parámetros de CPEIP, BCN, SII, Previred y organismos previsionales.</p></article>
         <article class="feature-card"><FileCheck2 size={25} /><h3>Desglose completo</h3><p>Se muestran haberes, bases imponible y tributable, cotizaciones, impuesto y sueldo líquido estimado.</p></article>
       </div>
+      <div class="hero-actions"><a class="hero-button" href={sitePath("metodologia/")}>Conocer la metodología <ArrowRight size={17} /></a></div>
     </div>
   </section>
 

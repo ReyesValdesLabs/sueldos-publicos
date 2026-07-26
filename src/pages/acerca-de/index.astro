@@ -1,0 +1,40 @@
+---
+import { ExternalLink, FileCheck2, Scale, ShieldCheck } from "lucide-react";
+import { SITE } from "@/data/site";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Quiénes somos | Sueldos Públicos";
+const description = "Conoce el propósito, independencia y criterios de transparencia detrás de las calculadoras de Sueldos Públicos.";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path: "acerca-de/", type: "AboutPage" }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Quiénes somos", path: "acerca-de/" },
+  ]),
+];
+---
+<BaseLayout title={title} description={description} structuredData={structuredData}>
+  <header class="page-header page-shell">
+    <span class="eyebrow">Quiénes somos</span>
+    <h1>Una herramienta independiente para entender remuneraciones públicas.</h1>
+    <p>Sueldos Públicos transforma reglas dispersas en cálculos explicables para docentes y asistentes de la educación en Chile.</p>
+  </header>
+  <article class="page-shell prose-page">
+    <h2>Propósito</h2>
+    <p>El proyecto busca que cada persona pueda estimar su remuneración, identificar los conceptos que la componen y revisar las fuentes utilizadas. El resultado se presenta como una orientación verificable, no como una liquidación oficial ni como asesoría jurídica, tributaria o previsional.</p>
+
+    <div class="trust-principles" aria-label="Principios del proyecto">
+      <section><Scale size={22} /><h2>Independencia</h2><p>No pertenecemos ni representamos al Gobierno, un SLEP, una municipalidad, una AFP o una institución empleadora.</p></section>
+      <section><FileCheck2 size={22} /><h2>Trazabilidad</h2><p>Las páginas legales enlazan las normas, resoluciones y parámetros oficiales que respaldan cada implementación.</p></section>
+      <section><ShieldCheck size={22} /><h2>Privacidad</h2><p>Los datos salariales se procesan en el navegador y no se almacenan en una cuenta o base de datos del sitio.</p></section>
+    </div>
+
+    <h2>Responsabilidad editorial</h2>
+    <p>El contenido y el código son mantenidos por el proyecto Sueldos Públicos. Las páginas indican su fecha de revisión y distinguen las reglas generales de los antecedentes que siempre deben confirmarse con el empleador o la autoridad competente.</p>
+
+    <h2>Transparencia del proyecto</h2>
+    <p>El código fuente es público para facilitar la revisión técnica y la detección de errores. Puedes consultar el <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer">repositorio de Sueldos Públicos <ExternalLink size={14} className="inline" /></a>, revisar nuestra <a href={sitePath("metodologia/")}>metodología</a> o utilizar el canal de <a href={sitePath("contacto/")}>contacto y correcciones</a>.</p>
+  </article>
+</BaseLayout>

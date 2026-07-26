@@ -1,5 +1,6 @@
 ---
-import { sitePath } from "@/lib/site-path";
+import { Image } from "astro:assets";
+import brandMark from "@/assets/sueldospublicos-mark-transparent.png";
 
 interface Props {
   compact?: boolean;
@@ -11,7 +12,7 @@ const { compact = false, class: className } = Astro.props;
 
 <span class:list={["brand-lockup", { "brand-lockup--compact": compact }, className]}>
   <span class="brand-symbol" aria-hidden="true">
-    <img src={sitePath("sueldospublicos-mark-transparent.png")} alt="" width="512" height="512" />
+    <Image src={brandMark} alt="" width={96} height={96} format="webp" quality={82} loading="eager" />
   </span>
   <span class="brand-wordmark" aria-hidden="true">
     <span>sueldos</span><strong>publicos</strong><small>.cl</small>

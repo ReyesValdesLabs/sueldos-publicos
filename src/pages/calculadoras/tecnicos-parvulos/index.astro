@@ -2,8 +2,21 @@
 import AdSlot from "@/components/AdSlot.astro";
 import TechnicalAssistantCalculator from "@/components/TechnicalAssistantCalculator";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Calculadora para técnicos en párvulos | Sueldos Públicos";
+const description = "Estima la liquidación de técnicos y técnicas en educación parvularia según su empleador SLEP o DAEM/DEM, con reglas y fórmulas separadas.";
+const path = "calculadoras/tecnicos-parvulos/";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path }),
+  calculatorStructuredData({ name: "Calculadora para técnicos en párvulos", description, path }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Técnicos/as en párvulos", path },
+  ]),
+];
 ---
-<BaseLayout title="Calculadora para técnicos en párvulos | Sueldos Públicos" description="Estima la liquidación de técnicos y técnicas en educación parvularia según su empleador SLEP o DAEM/DEM, con reglas y fórmulas separadas.">
+<BaseLayout title={title} description={description} structuredData={structuredData} adsense>
   <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p></header>
   <div class="page-shell calculator-page-content"><TechnicalAssistantCalculator client:load /></div>
   <AdSlot placement="después de la calculadora técnica" />

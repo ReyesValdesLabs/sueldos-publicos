@@ -1,24 +1,22 @@
 import { LEGAL_ENTRIES } from "@/data/legal";
+import { LEGAL_CONTENT_REVIEWED_AT, STATIC_PAGE_LAST_MODIFIED } from "@/data/site";
 
-const staticPages = [
-  "",
-  "calculadoras/docentes/",
-  "calculadoras/tecnicos-parvulos/",
-  "calculadoras/tramos-docentes/",
-  "legal/",
-  "privacidad/",
-  "terminos/",
-];
+const staticPages = Object.entries(STATIC_PAGE_LAST_MODIFIED).map(([path, lastModified]) => ({
+  path,
+  lastModified,
+}));
 
 export function GET({ site }: { site: URL }) {
   const pages = [
     ...staticPages,
-    ...LEGAL_ENTRIES.map((entry) => `legal/${entry.slug}/`),
+    ...LEGAL_ENTRIES.map((entry) => ({
+      path: `legal/${entry.slug}/`,
+      lastModified: LEGAL_CONTENT_REVIEWED_AT,
+    })),
   ];
-  const urls = pages.map((path) => {
+  const urls = pages.map(({ path, lastModified }) => {
     const loc = new URL(path, site).href;
-    const priority = path === "" ? "1.0" : path.startsWith("calculadoras/") ? "0.9" : "0.7";
-    return `  <url><loc>${loc}</loc><changefreq>monthly</changefreq><priority>${priority}</priority></url>`;
+    return `  <url><loc>${loc}</loc><lastmod>${lastModified}</lastmod></url>`;
   });
 
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`, {

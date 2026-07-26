@@ -2,8 +2,32 @@
 import { ArrowRight, ExternalLink, Scale } from "lucide-react";
 import { LEGAL_ENTRIES } from "@/data/legal";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
+import { LEGAL_CONTENT_REVIEWED_AT } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Respaldo legal de los cálculos | Sueldos Públicos";
+const description = "Consulta las fórmulas, criterios y fuentes oficiales utilizadas por nuestras calculadoras de remuneraciones públicas.";
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${LEGAL_CONTENT_REVIEWED_AT}T12:00:00Z`));
+const structuredData = [
+  webPageStructuredData({
+    name: title,
+    description,
+    path: "legal/",
+    type: "CollectionPage",
+    dateModified: LEGAL_CONTENT_REVIEWED_AT,
+  }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Respaldo legal", path: "legal/" },
+  ]),
+];
 
 const officialSources = [
   {
@@ -48,8 +72,8 @@ const officialSources = [
   },
 ];
 ---
-<BaseLayout title="Respaldo legal de los cálculos | Sueldos Públicos" description="Consulta las fórmulas, criterios y fuentes oficiales utilizadas por nuestras calculadoras de remuneraciones públicas.">
-  <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. La versión activa corresponde a julio de 2026.</p></header>
+<BaseLayout title={title} description={description} structuredData={structuredData}>
+  <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. La versión activa corresponde a julio de 2026.</p><p class="content-meta">Última revisión editorial: {reviewedLabel} · <a href={sitePath("metodologia/")}>Cómo revisamos las fuentes</a></p></header>
   <section class="page-shell official-sources" aria-labelledby="fuentes-principales">
     <div class="section-heading">
       <span class="eyebrow">Documentos consultados</span>

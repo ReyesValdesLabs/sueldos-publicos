@@ -1,0 +1,43 @@
+---
+import { ExternalLink } from "lucide-react";
+import { SITE } from "@/data/site";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Contacto y reporte de errores | Sueldos Públicos";
+const description = "Cómo reportar errores de cálculo, fuentes desactualizadas o problemas técnicos en Sueldos Públicos.";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path: "contacto/", type: "ContactPage" }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Contacto", path: "contacto/" },
+  ]),
+];
+---
+<BaseLayout title={title} description={description} structuredData={structuredData}>
+  <header class="page-header page-shell">
+    <span class="eyebrow">Contacto y correcciones</span>
+    <h1>Ayúdanos a corregir diferencias documentadas.</h1>
+    <p>El canal público del proyecto permite reportar una fuente desactualizada, una fórmula que no coincide con la norma o un problema técnico reproducible.</p>
+  </header>
+  <article class="page-shell prose-page">
+    <h2>Qué información incluir</h2>
+    <ul>
+      <li>La dirección exacta de la página afectada.</li>
+      <li>El período y régimen seleccionados, sin datos personales.</li>
+      <li>El resultado esperado y el resultado observado.</li>
+      <li>Un enlace al documento oficial o disposición que respalda la corrección.</li>
+    </ul>
+
+    <div class="privacy-warning">
+      <strong>No publiques información sensible.</strong>
+      <p>El reporte es público. No adjuntes liquidaciones, RUN, nombres, contratos, datos de salud, antecedentes bancarios ni documentos laborales personales.</p>
+    </div>
+
+    <p><a class="hero-button primary" href={SITE.issuesUrl} target="_blank" rel="noopener noreferrer">Crear reporte público en GitHub <ExternalLink size={16} /></a></p>
+
+    <h2>Antes de reportar</h2>
+    <p>Revisa el período activo, las advertencias de la calculadora, el <a href={sitePath("legal/")}>respaldo legal</a> y nuestra <a href={sitePath("metodologia/")}>metodología</a>. Las diferencias causadas por beneficios locales, acreditaciones pendientes o datos omitidos no siempre representan un error de la herramienta.</p>
+  </article>
+</BaseLayout>
