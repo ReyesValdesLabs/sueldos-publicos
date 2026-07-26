@@ -12,6 +12,14 @@ import type {
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
+const MANAGEMENT_QUARTER_MONTHS = 3;
+
+function calculateIncomeTax(taxableBase: number, payrollParameters: PeriodParameters) {
+  const bracket = payrollParameters.taxBrackets.find(
+    (candidate) => taxableBase <= candidate.upTo,
+  ) ?? payrollParameters.taxBrackets.at(-1)!;
+  return money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
+}
 
 export function calculateAdministrativeMinimumIncome(weeklyHours: number) {
   const hours = Math.min(D.minimumIncome.maximumWeeklyHours, money(weeklyHours));
@@ -111,11 +119,11 @@ export function calculateAdministrativeSalary(
       });
     }
 
-    if (input.managementAllowanceMonthlyEquivalent > 0) {
+    if (input.managementAllowanceQuarterlyPayment > 0) {
       earnings.push({
         id: "management-allowance",
-        label: "Asignación de mejoramiento de gestión (equivalente mensual)",
-        amount: money(input.managementAllowanceMonthlyEquivalent),
+        label: "Cuota de asignación de mejoramiento de gestión pagada en julio",
+        amount: money(input.managementAllowanceQuarterlyPayment),
         imposable: true,
         taxable: true,
         countsForMinimum: false,
@@ -151,31 +159,56 @@ export function calculateAdministrativeSalary(
   }
 
   const managementAllowance = earnings.find((line) => line.id === "management-allowance")?.amount ?? 0;
-  if (managementAllowance > 0) {
-    const imposableBeforeCompensation = sum(earnings.filter((line) => line.imposable));
+  const managementMonthlyEquivalent = money(
+    managementAllowance / MANAGEMENT_QUARTER_MONTHS,
+  );
+  const pensionCalculationSupported = !isMunicipalStatute
+    || input.pensionRegime === "afp";
+  let managementAfpReliquidation = 0;
+  let managementHealthReliquidation = 0;
+  let managementHealthLegalReliquidation = 0;
+  let managementContributionCompensation = 0;
+  if (managementAllowance > 0 && pensionCalculationSupported) {
+    const regularImposableBeforeBonus = sum(
+      earnings.filter((line) => line.imposable && line.id !== "management-allowance"),
+    );
     const planAmount = input.healthSystem === "isapre"
       ? money(input.isaprePlanUf * payrollParameters.uf)
       : 0;
-    const cappedWithManagement = Math.min(
-      imposableBeforeCompensation,
-      payrollParameters.pensionCapUf * payrollParameters.uf,
-    );
     const cappedWithoutManagement = Math.min(
-      Math.max(0, imposableBeforeCompensation - managementAllowance),
+      regularImposableBeforeBonus,
       payrollParameters.pensionCapUf * payrollParameters.uf,
     );
-    const afpCompensation = (cappedWithManagement - cappedWithoutManagement)
-      * (0.1 + payrollParameters.afpCommission[input.afp]);
-    const healthWithManagement = Math.max(cappedWithManagement * 0.07, planAmount);
-    const healthWithoutManagement = Math.max(cappedWithoutManagement * 0.07, planAmount);
-    const managementCompensation = money(
-      afpCompensation + healthWithManagement - healthWithoutManagement,
+    const cappedWithMonthlyManagement = Math.min(
+      regularImposableBeforeBonus + managementMonthlyEquivalent,
+      payrollParameters.pensionCapUf * payrollParameters.uf,
     );
-    if (managementCompensation > 0) {
+    const monthlyAfpDelta = (cappedWithMonthlyManagement - cappedWithoutManagement)
+      * (0.1 + payrollParameters.afpCommission[input.afp]);
+    const healthWithoutManagement = Math.max(cappedWithoutManagement * 0.07, planAmount);
+    const healthWithManagement = Math.max(
+      cappedWithMonthlyManagement * 0.07,
+      planAmount,
+    );
+    managementAfpReliquidation = money(
+      monthlyAfpDelta * MANAGEMENT_QUARTER_MONTHS,
+    );
+    managementHealthReliquidation = money(
+      (healthWithManagement - healthWithoutManagement) * MANAGEMENT_QUARTER_MONTHS,
+    );
+    managementHealthLegalReliquidation = money(
+      (cappedWithMonthlyManagement - cappedWithoutManagement)
+      * 0.07
+      * MANAGEMENT_QUARTER_MONTHS,
+    );
+    managementContributionCompensation = money(
+      managementAfpReliquidation + managementHealthReliquidation,
+    );
+    if (managementContributionCompensation > 0) {
       earnings.push({
         id: "management-contribution-compensation",
         label: "Bonificación compensatoria de cotizaciones de gestión",
-        amount: managementCompensation,
+        amount: managementContributionCompensation,
         imposable: false,
         taxable: true,
         countsForMinimum: false,
@@ -192,7 +225,9 @@ export function calculateAdministrativeSalary(
   const lowIncomeLower = D.lowIncomeBonus.lowerThreshold44h * hoursRatio;
   const lowIncomeUpper = D.lowIncomeBonus.upperThreshold44h * hoursRatio;
   const lowIncomeMaximum = D.lowIncomeBonus.maximum44h * hoursRatio;
-  const lowIncomeBonus = input.applyLowIncomeBonus
+  const legallyEligibleForLowIncomeBonus = !isDaemCentral;
+  const lowIncomeBonus = legallyEligibleForLowIncomeBonus
+    && input.applyLowIncomeBonus
     && grossBeforeLowIncomeBonus > 0
     && grossBeforeLowIncomeBonus < lowIncomeUpper
     ? money(
@@ -215,19 +250,33 @@ export function calculateAdministrativeSalary(
   }
 
   const article59Bonus = earnings.find((line) => line.id === "article-59-bonus")?.amount ?? 0;
-  const imposableEarnings = sum(earnings.filter((line) => line.imposable));
-  const taxableEarnings = sum(earnings.filter((line) => line.taxable));
+  const currentImposableEarnings = sum(
+    earnings.filter((line) => line.imposable && line.id !== "management-allowance"),
+  );
+  const currentTaxableEarnings = sum(
+    earnings.filter(
+      (line) => line.taxable
+        && line.id !== "management-allowance"
+        && line.id !== "management-contribution-compensation",
+    ),
+  );
   const imposableBase = money(Math.min(
-    imposableEarnings,
+    currentImposableEarnings,
     payrollParameters.pensionCapUf * payrollParameters.uf,
   ));
-  const afp = money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]));
+  const currentAfp = pensionCalculationSupported
+    ? money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]))
+    : 0;
+  const afp = currentAfp + managementAfpReliquidation;
   const healthLegal = money(imposableBase * 0.07);
-  const health = input.healthSystem === "isapre"
-    ? money(Math.max(healthLegal, input.isaprePlanUf * payrollParameters.uf))
-    : healthLegal;
+  const currentHealth = pensionCalculationSupported
+    ? input.healthSystem === "isapre"
+      ? money(Math.max(healthLegal, input.isaprePlanUf * payrollParameters.uf))
+      : healthLegal
+    : 0;
+  const health = currentHealth + managementHealthReliquidation;
   const afcBase = Math.min(
-    imposableEarnings,
+    currentImposableEarnings,
     payrollParameters.unemploymentCapUf * payrollParameters.uf,
   );
   const afc = !isMunicipalStatute
@@ -241,34 +290,67 @@ export function calculateAdministrativeSalary(
     : 0;
   const taxableBase = money(Math.max(
     0,
-    taxableEarnings - afp - healthLegal - afc - apvTaxReduction,
+    currentTaxableEarnings - currentAfp - healthLegal - afc - apvTaxReduction,
   ));
-  const bracket = payrollParameters.taxBrackets.find(
-    (candidate) => taxableBase <= candidate.upTo,
-  ) ?? payrollParameters.taxBrackets.at(-1)!;
-  const tax = money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
+  const currentTax = pensionCalculationSupported
+    ? calculateIncomeTax(taxableBase, payrollParameters)
+    : 0;
+  const managementMonthlyCompensation = money(
+    managementContributionCompensation / MANAGEMENT_QUARTER_MONTHS,
+  );
+  const managementMonthlyTaxableBase = managementAllowance > 0
+    && pensionCalculationSupported
+    ? money(Math.max(
+      0,
+      currentTaxableEarnings
+      + managementMonthlyEquivalent
+      + managementMonthlyCompensation
+      - currentAfp
+      - managementAfpReliquidation / MANAGEMENT_QUARTER_MONTHS
+      - healthLegal
+      - managementHealthLegalReliquidation / MANAGEMENT_QUARTER_MONTHS
+      - afc
+      - apvTaxReduction,
+    ))
+    : taxableBase;
+  const managementMonthlyTax = calculateIncomeTax(
+    managementMonthlyTaxableBase,
+    payrollParameters,
+  );
+  const managementTaxReliquidation = managementAllowance > 0
+    && pensionCalculationSupported
+    ? money(
+      Math.max(0, managementMonthlyTax - currentTax) * MANAGEMENT_QUARTER_MONTHS,
+    )
+    : 0;
+  const tax = currentTax + managementTaxReliquidation;
 
   const afpName = input.afp[0].toUpperCase() + input.afp.slice(1);
-  const discounts: ResultLine[] = [
-    {
+  const discounts: ResultLine[] = [];
+  if (pensionCalculationSupported) {
+    discounts.push({
       id: "afp",
-      label: `AFP ${afpName}`,
+      label: managementAfpReliquidation > 0
+        ? `AFP ${afpName} (julio y reliquidación de gestión)`
+        : `AFP ${afpName}`,
       amount: afp,
       imposable: false,
       taxable: false,
       countsForMinimum: false,
       legalSlug: "cotizaciones-previsionales",
-    },
-    {
+    });
+    discounts.push({
       id: "health",
-      label: input.healthSystem === "fonasa" ? "Fonasa (7%)" : "Plan Isapre",
+      label: managementHealthReliquidation > 0
+        ? `${input.healthSystem === "fonasa" ? "Fonasa (7%)" : "Plan Isapre"} (julio y reliquidación de gestión)`
+        : input.healthSystem === "fonasa" ? "Fonasa (7%)" : "Plan Isapre",
       amount: health,
       imposable: false,
       taxable: false,
       countsForMinimum: false,
       legalSlug: "cotizaciones-previsionales",
-    },
-  ];
+    });
+  }
   if (afc > 0) {
     discounts.push({
       id: "afc",
@@ -294,7 +376,9 @@ export function calculateAdministrativeSalary(
   if (tax > 0) {
     discounts.push({
       id: "tax",
-      label: "Impuesto Único de Segunda Categoría",
+      label: managementTaxReliquidation > 0
+        ? "Impuesto Único (julio y reliquidación de gestión)"
+        : "Impuesto Único de Segunda Categoría",
       amount: tax,
       imposable: false,
       taxable: false,
@@ -319,12 +403,16 @@ export function calculateAdministrativeSalary(
   }
   if (isDaemCentral) {
     warnings.push("No se aplicaron automáticamente el aumento de la Ley N.º 19.464 ni beneficios propios del establecimiento, porque el nivel central DAEM/DEM constituye una unidad distinta.");
+    warnings.push("El bono mensual de bajas remuneraciones del artículo 13 de la Ley N.º 21.806 no corresponde a este recorrido de nivel central DAEM/DEM.");
   }
   if (isMunicipalStatute) {
     warnings.push(`El grado ${Math.min(20, Math.max(1, money(input.municipalGrade)))} es informativo: confirma sueldo base y asignación municipal en la escala de transparencia vigente de tu municipalidad.`);
     warnings.push("No se descontó Seguro de Cesantía: planta y contrata municipal se rigen por la Ley N.º 18.883, no por un contrato sujeto al Código del Trabajo.");
-    if (input.managementAllowanceMonthlyEquivalent > 0) {
-      warnings.push("La asignación de gestión y su bonificación compensatoria se muestran como equivalentes mensuales; el pago efectivo se realiza en cuotas y su reliquidación previsional y tributaria puede diferir.");
+    if (!pensionCalculationSupported) {
+      warnings.push("Cálculo detenido: este recorrido todavía no modela las tasas ni los topes del régimen previsional antiguo administrado por IPS.");
+    }
+    if (input.managementAllowanceQuarterlyPayment > 0) {
+      warnings.push(`La cuota de gestión de julio se incluyó completa en el bruto y en el líquido. Para estimar su reliquidación previsional y tributaria se distribuyó en tres meses de ${managementMonthlyEquivalent.toLocaleString("es-CL")} y se usó la remuneración actual como aproximación de abril a junio.`);
     }
   }
   if (!isMunicipalStatute) {
@@ -342,13 +430,14 @@ export function calculateAdministrativeSalary(
   if (declaredHours > 44) {
     warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   }
-  if (!input.applyLowIncomeBonus) {
+  if (legallyEligibleForLowIncomeBonus && !input.applyLowIncomeBonus) {
     warnings.push("No se agregó el bono mensual de bajas remuneraciones porque desactivaste su aplicación para tu vínculo.");
   }
 
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
   return {
+    supported: pensionCalculationSupported,
     earnings,
     discounts,
     totalEarnings,
@@ -356,6 +445,8 @@ export function calculateAdministrativeSalary(
     netSalary: totalEarnings - totalDiscounts,
     imposableBase,
     taxableBase,
+    managementMonthlyEquivalent,
+    managementContributionCompensation,
     article59Bonus,
     lowIncomeBonus,
     municipalBienniaAllowance,

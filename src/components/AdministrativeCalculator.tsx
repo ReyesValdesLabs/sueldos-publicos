@@ -80,8 +80,9 @@ const initialInput: AdministrativeCalculationInput = {
   municipalGrade: 18,
   municipalAllowance: 0,
   municipalBiennia: 0,
-  managementAllowanceMonthlyEquivalent: 0,
+  managementAllowanceQuarterlyPayment: 0,
   applyLowIncomeBonus: true,
+  pensionRegime: "afp",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -217,6 +218,7 @@ export default function AdministrativeCalculator() {
   const regime = input.regime;
   const isMunicipalStatute = regime === "municipalStatute";
   const isEducationEstablishment = regime === "educationEstablishment";
+  const isDaemCentral = regime === "daemCentral";
 
   useEffect(() => {
     const urlRegime = regimeFromUrl();
@@ -343,7 +345,7 @@ export default function AdministrativeCalculator() {
       </div>
       <div className="scope-note">
         <Info size={20} />
-        <p><strong>No elijas por el nombre informal del cargo.</strong> Honorarios, corporaciones municipales y personal ya traspasado a un SLEP necesitan recorridos distintos de estos tres.</p>
+        <p><strong>No elijas por el nombre informal del cargo.</strong> Honorarios, corporaciones municipales y personal ya traspasado a un SLEP necesitan recorridos distintos. Si eres planta o contrata y cotizas en el régimen antiguo administrado por IPS, podrás identificarlo, pero el cálculo se detendrá antes de aplicar tasas AFP.</p>
       </div>
     </div>}
 
@@ -453,7 +455,7 @@ export default function AdministrativeCalculator() {
                 <div className="form-grid">
                   <NumberField id="municipal-allowance" label="Asignación municipal" value={input.municipalAllowance} onChange={(value) => update("municipalAllowance", value)} suffix="$" help="Monto exacto de tu estamento y grado; se trata como no imponible y tributable." />
                   <NumberField id="municipal-biennia" label="Bienios reconocidos" value={input.municipalBiennia} onChange={(value) => update("municipalBiennia", value)} min={0} max={15} help={`La estimación actual es ${currency.format(result.municipalBienniaAllowance)}: 2% del sueldo base por bienio, con máximo de 15.`} />
-                  <NumberField id="municipal-management" label="Gestión municipal, equivalente mensual" value={input.managementAllowanceMonthlyEquivalent} onChange={(value) => update("managementAllowanceMonthlyEquivalent", value)} suffix="$" help="Usa el equivalente mensual publicado o informado. Las cuotas efectivas pueden diferir." />
+                  <NumberField id="municipal-management" label="Cuota de gestión pagada en julio" value={input.managementAllowanceQuarterlyPayment} onChange={(value) => update("managementAllowanceQuarterlyPayment", value)} suffix="$" help="Ingresa la cuota completa correspondiente a abril-junio. La calculadora la incluye completa en el bruto de julio y la divide en tres solo para estimar la reliquidación previsional y tributaria." />
                 </div>
               </section>}
             </CardContent>
@@ -466,15 +468,25 @@ export default function AdministrativeCalculator() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="form-grid">
-                <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
-                  <option value="capital">Capital</option>
-                  <option value="cuprum">Cuprum</option>
-                  <option value="habitat">Habitat</option>
-                  <option value="modelo">Modelo</option>
-                  <option value="planvital">PlanVital</option>
-                  <option value="provida">Provida</option>
-                  <option value="uno">Uno</option>
-                </SelectField>
+                {isMunicipalStatute && <SelectField
+                  id="administrative-pension-regime"
+                  label="Régimen previsional"
+                  value={input.pensionRegime}
+                  onChange={(value) => update("pensionRegime", value as AdministrativeCalculationInput["pensionRegime"])}
+                  help="El régimen antiguo administrado por IPS usa tasas y topes distintos de una AFP."
+                >
+                  <option value="afp">AFP</option>
+                  <option value="ips">IPS / régimen antiguo</option>
+                </SelectField>}
+                {(!isMunicipalStatute || input.pensionRegime === "afp") && <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
+                    <option value="capital">Capital</option>
+                    <option value="cuprum">Cuprum</option>
+                    <option value="habitat">Habitat</option>
+                    <option value="modelo">Modelo</option>
+                    <option value="planvital">PlanVital</option>
+                    <option value="provida">Provida</option>
+                    <option value="uno">Uno</option>
+                  </SelectField>}
                 <SelectField id="administrative-health" label="Sistema de salud" value={input.healthSystem} onChange={(value) => update("healthSystem", value as AdministrativeCalculationInput["healthSystem"])}>
                   <option value="fonasa">Fonasa</option>
                   <option value="isapre">Isapre</option>
@@ -486,11 +498,19 @@ export default function AdministrativeCalculator() {
                   <option value="fixed">Plazo fijo</option>
                 </SelectField>}
               </div>
+              {!result.supported && <div className="scope-exclusion" role="alert">
+                <AlertTriangle size={18} />
+                <p><strong>Régimen IPS aún no calculable:</strong> no mostraremos un líquido usando tasas AFP incorrectas. Confirma tus descuentos en la liquidación o utiliza este recorrido cuando se incorpore el régimen antiguo.</p>
+              </div>}
               <div className="option-grid">
-                <CheckField id="administrative-low-income" checked={input.applyLowIncomeBonus} onChange={(value) => update("applyLowIncomeBonus", value)} label="Mi vínculo está cubierto por el bono de bajas remuneraciones 2026" help="Desactívalo si remuneraciones confirmó que tu esquema contractual queda fuera." />
+                {!isDaemCentral && <CheckField id="administrative-low-income" checked={input.applyLowIncomeBonus} onChange={(value) => update("applyLowIncomeBonus", value)} label="Mi vínculo está cubierto por el bono de bajas remuneraciones 2026" help="Desactívalo si remuneraciones confirmó que tu esquema contractual queda fuera." />}
                 {input.contractType === "indefinite" && !isMunicipalStatute && <CheckField id="administrative-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal termina para esa relación laboral." />}
                 <CheckField id="administrative-apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="El APV rebaja la base tributable" help="Actívalo solo si corresponde al régimen informado por tu institución." />
               </div>
+              {isDaemCentral && <div className="scope-exclusion">
+                <Info size={18} />
+                <p><strong>Nivel central DAEM/DEM:</strong> el bono mensual del artículo 13 de la Ley N.º 21.806 no se agrega en este recorrido. Si existe otro pago local, incorpóralo como haber manual con el tratamiento de tu liquidación.</p>
+              </div>}
 
               <section className="border-t border-border pt-6">
                 <div className="flex items-center justify-between gap-3">
@@ -541,10 +561,12 @@ export default function AdministrativeCalculator() {
               <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />
               <ResultTable title="Descuentos" lines={result.discounts} total={result.totalDiscounts} />
               <div className="base-grid daem-base-grid">
-                <div><span>Base imponible</span><strong>{currency.format(result.imposableBase)}</strong></div>
-                <div><span>Base tributable</span><strong>{currency.format(result.taxableBase)}</strong></div>
+                <div><span>Base imponible de julio</span><strong>{currency.format(result.imposableBase)}</strong></div>
+                <div><span>Base tributable de julio</span><strong>{currency.format(result.taxableBase)}</strong></div>
                 <div><span>Bono artículo 59</span><strong>{currency.format(result.article59Bonus)}</strong></div>
                 <div><span>Bono bajas rentas</span><strong>{currency.format(result.lowIncomeBonus)}</strong></div>
+                {result.managementMonthlyEquivalent > 0 && <div><span>Gestión distribuida por mes</span><strong>{currency.format(result.managementMonthlyEquivalent)}</strong></div>}
+                {result.managementContributionCompensation > 0 && <div><span>Compensación cotizaciones gestión</span><strong>{currency.format(result.managementContributionCompensation)}</strong></div>}
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button type="button" onClick={() => window.print()}><Printer size={18} /> Imprimir o guardar PDF</Button>
@@ -556,7 +578,15 @@ export default function AdministrativeCalculator() {
 
           <div className={`flex items-center border-t border-border bg-muted/30 p-4 md:px-8 print:hidden ${step === 1 ? "justify-end" : "justify-between"}`}>
             {step > 1 && <Button type="button" variant="ghost" onClick={() => goTo(step - 1)}><ArrowLeft size={17} /> Anterior</Button>}
-            {step < 3 && <Button type="button" onClick={() => step === 1 && earningsInvalid ? undefined : goTo(step + 1)} disabled={step === 1 && earningsInvalid}>
+            {step < 3 && <Button
+              type="button"
+              onClick={() => step === 1 && earningsInvalid
+                ? undefined
+                : step === 2 && !result.supported
+                  ? undefined
+                  : goTo(step + 1)}
+              disabled={(step === 1 && earningsInvalid) || (step === 2 && !result.supported)}
+            >
               {step === 2 ? "Ver resultado" : "Continuar"} <ArrowRight size={17} />
             </Button>}
           </div>
@@ -572,7 +602,7 @@ export default function AdministrativeCalculator() {
               <CardContent className="space-y-4 pt-7 md:pt-7">
                 <SummaryRow label="Total haberes" value={result.totalEarnings} positive />
                 <SummaryRow label="Total descuentos" value={result.totalDiscounts} />
-                <SummaryRow label="Base imponible" value={result.imposableBase} />
+                <SummaryRow label="Base imponible de julio" value={result.imposableBase} />
                 <div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
                   <Info size={15} className="mb-1 inline text-primary" /> Resumen final de esta estimación.
                 </div>

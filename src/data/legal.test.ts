@@ -49,7 +49,11 @@ describe("Respaldo de administrativos DAEM y municipales", () => {
     expect(explanation).toContain("nivel central");
     expect(explanation).toContain("planta o contrata");
     expect(explanation).toContain("2% del sueldo base");
+    expect(explanation).toContain("cuota completa pagada en julio");
     expect(notes).toContain("no se les descuenta AFC");
+    expect(notes).toContain("nivel central DAEM/DEM no concede");
+    expect(notes).toContain("IPS queda fuera");
     expect(entry?.sources.some((source) => source.label.includes("Resolución Exenta N.º 80"))).toBe(true);
+    expect(entry?.sources.some((source) => source.label.includes("Superintendencia de Pensiones"))).toBe(true);
   });
 });

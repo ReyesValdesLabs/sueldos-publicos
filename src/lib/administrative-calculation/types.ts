@@ -5,6 +5,8 @@ export type AdministrativeRegime =
   | "daemCentral"
   | "municipalStatute";
 
+export type AdministrativePensionRegime = "afp" | "ips";
+
 export interface AdministrativeCalculationInput {
   regime: AdministrativeRegime;
   weeklyHours: number;
@@ -18,8 +20,9 @@ export interface AdministrativeCalculationInput {
   municipalGrade: number;
   municipalAllowance: number;
   municipalBiennia: number;
-  managementAllowanceMonthlyEquivalent: number;
+  managementAllowanceQuarterlyPayment: number;
   applyLowIncomeBonus: boolean;
+  pensionRegime: AdministrativePensionRegime;
   afp: Afp;
   healthSystem: HealthSystem;
   isaprePlanUf: number;
@@ -31,6 +34,7 @@ export interface AdministrativeCalculationInput {
 }
 
 export interface AdministrativeCalculationResult {
+  supported: boolean;
   earnings: ResultLine[];
   discounts: ResultLine[];
   totalEarnings: number;
@@ -38,6 +42,8 @@ export interface AdministrativeCalculationResult {
   netSalary: number;
   imposableBase: number;
   taxableBase: number;
+  managementMonthlyEquivalent: number;
+  managementContributionCompensation: number;
   article59Bonus: number;
   lowIncomeBonus: number;
   municipalBienniaAllowance: number;

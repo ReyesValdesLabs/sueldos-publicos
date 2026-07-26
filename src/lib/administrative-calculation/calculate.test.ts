@@ -18,8 +18,9 @@ const baseInput: AdministrativeCalculationInput = {
   municipalGrade: 18,
   municipalAllowance: 0,
   municipalBiennia: 0,
-  managementAllowanceMonthlyEquivalent: 0,
+  managementAllowanceQuarterlyPayment: 0,
   applyLowIncomeBonus: true,
+  pensionRegime: "afp",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -95,36 +96,45 @@ describe("calculateAdministrativeSalary", () => {
     });
   });
 
-  it("adds the non-imposable compensation for pension and health deductions on management pay", () => {
+  it("adds the non-imposable compensation for the quarterly management payment", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
       regime: "municipalStatute",
       baseSalary: 1_000_000,
-      managementAllowanceMonthlyEquivalent: 100_000,
+      managementAllowanceQuarterlyPayment: 300_000,
     });
     const compensation = result.earnings.find(
       (line) => line.id === "management-contribution-compensation",
     );
-    expect(compensation?.amount).toBeGreaterThan(17_000);
+    expect(compensation?.amount).toBeGreaterThan(51_000);
     expect(compensation).toMatchObject({ imposable: false, taxable: true });
+    expect(result.managementMonthlyEquivalent).toBe(100_000);
   });
 
-  it("counts the management contribution compensation in gross pay for the 2026 bonus", () => {
+  it("uses the full July management payment when testing the 2026 bonus threshold", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
       regime: "municipalStatute",
       baseSalary: 640_000,
-      managementAllowanceMonthlyEquivalent: 50_000,
+      managementAllowanceQuarterlyPayment: 150_000,
     });
     const compensation = result.earnings.find(
       (line) => line.id === "management-contribution-compensation",
     )?.amount ?? 0;
-    const expected = Math.round(
-      62_903 - 0.71437 * (640_000 + 50_000 + compensation - 673_687),
-    );
-
     expect(compensation).toBeGreaterThan(0);
-    expect(result.lowIncomeBonus).toBe(expected);
+    expect(result.earnings.find((line) => line.id === "management-allowance")?.amount)
+      .toBe(150_000);
+    expect(result.lowIncomeBonus).toBe(0);
+  });
+
+  it("does not let the central DAEM route activate the 2026 low-income bonus", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "daemCentral",
+      applyLowIncomeBonus: true,
+    });
+    expect(result.lowIncomeBonus).toBe(0);
+    expect(result.warnings.some((warning) => warning.includes("artículo 13"))).toBe(true);
   });
 
   it("never charges AFC to plant or municipal contrata", () => {
@@ -135,6 +145,20 @@ describe("calculateAdministrativeSalary", () => {
       contractType: "indefinite",
     });
     expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+  });
+
+  it("refuses to calculate AFP deductions for municipal IPS affiliates", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "municipalStatute",
+      baseSalary: 1_000_000,
+      pensionRegime: "ips",
+      managementAllowanceQuarterlyPayment: 300_000,
+    });
+    expect(result.supported).toBe(false);
+    expect(result.discounts.some((line) => line.id === "afp")).toBe(false);
+    expect(result.managementContributionCompensation).toBe(0);
+    expect(result.warnings.some((warning) => warning.includes("IPS"))).toBe(true);
   });
 
   it("lets the worker disable the annual low-income bonus when the link is not covered", () => {
