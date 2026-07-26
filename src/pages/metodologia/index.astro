@@ -1,0 +1,46 @@
+---
+import { ExternalLink } from "lucide-react";
+import { SITE } from "@/data/site";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Metodología de cálculo y actualización | Sueldos Públicos";
+const description = "Cómo seleccionamos fuentes oficiales, versionamos parámetros, validamos fórmulas y corregimos las calculadoras de Sueldos Públicos.";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path: "metodologia/" }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Metodología", path: "metodologia/" },
+  ]),
+];
+---
+<BaseLayout title={title} description={description} structuredData={structuredData}>
+  <header class="page-header page-shell">
+    <span class="eyebrow">Metodología</span>
+    <h1>Fuentes oficiales, períodos explícitos y cálculos revisables.</h1>
+    <p>Esta metodología explica cómo convertimos normativa y parámetros mensuales en resultados que una persona pueda desglosar y comprobar.</p>
+  </header>
+  <article class="page-shell prose-page">
+    <h2>1. Alcance definido</h2>
+    <p>Cada calculadora declara los regímenes que cubre y los casos que quedan fuera. No trasladamos automáticamente una regla docente a asistentes de la educación ni tratamos SLEP y DAEM/DEM como equivalentes cuando sus estatutos difieren.</p>
+
+    <h2>2. Jerarquía de fuentes</h2>
+    <p>Priorizamos leyes y decretos publicados oficialmente, textos consolidados de la Biblioteca del Congreso Nacional, resoluciones y documentos de CPEIP o Mineduc, tablas del SII y parámetros previsionales de Previred y superintendencias. Las páginas de <a href={sitePath("legal/")}>respaldo legal</a> enlazan las fuentes específicas de cada concepto.</p>
+
+    <h2>3. Parámetros versionados</h2>
+    <p>Los valores mensuales se asocian a un período de remuneración y pago. No reemplazamos silenciosamente un período anterior: la interfaz muestra la versión activa y la fecha de actualización disponible.</p>
+
+    <h2>4. Implementación separada y comprobable</h2>
+    <p>Las reglas de cálculo se mantienen separadas de la interfaz. Las fórmulas críticas cuentan con pruebas automatizadas para límites, topes y combinaciones relevantes; además, cada resultado muestra sus haberes, bases, descuentos y advertencias.</p>
+
+    <h2>5. Revisión y correcciones</h2>
+    <p>Cuando una norma o parámetro cambia, revisamos la fuente exacta, actualizamos el cálculo y comprobamos regresiones antes de publicar. Una compilación correcta no sustituye la revisión del significado legal o previsional.</p>
+
+    <h2>6. Privacidad y límites</h2>
+    <p>Los datos ingresados se calculan localmente en el navegador. La estimación no puede conocer actos administrativos, acreditaciones, retroactivos, ausencias ni beneficios locales que el usuario no informe. Consulta también la <a href={sitePath("privacidad/")}>política de privacidad</a> y los <a href={sitePath("terminos/")}>términos de uso</a>.</p>
+
+    <h2>Revisión pública</h2>
+    <p>El <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer">código fuente está disponible públicamente <ExternalLink size={14} className="inline" /></a>. Si encuentras una diferencia documentada, utiliza el canal de <a href={sitePath("contacto/")}>contacto y reporte de errores</a>.</p>
+  </article>
+</BaseLayout>

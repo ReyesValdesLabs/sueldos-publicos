@@ -2,6 +2,7 @@
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import { sitePath } from "@/lib/site-path";
+import { organizationStructuredData, websiteStructuredData } from "@/lib/structured-data";
 import "@/styles/global.css";
 
 interface Props {
@@ -11,13 +12,30 @@ interface Props {
   imageAlt?: string;
   type?: "website" | "article";
   noindex?: boolean;
+  adsense?: boolean;
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
-const { title, description, image = "sueldospublicos-mark.png", imageAlt = "Marca de Sueldos Públicos", type = "website", noindex = false, structuredData } = Astro.props;
+const {
+  title,
+  description,
+  image = "og.png",
+  imageAlt = "Calculadoras de sueldos públicos en Chile",
+  type = "website",
+  noindex = false,
+  adsense = false,
+  structuredData,
+} = Astro.props;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 const imageUrl = new URL(sitePath(image), Astro.site ?? Astro.url);
 const robotsContent = noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large";
-const jsonLd = structuredData ? JSON.stringify(structuredData).replace(/</g, "\\u003c") : undefined;
+const pageStructuredData = structuredData
+  ? Array.isArray(structuredData) ? structuredData : [structuredData]
+  : [];
+const jsonLd = JSON.stringify([
+  organizationStructuredData,
+  websiteStructuredData,
+  ...pageStructuredData,
+]).replace(/</g, "\\u003c");
 ---
 <!doctype html>
 <html lang="es">
@@ -26,6 +44,7 @@ const jsonLd = structuredData ? JSON.stringify(structuredData).replace(/</g, "\\
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <meta name="robots" content={robotsContent} />
+    <meta name="author" content="Sueldos Públicos" />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#0d47a1" />
     <link rel="canonical" href={canonicalUrl.href} />
@@ -37,15 +56,18 @@ const jsonLd = structuredData ? JSON.stringify(structuredData).replace(/</g, "\\
     <meta property="og:url" content={canonicalUrl.href} />
     <meta property="og:image" content={imageUrl.href} />
     <meta property="og:image:alt" content={imageAlt} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl.href} />
     <meta name="twitter:image:alt" content={imageAlt} />
-    <link rel="icon" type="image/svg+xml" href={sitePath("favicon.svg")} />
-    <link rel="icon" type="image/png" href={sitePath("sueldospublicos-mark.png")} />
+    <link rel="icon" href={sitePath("favicon.ico")} sizes="any" />
+    {adsense && <link rel="preconnect" href="https://pagead2.googlesyndication.com" />}
     <title>{title}</title>
-    {jsonLd && <script is:inline type="application/ld+json" set:html={jsonLd} />}
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
     <script is:inline>
       (() => {
         const saved = localStorage.getItem("sp-theme");
@@ -56,9 +78,14 @@ const jsonLd = structuredData ? JSON.stringify(structuredData).replace(/</g, "\\
         document.documentElement.dataset.theme = theme;
       })();
     </script>
-    <script is:inline async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5034305532752206"
-     crossorigin="anonymous">
-    </script>
+    {adsense && (
+      <script
+        is:inline
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5034305532752206"
+        crossorigin="anonymous"
+      ></script>
+    )}
   </head>
   <body>
     <a class="skip-link" href="#main-content">Saltar al contenido</a>

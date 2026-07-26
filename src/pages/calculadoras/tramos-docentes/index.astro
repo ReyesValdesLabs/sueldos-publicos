@@ -2,8 +2,21 @@
 import AdSlot from "@/components/AdSlot.astro";
 import TrancheCalculator from "@/components/TrancheCalculator";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Calculadora de tramos de Carrera Docente | Sueldos Públicos";
+const description = "Simula tu progresión de tramo en Carrera Docente según Portafolio, ECEP, experiencia, linealidad y permanencia, con respaldo legal oficial.";
+const path = "calculadoras/tramos-docentes/";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path }),
+  calculatorStructuredData({ name: "Calculadora de tramos de Carrera Docente", description, path }),
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Progresión de tramo", path },
+  ]),
+];
 ---
-<BaseLayout title="Calculadora de tramos de Carrera Docente | Sueldos Públicos" description="Simula tu progresión de tramo en Carrera Docente según Portafolio, ECEP, experiencia, linealidad y permanencia, con respaldo legal oficial.">
+<BaseLayout title={title} description={description} structuredData={structuredData} adsense>
   <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p></header>
   <div class="page-shell calculator-page-content"><TrancheCalculator client:load /></div>
   <AdSlot placement="después de la calculadora de tramos" />
