@@ -56,13 +56,13 @@ const regimeDetails = {
   daemCentral: {
     eyebrow: "Nivel central de educación",
     title: "Administrativo/a del DAEM o DEM",
-    description: "Trabajo en las oficinas centrales del DAEM/DEM, bajo un contrato regido por el Código del Trabajo.",
+    description: "Trabajo en las oficinas centrales del DAEM/DEM bajo el Código del Trabajo y no tengo nombramiento municipal de planta o contrata.",
     icon: Landmark,
   },
   municipalStatute: {
-    eyebrow: "Municipalidad",
-    title: "Funcionario/a municipal de planta o contrata",
-    description: "Tengo un nombramiento municipal, estamento y grado, y estoy sujeto/a a la Ley N.º 18.883.",
+    eyebrow: "Municipalidad o DAEM/DEM",
+    title: "Funcionario/a de planta o contrata",
+    description: "Tengo nombramiento municipal, estamento y grado bajo la Ley N.º 18.883, aunque esté destinado/a al DAEM/DEM.",
     icon: Building2,
   },
 } as const;
@@ -444,13 +444,13 @@ export default function AdministrativeCalculator() {
 
               {regime === "daemCentral" && <div className="scope-exclusion">
                 <Info size={18} />
-                <p><strong>Nivel central DAEM/DEM:</strong> este recorrido no agrega Ley N.º 19.464, alta concentración, excelencia académica ni desempeño difícil. Puedes incorporar haberes pactados en el paso siguiente.</p>
+                <p><strong>Nivel central DAEM/DEM bajo Código del Trabajo:</strong> este recorrido no agrega un bienio legal automático ni beneficios del establecimiento. Si tienes nombramiento municipal de planta o contrata, vuelve a «Régimen» y elige ese caso: allí la antigüedad se calcula al 2% del sueldo base por bienio. Los haberes pactados en un contrato o instrumento local se pueden incorporar en el paso siguiente.</p>
               </div>}
 
               {isMunicipalStatute && <section className="space-y-4 border-t border-border pt-6">
                 <div>
                   <h3 className="font-bold">Escala y asignaciones municipales</h3>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Copia los montos de la escala local vigente. La herramienta solo automatiza la antigüedad legal.</p>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">También corresponde si tu nombramiento municipal de planta o contrata está destinado al DAEM/DEM. Copia los montos de la escala local vigente; la herramienta automatiza la antigüedad legal.</p>
                 </div>
                 <div className="form-grid">
                   <NumberField id="municipal-allowance" label="Asignación municipal" value={input.municipalAllowance} onChange={(value) => update("municipalAllowance", value)} suffix="$" help="Monto exacto de tu estamento y grado; se trata como no imponible y tributable." />

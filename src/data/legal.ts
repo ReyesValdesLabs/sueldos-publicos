@@ -49,6 +49,7 @@ export const LEGAL_ENTRIES: LegalEntry[] = [
     explanation: [
       "El personal administrativo que presta servicios dentro de un establecimiento educacional municipal puede quedar comprendido en la Ley N.º 19.464 y en beneficios asociados al establecimiento. La función, el contrato y el lugar efectivo de desempeño deben respaldar esa calidad.",
       "El personal del nivel central de una municipalidad, corporación o DAEM/DEM constituye una unidad distinta del establecimiento. La Dirección del Trabajo lo excluye de la aplicación general de la Ley N.º 19.464, aunque el bono del artículo 59 se extiende expresamente a trabajadores DAEM/DEM regidos por el Código del Trabajo.",
+      "El lugar de desempeño no reemplaza la calidad jurídica del vínculo: una persona destinada al DAEM/DEM que tenga nombramiento municipal de planta o contrata debe usar el recorrido de la Ley N.º 18.883; quien tenga un contrato regido por el Código del Trabajo debe usar el recorrido de nivel central.",
       "El personal municipal de planta o contrata se rige por la Ley N.º 18.883. Su cargo tiene un grado y las remuneraciones dependen de la escala municipal vigente; por eso la calculadora exige copiar el sueldo base y la asignación municipal desde la publicación de transparencia de la municipalidad.",
       "Para planta y contrata, la asignación de antigüedad equivale a 2% del sueldo base del grado por cada bienio efectivo en el mismo grado, con un máximo de treinta años. La asignación municipal se registra separadamente como no imponible y tributable.",
       "La asignación de mejoramiento de la gestión municipal es imponible y tributable y se paga en cuatro cuotas, en mayo, julio, octubre y diciembre. La calculadora pide la cuota completa pagada en julio: la incluye completa en la remuneración bruta y en el líquido del mes, pero la distribuye entre abril, mayo y junio para estimar las reliquidaciones previsionales y tributarias exigidas por la ley.",
@@ -61,6 +62,7 @@ export const LEGAL_ENTRIES: LegalEntry[] = [
       "A planta y contrata municipal no se les descuenta AFC en esta estimación, porque el Seguro de Cesantía de la Ley N.º 19.728 protege a dependientes regidos por el Código del Trabajo.",
       "La cuota de gestión pagada en julio se considera completa para evaluar el bono mensual de bajas remuneraciones. El equivalente mensual se usa solo para la estimación de cotizaciones e impuesto.",
       "El recorrido de nivel central DAEM/DEM no concede el bono mensual del artículo 13 de la Ley N.º 21.806; ese beneficio no debe confundirse con el bono del artículo 59 de la Ley N.º 20.883, que sí incluye expresamente al personal central regido por el Código del Trabajo.",
+      "El artículo 48 de la Ley N.º 21.109 también usa una tasa de 2% por bienio, pero para asistentes de establecimientos dependientes de un SLEP. No transforma ese beneficio en una asignación general para contratos del nivel central DAEM/DEM.",
       "El régimen previsional antiguo administrado por IPS queda fuera del cálculo automático hasta incorporar sus tasas y topes. La interfaz detiene el resultado para no sustituirlos por tasas AFP.",
     ],
     sources: [
@@ -69,6 +71,7 @@ export const LEGAL_ENTRIES: LegalEntry[] = [
       { label: "Dirección del Trabajo — bono artículo 59 para DAEM/DEM", url: "https://www.dt.gob.cl/legislacion/1624/w3-article-114418.html" },
       { label: "Ley N.º 21.806 — bono mensual de bajas remuneraciones 2026", url: "https://www.bcn.cl/leychile/navegar?idNorma=1221118" },
       { label: "Ley N.º 18.883 — Estatuto Administrativo Municipal, artículos 9, 92 y 97", url: "https://www.bcn.cl/leychile/navegar?idNorma=30256" },
+      { label: "Ley N.º 21.109, artículo 48 — experiencia de asistentes SLEP", url: "https://www.bcn.cl/leychile/navegar?idNorma=1123513" },
       { label: "Decreto ley N.º 3.551 — escala y asignación municipal", url: "https://www.bcn.cl/leychile/navegar?idNorma=7175" },
       { label: "Ley N.º 19.803 — mejoramiento de la gestión municipal", url: "https://www.bcn.cl/leychile/navegar?idNorma=197351" },
       { label: "Consejo para la Transparencia — Resolución Exenta N.º 80 de 2026", url: "https://www.bcn.cl/leychile/navegar?idNorma=1221720" },

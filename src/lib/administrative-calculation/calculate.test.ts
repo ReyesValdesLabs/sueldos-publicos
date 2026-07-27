@@ -73,15 +73,34 @@ describe("calculateAdministrativeSalary", () => {
     expect(calculateAdministrativeSalary({ ...baseInput, regime: "municipalStatute" }).article59Bonus).toBe(0);
   });
 
-  it("calculates municipal biennia at 2% of base salary with a 15 biennia cap", () => {
+  it("calculates 2% biennia for a municipal plant or contrata appointment, including DAEM destinations", () => {
     const result = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "municipalStatute",
+      baseSalary: 600_000,
+      municipalBiennia: 1,
+    });
+    expect(result.municipalBienniaAllowance).toBe(12_000);
+    expect(result.earnings.find((line) => line.id === "municipal-biennia")?.imposable).toBe(true);
+  });
+
+  it("caps municipal biennia at 15 and does not transfer them to a central DAEM labor contract", () => {
+    const capped = calculateAdministrativeSalary({
       ...baseInput,
       regime: "municipalStatute",
       baseSalary: 600_000,
       municipalBiennia: 20,
     });
-    expect(result.municipalBienniaAllowance).toBe(180_000);
-    expect(result.earnings.find((line) => line.id === "municipal-biennia")?.imposable).toBe(true);
+    const centralLaborContract = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "daemCentral",
+      baseSalary: 600_000,
+      municipalBiennia: 5,
+    });
+
+    expect(capped.municipalBienniaAllowance).toBe(180_000);
+    expect(centralLaborContract.municipalBienniaAllowance).toBe(0);
+    expect(centralLaborContract.earnings.some((line) => line.id === "municipal-biennia")).toBe(false);
   });
 
   it("keeps the municipal allowance non-imposable but taxable", () => {
