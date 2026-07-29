@@ -117,6 +117,7 @@ function NumberField({
   onChange,
   min = 0,
   max,
+  step,
   suffix,
   help,
   error,
@@ -127,6 +128,7 @@ function NumberField({
   onChange: (value: number) => void;
   min?: number;
   max?: number;
+  step?: number;
   suffix?: string;
   help?: string;
   error?: string;
@@ -145,6 +147,7 @@ function NumberField({
         inputMode={money ? "numeric" : undefined}
         min={money ? undefined : min}
         max={money ? undefined : max}
+        step={money ? undefined : step}
         value={display}
         onChange={(event) => onChange(money ? parseMoney(event.target.value) : Number(event.target.value))}
         aria-describedby={describedBy}
@@ -356,7 +359,7 @@ export default function AdministrativeCalculator() {
       </div>
       <div className="scope-note">
         <Info size={20} />
-        <p><strong>No elijas por el nombre informal del cargo.</strong> Honorarios, corporaciones municipales y personal ya traspasado a un SLEP necesitan recorridos distintos. Si eres planta o contrata y cotizas en el régimen antiguo administrado por IPS, podrás identificarlo, pero el cálculo se detendrá antes de aplicar tasas AFP.</p>
+        <p><strong>No elijas por el nombre informal del cargo.</strong> Honorarios, corporaciones municipales y personal ya traspasado a un SLEP necesitan recorridos distintos. Si cotizas en el régimen antiguo administrado por IPS, podrás identificarlo en cualquiera de los tres recorridos, pero el cálculo se detendrá antes de aplicar tasas AFP.</p>
       </div>
     </div>}
 
@@ -465,7 +468,7 @@ export default function AdministrativeCalculator() {
                 </div>
                 <div className="form-grid">
                   <NumberField id="municipal-allowance" label="Asignación municipal" value={input.municipalAllowance} onChange={(value) => update("municipalAllowance", value)} suffix="$" help="Monto exacto de tu estamento y grado; se trata como no imponible y tributable." />
-                  <NumberField id="municipal-biennia" label="Bienios reconocidos" value={input.municipalBiennia} onChange={(value) => update("municipalBiennia", value)} min={0} max={15} help={`La estimación actual es ${currency.format(result.municipalBienniaAllowance)}: 2% del sueldo base por bienio, con máximo de 15.`} />
+                  <NumberField id="municipal-biennia" label="Bienios reconocidos" value={input.municipalBiennia} onChange={(value) => update("municipalBiennia", Math.trunc(value))} min={0} max={15} step={1} help={`Ingresa solo bienios completos. La estimación actual es ${currency.format(result.municipalBienniaAllowance)}: 2% del sueldo base por bienio, con máximo de 15.`} />
                   <NumberField id="municipal-management" label="Cuota de gestión pagada en julio" value={input.managementAllowanceQuarterlyPayment} onChange={(value) => update("managementAllowanceQuarterlyPayment", value)} suffix="$" help="Ingresa la cuota completa correspondiente a abril-junio. La calculadora la incluye completa en el bruto de julio y la divide en tres solo para estimar la reliquidación previsional y tributaria." />
                 </div>
               </section>}
@@ -479,7 +482,7 @@ export default function AdministrativeCalculator() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="form-grid">
-                {isMunicipalStatute && <SelectField
+                <SelectField
                   id="administrative-pension-regime"
                   label="Régimen previsional"
                   value={input.pensionRegime}
@@ -488,8 +491,8 @@ export default function AdministrativeCalculator() {
                 >
                   <option value="afp">AFP</option>
                   <option value="ips">IPS / régimen antiguo</option>
-                </SelectField>}
-                {(!isMunicipalStatute || input.pensionRegime === "afp") && <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
+                </SelectField>
+                {input.pensionRegime === "afp" && <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
                     <option value="capital">Capital</option>
                     <option value="cuprum">Cuprum</option>
                     <option value="habitat">Habitat</option>

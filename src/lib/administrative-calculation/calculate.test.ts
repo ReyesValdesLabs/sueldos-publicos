@@ -125,6 +125,19 @@ describe("calculateAdministrativeSalary", () => {
     expect(centralLaborContract.earnings.some((line) => line.id === "municipal-biennia")).toBe(false);
   });
 
+  it("uses only completed municipal biennia when receiving a fractional value", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "municipalStatute",
+      baseSalary: 600_000,
+      municipalBiennia: 1.5,
+    });
+
+    expect(result.municipalBienniaAllowance).toBe(12_000);
+    expect(result.earnings.find((line) => line.id === "municipal-biennia")?.label)
+      .toContain("(1 bienio)");
+  });
+
   it("keeps the municipal allowance non-imposable but taxable", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
@@ -188,13 +201,17 @@ describe("calculateAdministrativeSalary", () => {
     expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
   });
 
-  it("refuses to calculate AFP deductions for municipal IPS affiliates", () => {
+  it.each([
+    "educationEstablishment",
+    "daemCentral",
+    "municipalStatute",
+  ] as const)("refuses to calculate AFP deductions for IPS affiliates in %s", (regime) => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
-      regime: "municipalStatute",
+      regime,
       baseSalary: 1_000_000,
       pensionRegime: "ips",
-      managementAllowanceQuarterlyPayment: 300_000,
+      managementAllowanceQuarterlyPayment: regime === "municipalStatute" ? 300_000 : 0,
     });
     expect(result.supported).toBe(false);
     expect(result.discounts.some((line) => line.id === "afp")).toBe(false);

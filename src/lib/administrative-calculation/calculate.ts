@@ -117,13 +117,17 @@ export function calculateAdministrativeSalary(
       });
     }
 
+    const recognizedMunicipalBiennia = Math.min(
+      15,
+      Math.floor(Math.max(0, input.municipalBiennia)),
+    );
     municipalBienniaAllowance = money(
-      input.baseSalary * 0.02 * Math.min(15, money(input.municipalBiennia)),
+      input.baseSalary * 0.02 * recognizedMunicipalBiennia,
     );
     if (municipalBienniaAllowance > 0) {
       earnings.push({
         id: "municipal-biennia",
-        label: `Asignación de antigüedad (${Math.min(15, money(input.municipalBiennia))} bienios)`,
+        label: `Asignación de antigüedad (${recognizedMunicipalBiennia} ${recognizedMunicipalBiennia === 1 ? "bienio" : "bienios"})`,
         amount: municipalBienniaAllowance,
         imposable: true,
         taxable: true,
@@ -175,8 +179,7 @@ export function calculateAdministrativeSalary(
   const managementMonthlyEquivalent = money(
     managementAllowance / MANAGEMENT_QUARTER_MONTHS,
   );
-  const pensionCalculationSupported = !isMunicipalStatute
-    || input.pensionRegime === "afp";
+  const pensionCalculationSupported = input.pensionRegime === "afp";
   let managementAfpReliquidation = 0;
   let managementHealthReliquidation = 0;
   let managementHealthLegalReliquidation = 0;
@@ -421,12 +424,12 @@ export function calculateAdministrativeSalary(
   if (isMunicipalStatute) {
     warnings.push(`El grado ${Math.min(20, Math.max(1, money(input.municipalGrade)))} es informativo: confirma sueldo base y asignación municipal en la escala de transparencia vigente de tu municipalidad.`);
     warnings.push("No se descontó Seguro de Cesantía: planta y contrata municipal se rigen por la Ley N.º 18.883, no por un contrato sujeto al Código del Trabajo.");
-    if (!pensionCalculationSupported) {
-      warnings.push("Cálculo detenido: este recorrido todavía no modela las tasas ni los topes del régimen previsional antiguo administrado por IPS.");
-    }
     if (input.managementAllowanceQuarterlyPayment > 0) {
       warnings.push(`La cuota de gestión de julio se incluyó completa en el bruto y en el líquido. Para estimar su reliquidación previsional y tributaria se distribuyó en tres meses de ${managementMonthlyEquivalent.toLocaleString("es-CL")} y se usó la remuneración actual como aproximación de abril a junio.`);
     }
+  }
+  if (!pensionCalculationSupported) {
+    warnings.push("Cálculo detenido: este recorrido todavía no modela las tasas ni los topes del régimen previsional antiguo administrado por IPS.");
   }
   if (!isMunicipalStatute) {
     const minimumIncome = calculateAdministrativeMinimumIncome(hours, input.regime);
