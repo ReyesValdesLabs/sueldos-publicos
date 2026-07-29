@@ -8,11 +8,13 @@ import {
 import type {
   AdministrativeCalculationInput,
   AdministrativeCalculationResult,
+  AdministrativeRegime,
 } from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
 const MANAGEMENT_QUARTER_MONTHS = 3;
+const DAEM_CENTRAL_MAXIMUM_WEEKLY_HOURS = 42;
 
 function calculateIncomeTax(taxableBase: number, payrollParameters: PeriodParameters) {
   const bracket = payrollParameters.taxBrackets.find(
@@ -21,10 +23,20 @@ function calculateIncomeTax(taxableBase: number, payrollParameters: PeriodParame
   return money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
 }
 
-export function calculateAdministrativeMinimumIncome(weeklyHours: number) {
-  const hours = Math.min(D.minimumIncome.maximumWeeklyHours, money(weeklyHours));
+export function getAdministrativeMaximumWeeklyHours(regime: AdministrativeRegime) {
+  return regime === "daemCentral"
+    ? DAEM_CENTRAL_MAXIMUM_WEEKLY_HOURS
+    : D.minimumIncome.maximumWeeklyHours;
+}
+
+export function calculateAdministrativeMinimumIncome(
+  weeklyHours: number,
+  regime: AdministrativeRegime = "educationEstablishment",
+) {
+  const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(regime);
+  const hours = Math.min(maximumWeeklyHours, money(weeklyHours));
   return hours <= D.minimumIncome.proportionalUpToWeeklyHours
-    ? money(D.minimumIncome.monthly * hours / D.minimumIncome.maximumWeeklyHours)
+    ? money(D.minimumIncome.monthly * hours / maximumWeeklyHours)
     : D.minimumIncome.monthly;
 }
 
@@ -33,8 +45,9 @@ export function calculateAdministrativeSalary(
   payrollParameters: PeriodParameters = P,
 ): AdministrativeCalculationResult {
   const declaredHours = money(input.weeklyHours);
-  const hours = Math.min(44, declaredHours);
-  const hoursRatio = hours / 44;
+  const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(input.regime);
+  const hours = Math.min(maximumWeeklyHours, declaredHours);
+  const hoursRatio = hours / maximumWeeklyHours;
   const isMunicipalStatute = input.regime === "municipalStatute";
   const isEducationEstablishment = input.regime === "educationEstablishment";
   const isDaemCentral = input.regime === "daemCentral";
@@ -416,7 +429,7 @@ export function calculateAdministrativeSalary(
     }
   }
   if (!isMunicipalStatute) {
-    const minimumIncome = calculateAdministrativeMinimumIncome(hours);
+    const minimumIncome = calculateAdministrativeMinimumIncome(hours, input.regime);
     if (input.baseSalary < minimumIncome) {
       warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para esta jornada.`);
     }
@@ -427,8 +440,8 @@ export function calculateAdministrativeSalary(
       warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
     }
   }
-  if (declaredHours > 44) {
-    warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
+  if (declaredHours > maximumWeeklyHours) {
+    warnings.push(`La jornada se limitó a ${maximumWeeklyHours} horas para este régimen.`);
   }
   if (legallyEligibleForLowIncomeBonus && !input.applyLowIncomeBonus) {
     warnings.push("No se agregó el bono mensual de bajas remuneraciones porque desactivaste su aplicación para tu vínculo.");

@@ -18,6 +18,7 @@ import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D } from "@/data/parameters/daem
 import {
   calculateAdministrativeMinimumIncome,
   calculateAdministrativeSalary,
+  getAdministrativeMaximumWeeklyHours,
 } from "@/lib/administrative-calculation/calculate";
 import type {
   AdministrativeCalculationInput,
@@ -45,6 +46,7 @@ const currency = new Intl.NumberFormat("es-CL", {
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const steps = ["Régimen", "Haberes", "Previsión", "Resultado"];
 const initialMinimumIncome = calculateAdministrativeMinimumIncome(44);
+const reducedMinimumIncome = 412_938;
 
 const regimeDetails = {
   educationEstablishment: {
@@ -219,6 +221,7 @@ export default function AdministrativeCalculator() {
   const isMunicipalStatute = regime === "municipalStatute";
   const isEducationEstablishment = regime === "educationEstablishment";
   const isDaemCentral = regime === "daemCentral";
+  const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(regime);
 
   useEffect(() => {
     const urlRegime = regimeFromUrl();
@@ -227,6 +230,10 @@ export default function AdministrativeCalculator() {
     setInput((current) => ({
       ...current,
       regime: urlRegime,
+      weeklyHours: Math.min(
+        current.weeklyHours,
+        getAdministrativeMaximumWeeklyHours(urlRegime),
+      ),
       baseSalary: codeLabor ? (current.baseSalary || initialMinimumIncome) : 0,
       previousMonthGross: codeLabor ? (current.previousMonthGross || initialMinimumIncome) : 0,
       applyLowIncomeBonus: urlRegime !== "daemCentral",
@@ -241,8 +248,8 @@ export default function AdministrativeCalculator() {
 
   const hoursError = !Number.isInteger(input.weeklyHours)
     || input.weeklyHours < 1
-    || input.weeklyHours > 44
-    ? "Ingresa una jornada completa entre 1 y 44 horas."
+    || input.weeklyHours > maximumWeeklyHours
+    ? `Ingresa una jornada entre 1 y ${maximumWeeklyHours} horas.`
     : undefined;
   const baseSalaryError = input.baseSalary <= 0
     ? isMunicipalStatute
@@ -275,6 +282,10 @@ export default function AdministrativeCalculator() {
     setInput((current) => ({
       ...current,
       regime: nextRegime,
+      weeklyHours: Math.min(
+        current.weeklyHours,
+        getAdministrativeMaximumWeeklyHours(nextRegime),
+      ),
       baseSalary: codeLabor ? (current.baseSalary || initialMinimumIncome) : 0,
       previousMonthGross: codeLabor ? (current.previousMonthGross || initialMinimumIncome) : 0,
       applyLowIncomeBonus: nextRegime !== "daemCentral",
@@ -391,7 +402,7 @@ export default function AdministrativeCalculator() {
                   value={input.weeklyHours}
                   onChange={(value) => update("weeklyHours", value)}
                   min={1}
-                  max={44}
+                  max={maximumWeeklyHours}
                   suffix="horas"
                   error={hoursError}
                 />
@@ -413,7 +424,7 @@ export default function AdministrativeCalculator() {
                   suffix="$"
                   help={isMunicipalStatute
                     ? "Cópialo de la escala de remuneraciones vigente publicada por tu municipalidad."
-                    : `Como referencia, el ingreso mínimo estimado a 44 horas es ${currency.format(initialMinimumIncome)}.`}
+                    : `Como referencia para mayores de 18 y hasta 65 años, el ingreso mínimo a ${maximumWeeklyHours} horas es ${currency.format(initialMinimumIncome)}. Para menores de 18 o mayores de 65 años es ${currency.format(reducedMinimumIncome)}; reemplaza el monto si corresponde.`}
                   error={baseSalaryError}
                 />
               </div>

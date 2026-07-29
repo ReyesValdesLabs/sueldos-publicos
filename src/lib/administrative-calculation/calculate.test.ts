@@ -35,6 +35,8 @@ describe("calculateAdministrativeSalary", () => {
   it("uses the Code of Labor minimum only for the DAEM routes", () => {
     expect(calculateAdministrativeMinimumIncome(44)).toBe(553_553);
     expect(calculateAdministrativeMinimumIncome(30)).toBe(377_423);
+    expect(calculateAdministrativeMinimumIncome(42, "daemCentral")).toBe(553_553);
+    expect(calculateAdministrativeMinimumIncome(30, "daemCentral")).toBe(395_395);
 
     const result = calculateAdministrativeSalary({
       ...baseInput,
@@ -69,8 +71,28 @@ describe("calculateAdministrativeSalary", () => {
 
   it("applies article 59 to both Code of Labor DAEM routes, but not municipal statute", () => {
     expect(calculateAdministrativeSalary(baseInput).article59Bonus).toBe(38_320);
-    expect(calculateAdministrativeSalary({ ...baseInput, regime: "daemCentral" }).article59Bonus).toBe(38_320);
+    expect(calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "daemCentral",
+      weeklyHours: 42,
+    }).article59Bonus).toBe(38_320);
+    expect(calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "daemCentral",
+      weeklyHours: 30,
+    }).article59Bonus).toBe(27_371);
     expect(calculateAdministrativeSalary({ ...baseInput, regime: "municipalStatute" }).article59Bonus).toBe(0);
+  });
+
+  it("limits the central DAEM route to the 42-hour ordinary week", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      regime: "daemCentral",
+      weeklyHours: 44,
+    });
+
+    expect(result.article59Bonus).toBe(38_320);
+    expect(result.warnings).toContain("La jornada se limitó a 42 horas para este régimen.");
   });
 
   it("calculates 2% biennia for a municipal plant or contrata appointment, including DAEM destinations", () => {
