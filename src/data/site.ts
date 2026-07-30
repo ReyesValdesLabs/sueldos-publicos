@@ -1,7 +1,7 @@
 export const SITE = {
   name: "Sueldos Públicos",
   url: "https://sueldospublicos.cl/",
-  description: "Calculadoras de sueldos públicos en Chile para docentes y asistentes de la educación.",
+  description: "Calculadoras de sueldos públicos en Chile para docentes, asistentes de la educación y personal administrativo municipal.",
   organizationId: "https://sueldospublicos.cl/#organization",
   websiteId: "https://sueldospublicos.cl/#website",
   logoUrl: "https://sueldospublicos.cl/sueldospublicos-mark.png",
@@ -9,16 +9,17 @@ export const SITE = {
   githubUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos",
   issuesUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos/issues/new",
   publishedAt: "2026-07-18",
-  updatedAt: "2026-07-25",
+  updatedAt: "2026-07-26",
 } as const;
 
 export const LEGAL_CONTENT_PUBLISHED_AT = "2026-07-18";
-export const LEGAL_CONTENT_REVIEWED_AT = "2026-07-25";
+export const LEGAL_CONTENT_REVIEWED_AT = "2026-07-26";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
   "": SITE.updatedAt,
   "calculadoras/docentes/": SITE.updatedAt,
   "calculadoras/tecnicos-parvulos/": SITE.updatedAt,
+  "calculadoras/administrativos-municipales/": "2026-07-26",
   "calculadoras/tramos-docentes/": SITE.updatedAt,
   "legal/": LEGAL_CONTENT_REVIEWED_AT,
   "acerca-de/": SITE.updatedAt,

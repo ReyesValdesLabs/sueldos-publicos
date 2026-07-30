@@ -1,6 +1,6 @@
 # Sueldos Públicos
 
-Calculadoras estáticas de liquidaciones para docentes de establecimientos públicos municipales o SLEP y para asistentes de la educación contratados por SLEP o DAEM/DEM en Chile. Cada cálculo se ejecuta completamente en el navegador y los conceptos automáticos enlazan a páginas con sus fórmulas y fuentes.
+Calculadoras estáticas de liquidaciones para docentes, asistentes de la educación y personal administrativo DAEM o municipal en Chile. Cada cálculo se ejecuta completamente en el navegador y los conceptos automáticos enlazan a páginas con sus fórmulas y fuentes.
 
 ## Desarrollo
 
@@ -99,9 +99,11 @@ visibilidad del paquete a pública desde su configuración en GitHub.
 - `src/components/TechnicalAssistantCalculator.tsx`: selector único que dirige a la experiencia SLEP o DAEM/DEM según el empleador.
 - `src/components/AssistantCalculator.tsx`: interfaz para técnicos/as en educación parvularia SLEP.
 - `src/components/DaemAssistantCalculator.tsx`: interfaz para técnicos/as y asistentes contratados por DAEM/DEM.
+- `src/components/AdministrativeCalculator.tsx`: selector y flujo independiente para administrativos de establecimientos, nivel central DAEM/DEM y planta o contrata municipal.
 - `src/lib/calculation/`: motor puro docente y pruebas.
 - `src/lib/assistant-calculation/`: motor puro para categoría técnica SLEP y pruebas.
 - `src/lib/daem-assistant-calculation/`: motor puro para asistentes DAEM/DEM y pruebas.
+- `src/lib/administrative-calculation/`: motor puro para los tres regímenes administrativos y pruebas.
 - `src/data/parameters/`: parámetros versionados por período.
 - `src/data/legal.ts`: conceptos legales y fuentes oficiales.
 - `src/pages/legal/`: biblioteca legal generada estáticamente.
@@ -146,7 +148,13 @@ El proceso requiere Python 3 y `bsdtar`/libarchive. El extractor de XLSX usa ún
 
 ## Alcance
 
-La calculadora docente acepta jornadas que combinen horas de enseñanza básica y media. La vista técnica pide elegir el empleador y mantiene dos motores separados: SLEP se limita a contratos SLEP en categoría técnica; DAEM/DEM cubre asistentes contratados por la administración educacional municipal y usa los haberes locales informados, sin trasladar el piso técnico ni los bienios SLEP. Ninguna debe usarse automáticamente para JUNJI, Integra o jardines VTF. Todas aplican un máximo de 44 horas semanales para un mismo empleador y estiman un mes completo, sin prorratear licencias, ausencias ni fracciones de mes.
+La calculadora docente acepta jornadas que combinen horas de enseñanza básica y media. La vista técnica pide elegir el empleador y mantiene dos motores separados: SLEP se limita a contratos SLEP en categoría técnica; DAEM/DEM cubre asistentes contratados por la administración educacional municipal y usa los haberes locales informados, sin trasladar el piso técnico ni los bienios SLEP.
+
+La calculadora administrativa mantiene tres recorridos separados: asistente administrativo dentro de un establecimiento municipal, trabajador del nivel central DAEM/DEM regido por el Código del Trabajo y funcionario municipal de planta o contrata. Este último recorrido también corresponde a quien está destinado al DAEM/DEM pero conserva un nombramiento municipal bajo la Ley N.º 18.883: el usuario copia sueldo base y asignación municipal desde la escala local de transparencia y la herramienta calcula 2% del sueldo base por cada bienio completo, con un máximo de 15. No se extiende ese bienio automáticamente a los contratos DAEM regidos por el Código del Trabajo ni se confunde con la asignación de experiencia de asistentes SLEP de la Ley N.º 21.109. Para planta o contrata, la calculadora no descuenta AFC. En los tres recorridos exige identificar si la afiliación es AFP o corresponde al régimen antiguo administrado por IPS; el cálculo se detiene para IPS hasta incorporar sus tasas y topes, evitando sustituirlos por parámetros AFP.
+
+Para la asignación de mejoramiento de la gestión municipal se ingresa la cuota completa pagada en julio. Esa cuota integra el bruto y el líquido del mes; solo para estimar sus reliquidaciones previsionales y tributarias se distribuye en tres meses. El bono de bajas remuneraciones considera la cuota completa y no se ofrece en el recorrido de nivel central DAEM/DEM. Honorarios, SLEP, salud municipal, JUNJI, Integra y jardines VTF quedan fuera de esos recorridos.
+
+Todas aplican un máximo de 44 horas semanales para un mismo empleador y estiman un mes completo, sin prorratear licencias, ausencias ni fracciones de mes.
 
 El resultado es informativo y no reemplaza la liquidación del empleador ni asesoría jurídica, previsional o tributaria. La primera versión no activa publicidad ni analítica; los espacios futuros están preparados pero ocultos.
 

@@ -1,7 +1,5 @@
 ---
-import { Image } from "astro:assets";
 import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
-import brandMark from "@/assets/sueldospublicos-mark-transparent.png";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { sitePath } from "@/lib/site-path";
@@ -10,7 +8,7 @@ import { webPageStructuredData } from "@/lib/structured-data";
 const sourceUpdatedLabel = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
 const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
 const homeTitle = "Calculadoras de sueldos públicos en Chile | Sueldos Públicos";
-const homeDescription = "Estima liquidaciones de docentes y asistentes de la educación SLEP o DAEM/DEM con fórmulas explicadas y respaldo legal.";
+const homeDescription = "Estima liquidaciones de docentes, asistentes de la educación y personal administrativo DAEM o municipal con fórmulas explicadas y respaldo legal.";
 const homeStructuredData = [
   webPageStructuredData({ name: homeTitle, description: homeDescription, path: "" }),
   {
@@ -56,7 +54,7 @@ const homeStructuredData = [
       </div>
       <div class="hero-visual">
         <div class="hero-brand-panel" aria-hidden="true">
-          <span class="hero-logo"><Image src={brandMark} alt="" width={240} height={240} format="webp" quality={84} loading="eager" /></span>
+          <span class="hero-logo"><img src={sitePath("sueldospublicos-mark-transparent.png")} alt="" width="240" height="240" loading="eager" decoding="async" /></span>
           <div><span>sueldospublicos.cl</span><strong>Claridad para tomar mejores decisiones</strong></div>
         </div>
         <aside class="trust-card" aria-label="Características de las calculadoras">
@@ -78,9 +76,15 @@ const homeStructuredData = [
       </article>
       <article class="calculator-card">
         <span class="calculator-icon"><BriefcaseBusiness size={27} /></span>
-        <div><span class="calculator-audience">Categoría técnica · SLEP o DAEM/DEM</span><h3>Técnicos/as en educación parvularia</h3><p>Elige el empleador de tu contrato y aplicaremos el piso, beneficios y descuentos que correspondan a ese régimen.</p></div>
+        <div><span class="calculator-audience">Categoría técnica · SLEP o DAEM/DEM</span><h3>Liquidación de técnicos/as en educación parvularia</h3><p>Elige el empleador de tu contrato y aplicaremos el piso, beneficios y descuentos que correspondan a ese régimen.</p></div>
         <ul><li>Contrato directo con SLEP o municipalidad</li><li>Selección guiada por empleador</li><li>Fórmulas separadas para cada régimen</li></ul>
         <a class="hero-button primary" href={sitePath("calculadoras/tecnicos-parvulos/")}>Calculadora educación parvularia <ArrowRight size={17} /></a>
+      </article>
+      <article class="calculator-card">
+        <span class="calculator-icon"><BriefcaseBusiness size={27} /></span>
+        <div><span class="calculator-audience">Administrativos DAEM y municipales</span><h3>Liquidación administrativa</h3><p>Distingue establecimiento educacional, nivel central DAEM/DEM y funcionario/a municipal de planta o contrata.</p></div>
+        <ul><li>Tres recorridos contractuales separados</li><li>Grado, bienios y asignación municipal</li><li>Haberes educacionales solo cuando corresponden</li></ul>
+        <a class="hero-button primary" href={sitePath("calculadoras/administrativos-municipales/")}>Calculadora administrativa <ArrowRight size={17} /></a>
       </article>
       <article class="calculator-card">
         <span class="calculator-icon"><TrendingUp size={27} /></span>
@@ -89,7 +93,7 @@ const homeStructuredData = [
         <a class="hero-button primary" href={sitePath("calculadoras/tramos-docentes/")}>Simular progresión <ArrowRight size={17} /></a>
       </article>
     </div>
-    <div class="scope-note"><ShieldCheck size={20} /><p><strong>¿Trabajas en JUNJI, Integra, VTF o con otro sostenedor?</strong> Estas calculadoras técnicas todavía no cubren tu régimen; no uses SLEP o DAEM/DEM como equivalentes.</p></div>
+    <div class="scope-note"><ShieldCheck size={20} /><p><strong>¿Trabajas a honorarios, en JUNJI, Integra, VTF o con otro sostenedor?</strong> Estas calculadoras todavía no cubren tu régimen; no uses SLEP, DAEM/DEM o planta municipal como equivalentes.</p></div>
   </section>
 
   <section id="metodologia" class="section section-muted">

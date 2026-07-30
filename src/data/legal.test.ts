@@ -38,3 +38,24 @@ describe("Asignación por tramo legal table", () => {
     expect(table?.source.url).toBe("https://cpeip.cl/carrera-docente-asignaciones/");
   });
 });
+
+describe("Respaldo de administrativos DAEM y municipales", () => {
+  it("keeps the three regimes and their main exclusions traceable", () => {
+    const entry = findLegalEntry("administrativos-daem-municipales");
+    const explanation = entry?.explanation.join(" ") ?? "";
+    const notes = entry?.notes.join(" ") ?? "";
+
+    expect(explanation).toContain("establecimiento educacional municipal");
+    expect(explanation).toContain("nivel central");
+    expect(explanation).toContain("planta o contrata");
+    expect(explanation).toContain("destinada al DAEM/DEM");
+    expect(explanation).toContain("2% del sueldo base");
+    expect(explanation).toContain("cuota completa pagada en julio");
+    expect(notes).toContain("no se les descuenta AFC");
+    expect(notes).toContain("nivel central DAEM/DEM no concede");
+    expect(notes).toContain("artículo 48 de la Ley N.º 21.109");
+    expect(notes).toContain("IPS queda fuera");
+    expect(entry?.sources.some((source) => source.label.includes("Resolución Exenta N.º 80"))).toBe(true);
+    expect(entry?.sources.some((source) => source.label.includes("Superintendencia de Pensiones"))).toBe(true);
+  });
+});
