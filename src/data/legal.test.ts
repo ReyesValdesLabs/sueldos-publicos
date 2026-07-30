@@ -39,6 +39,17 @@ describe("Asignación por tramo legal table", () => {
   });
 });
 
+describe("Resolución de alumnos prioritarios 2026", () => {
+  it("keeps the official resolution number and PDF aligned", () => {
+    for (const slug of ["responsabilidad-directiva", "alumnos-prioritarios"]) {
+      const source = findLegalEntry(slug)?.sources.find((candidate) => candidate.label.includes("porcentajes por RBD 2026"));
+
+      expect(source?.label).toContain("Rex. N.º 2.012");
+      expect(source?.url).toBe("https://cpeip.cl/wp-content/uploads/2026/03/Rex_2012_RBD_prioritarios.pdf");
+    }
+  });
+});
+
 describe("Respaldo de administrativos DAEM y municipales", () => {
   it("keeps the three regimes and their main exclusions traceable", () => {
     const entry = findLegalEntry("administrativos-daem-municipales");

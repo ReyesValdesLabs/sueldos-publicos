@@ -8,6 +8,7 @@ export type ManualEarningKind =
   | "nonImposableNonTaxable";
 export type ManualKind = ManualEarningKind | "discount";
 export type ResponsibilityRole = "none" | "director" | "otherDirector" | "utpHead" | "otherUtp";
+export type ResponsibilityAppointment = "regular" | "exceptionalWithoutAdvancedTranche";
 export type BrpEntitlement = "none" | "title" | "titleAndMention" | "normalSchool" | "historicalShortTitleAndMention";
 
 export interface ManualItem { id: string; name: string; amount: number; kind: ManualKind; countsForMinimum?: boolean }
@@ -29,6 +30,7 @@ export interface CalculationInput {
   priorityExpired: boolean;
   zonePercentage: number;
   responsibilityRole: ResponsibilityRole;
+  responsibilityAppointment: ResponsibilityAppointment;
   responsibilityPercentage: number;
   establishmentEnrollment: number;
   afp: Afp;

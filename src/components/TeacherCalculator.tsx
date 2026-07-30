@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, CalendarClock, Check, ExternalLink, FileText, Info, Plus, Printer, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_PARAMETERS as P, type AfpKey, type PeriodParameters } from "@/data/parameters/2026-07";
-import { calculateTeacherSalary, suggestedResponsibilityPercentage } from "@/lib/calculation/calculate";
+import { applyTrancheSelection, calculateTeacherSalary, suggestedResponsibilityPercentage } from "@/lib/calculation/calculate";
 import { sitePath } from "@/lib/site-path";
 import type { CalculationInput, ManualItem, ManualKind } from "@/lib/calculation/types";
 import { Badge } from "@/components/ui/badge";
@@ -55,12 +55,13 @@ const initialInput: CalculationInput = {
   tranche: null,
   trancheSuspended: false,
   trancheFixedComponentReduced: false,
-  brpEntitlement: "title",
+  brpEntitlement: "none",
   priorityPercentage: 0,
   rural: false,
   priorityExpired: false,
   zonePercentage: 0,
   responsibilityRole: "none",
+  responsibilityAppointment: "regular",
   responsibilityPercentage: 0,
   establishmentEnrollment: 0,
   afp: "habitat",
@@ -165,8 +166,12 @@ export default function TeacherCalculator() {
     setInput((current) => ({
       ...current,
       responsibilityRole: role,
+      responsibilityAppointment: "regular",
       responsibilityPercentage: suggestedResponsibilityPercentage(role, current.establishmentEnrollment),
     }));
+  };
+  const updateTranche = (tranche: CalculationInput["tranche"]) => {
+    setInput((current) => applyTrancheSelection(current, tranche));
   };
   const updateEstablishmentEnrollment = (value: number) => setInput((current) => ({
     ...current,
@@ -288,12 +293,15 @@ export default function TeacherCalculator() {
             <div className="warning-inline"><Info size={18} /><p>Selecciona el tramo que figure en tu resolución o Portal Docente. “Acceso” es un tramo transitorio reconocido; no equivale a estar sin tramo. <a className="font-bold text-primary hover:underline" href={sitePath("calculadoras/tramos-docentes/")}>Simula aquí una futura progresión</a>, pero no la uses en esta liquidación hasta que sea oficial.</p></div>
             <div className="form-grid">
               <NumberField id="biennia" label="Bienios reconocidos" value={input.biennia} onChange={(value) => update("biennia", value)} min={0} max={15} help="Cada bienio corresponde a dos años acreditados; máximo 15." error={bienniaError} />
-              <SelectField id="tranche" label="Tramo profesional" value={input.tranche ?? ""} onChange={(value) => update("tranche", value ? value as CalculationInput["tranche"] : null)} error={trancheError}>
+              <SelectField id="tranche" label="Tramo profesional" value={input.tranche ?? ""} onChange={(value) => updateTranche(value ? value as CalculationInput["tranche"] : null)} error={trancheError}>
                 <option value="" disabled>Selecciona tu tramo reconocido</option>
                 {Object.entries(trancheNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </SelectField>
             </div>
-            {input.responsibilityRole !== "none" && input.responsibilityRole !== "director" && input.tranche !== null && !["advanced", "expert1", "expert2"].includes(input.tranche) && <div className="warning-inline"><AlertTriangle size={18} /><p>Un nombramiento excepcional en este cargo sin tramo Avanzado no da derecho a la asignación de responsabilidad. La estimación la mostrará en $0.</p></div>}
+            {input.responsibilityRole !== "none" && input.responsibilityRole !== "director" && input.tranche !== null && !["advanced", "expert1", "expert2"].includes(input.tranche) && <>
+              <CheckField id="exceptional-responsibility-appointment" checked={input.responsibilityAppointment === "exceptionalWithoutAdvancedTranche"} onChange={(checked) => update("responsibilityAppointment", checked ? "exceptionalWithoutAdvancedTranche" : "regular")} label="Nombramiento excepcional sin tramo Avanzado" help="Marca solo si el acto aplicó expresamente la excepción del artículo 24 por no existir profesionales con tramo Avanzado." />
+              {input.responsibilityAppointment === "exceptionalWithoutAdvancedTranche" && <div className="warning-inline"><AlertTriangle size={18} /><p>Este nombramiento excepcional no da derecho a la asignación de responsabilidad. La estimación la mostrará en $0.</p></div>}
+            </>}
             <SelectField
               id="brp-entitlement"
               label="BRP acreditada por el sostenedor"
@@ -324,9 +332,9 @@ export default function TeacherCalculator() {
                 </div>
                 <div className="option-grid">
                   <CheckField id="rural" checked={input.rural} onChange={(value) => update("rural", value)} label="Establecimiento rural" help="Se completa desde la misma base oficial de Mineduc cuando hay un dato consistente para el RBD." />
-                  <CheckField id="tranche-suspended" checked={input.trancheSuspended} onChange={(value) => update("trancheSuspended", value)} label="Asignación de tramo suspendida" help="Marca solo si te aplicaron el artículo 19 P por no rendir ni suspender una convocatoria obligatoria. No corresponde solo por permanecer en el mismo tramo." />
+                  {(input.tranche === "initial" || input.tranche === "early") && <CheckField id="tranche-suspended" checked={input.trancheSuspended} onChange={(value) => update("trancheSuspended", value)} label="Asignación de tramo suspendida" help="Marca solo si te aplicaron el artículo 19 P por no rendir ni suspender una convocatoria obligatoria. No corresponde solo por permanecer en el mismo tramo." />}
                   {input.tranche !== null && ["advanced", "expert1", "expert2"].includes(input.tranche) && <CheckField id="tranche-fixed-reduced" checked={input.trancheFixedComponentReduced} onChange={(value) => update("trancheFixedComponentReduced", value)} label="Componente fijo reducido" help="Marca solo si venció el ciclo de profundización de cuatro años sin una acción aprobada. El tramo reconocido no cambia." />}
-                  <CheckField id="priority-expired" checked={input.priorityExpired} onChange={(value) => update("priorityExpired", value)} label="Límite de 4 años del beneficio de prioritarios" help="Marca solo si pasaron cuatro años desde que nació este derecho y todavía estás en tramo Inicial o Temprano. Vuelve a ser exigible al alcanzar Avanzado." />
+                  {(input.tranche === "initial" || input.tranche === "early") && <CheckField id="priority-expired" checked={input.priorityExpired} onChange={(value) => update("priorityExpired", value)} label="Límite de 4 años del beneficio de prioritarios" help="Marca solo si pasaron cuatro años desde que nació este derecho y todavía estás en tramo Inicial o Temprano. Vuelve a ser exigible al alcanzar Avanzado." />}
                 </div>
               </div>
             </section>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
-import { calculateTeacherSalary, directorPriorityResponsibilityPercentage, experiencePercentage, suggestedResponsibilityPercentage } from "./calculate";
+import { applyTrancheSelection, calculateTeacherSalary, directorPriorityResponsibilityPercentage, experiencePercentage, suggestedResponsibilityPercentage } from "./calculate";
 import type { CalculationInput } from "./types";
 
 const baseInput: CalculationInput = {
@@ -16,6 +16,7 @@ const baseInput: CalculationInput = {
   priorityExpired: false,
   zonePercentage: 0,
   responsibilityRole: "none",
+  responsibilityAppointment: "regular",
   responsibilityPercentage: 0,
   establishmentEnrollment: 0,
   afp: "habitat",
@@ -56,6 +57,35 @@ describe("responsibility percentages", () => {
     expect(directorPriorityResponsibilityPercentage(400, 60)).toBe(37.5);
     expect(directorPriorityResponsibilityPercentage(800, 60)).toBe(75);
     expect(directorPriorityResponsibilityPercentage(1200, 60)).toBe(100);
+  });
+});
+
+describe("applyTrancheSelection", () => {
+  it("clears Initial and Early-only states when progressing to Advanced", () => {
+    const result = applyTrancheSelection({
+      ...baseInput,
+      tranche: "early",
+      trancheSuspended: true,
+      priorityExpired: true,
+      responsibilityAppointment: "exceptionalWithoutAdvancedTranche",
+    }, "advanced");
+
+    expect(result).toMatchObject({
+      tranche: "advanced",
+      trancheSuspended: false,
+      priorityExpired: false,
+      responsibilityAppointment: "regular",
+    });
+  });
+
+  it("clears the fixed-component reduction outside Advanced and Expert tranches", () => {
+    const result = applyTrancheSelection({
+      ...baseInput,
+      tranche: "advanced",
+      trancheFixedComponentReduced: true,
+    }, "initial");
+
+    expect(result.trancheFixedComponentReduced).toBe(false);
   });
 });
 
@@ -167,10 +197,34 @@ describe("calculateTeacherSalary", () => {
       ...baseInput,
       tranche: "early",
       responsibilityRole: "otherDirector",
+      responsibilityAppointment: "exceptionalWithoutAdvancedTranche",
       responsibilityPercentage: 20,
     });
     expect(result.earnings.some((line) => line.id === "responsibility")).toBe(false);
     expect(result.warnings.some((warning) => warning.includes("designados excepcionalmente sin tramo Avanzado"))).toBe(true);
+  });
+
+  it("does not infer an exceptional appointment from a non-director role and tranche", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      tranche: "early",
+      responsibilityRole: "otherDirector",
+      responsibilityAppointment: "regular",
+      responsibilityPercentage: 20,
+    });
+    expect(result.earnings.find((line) => line.id === "responsibility")?.amount).toBe(Math.round(result.legalRbmn * 0.2));
+    expect(result.warnings.some((warning) => warning.includes("designados excepcionalmente sin tramo Avanzado"))).toBe(false);
+  });
+
+  it("ignores an inconsistent exceptional-appointment state from the Advanced tranche", () => {
+    const result = calculateTeacherSalary({
+      ...baseInput,
+      tranche: "advanced",
+      responsibilityRole: "utpHead",
+      responsibilityAppointment: "exceptionalWithoutAdvancedTranche",
+      responsibilityPercentage: 20,
+    });
+    expect(result.earnings.find((line) => line.id === "responsibility")?.amount).toBe(Math.round(result.legalRbmn * 0.2));
   });
 
   it("adds the rural priority benefit from 45% concentration", () => {
@@ -212,6 +266,32 @@ describe("calculateTeacherSalary", () => {
     expect(result.earnings.find((line) => line.id === "tranche-experience")?.amount).toBe(0);
     expect(result.earnings.find((line) => line.id === "tranche-progression")?.amount).toBe(0);
     expect(result.warnings).toContain("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
+  });
+
+  it("applies article 19 P suspension only to Initial and Early tranches", () => {
+    const initial = calculateTeacherSalary({ ...baseInput, tranche: "initial", biennia: 15, trancheSuspended: true });
+    const early = calculateTeacherSalary({ ...baseInput, tranche: "early", biennia: 15, trancheSuspended: true });
+    const advanced = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, trancheSuspended: true });
+    const expert = calculateTeacherSalary({ ...baseInput, tranche: "expert2", biennia: 15, trancheSuspended: true });
+
+    expect(initial.earnings.find((line) => line.id === "tranche-experience")?.amount).toBe(0);
+    expect(early.earnings.find((line) => line.id === "tranche-progression")?.amount).toBe(0);
+    expect(advanced.earnings.find((line) => line.id === "tranche-fixed")?.amount).toBe(P.fixedComponent.advanced);
+    expect(expert.earnings.find((line) => line.id === "tranche-progression")?.amount).toBe(P.progression.expert2);
+    expect(advanced.warnings.some((warning) => warning.includes("está suspendida"))).toBe(false);
+  });
+
+  it("expires priority pay after four years only while the teacher remains Initial or Early", () => {
+    const initial = calculateTeacherSalary({ ...baseInput, tranche: "initial", biennia: 15, priorityPercentage: 60, priorityExpired: true });
+    const early = calculateTeacherSalary({ ...baseInput, tranche: "early", biennia: 15, priorityPercentage: 60, priorityExpired: true });
+    const advanced = calculateTeacherSalary({ ...baseInput, tranche: "advanced", biennia: 15, priorityPercentage: 60, priorityExpired: true });
+    const expert = calculateTeacherSalary({ ...baseInput, tranche: "expert1", biennia: 15, priorityPercentage: 60, priorityExpired: true });
+
+    expect(initial.earnings.some((line) => line.id === "priority")).toBe(false);
+    expect(early.earnings.some((line) => line.id === "priority")).toBe(false);
+    expect(advanced.earnings.find((line) => line.id === "priority")?.amount).toBeGreaterThan(0);
+    expect(expert.earnings.find((line) => line.id === "priority")?.amount).toBeGreaterThan(0);
+    expect(advanced.warnings.some((warning) => warning.includes("pérdida temporal"))).toBe(false);
   });
 
   it("adds a complementary amount when computable earnings are below RTM", () => {
@@ -275,6 +355,19 @@ describe("calculateTeacherSalary", () => {
     expect(atThirtyFive.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atThirtyFive.taxableBase * 0.35 - 1_670_854.68));
     expect(atForty.taxableBase).toBeGreaterThan(22_211_190);
     expect(atForty.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atForty.taxableBase * 0.4 - 2_781_414.18));
+  });
+
+  it("deducts an Isapre additional health contribution from IUSC up to the legal health cap", () => {
+    const fonasa = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 3_000_000, healthSystem: "fonasa" });
+    const isapreWithinCap = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 3_000_000, healthSystem: "isapre", isaprePlanUf: 6 });
+    const isapreAboveCap = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 3_000_000, healthSystem: "isapre", isaprePlanUf: 10 });
+    const legalHealth = fonasa.discounts.find((line) => line.id === "health")?.amount ?? 0;
+    const withinCapHealth = isapreWithinCap.discounts.find((line) => line.id === "health")?.amount ?? 0;
+    const maximumHealthDeduction = Math.round(P.pensionCapUf * P.uf * 0.07);
+
+    expect(fonasa.taxableBase - isapreWithinCap.taxableBase).toBe(withinCapHealth - legalHealth);
+    expect(fonasa.taxableBase - isapreAboveCap.taxableBase).toBe(maximumHealthDeduction - legalHealth);
+    expect(isapreAboveCap.discounts.find((line) => line.id === "health")?.amount).toBe(Math.round(P.uf * 10));
   });
 
   it("counts declared permanent monthly earnings toward RTM", () => {
