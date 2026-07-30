@@ -40,11 +40,12 @@ describe("Asignación por tramo legal table", () => {
 });
 
 describe("Resolución de alumnos prioritarios 2026", () => {
-  it("keeps the official resolution number and PDF aligned", () => {
+  it("distinguishes Rex. N.º 1.522 from solicitud N.º 2.012 in the PDF filename", () => {
     for (const slug of ["responsabilidad-directiva", "alumnos-prioritarios"]) {
       const source = findLegalEntry(slug)?.sources.find((candidate) => candidate.label.includes("porcentajes por RBD 2026"));
 
-      expect(source?.label).toContain("Rex. N.º 2.012");
+      // The URL records solicitud N.º 2.012; the PDF cover identifies the act as Rex. N.º 1.522.
+      expect(source?.label).toContain("Rex. N.º 1.522");
       expect(source?.url).toBe("https://cpeip.cl/wp-content/uploads/2026/03/Rex_2012_RBD_prioritarios.pdf");
     }
   });
