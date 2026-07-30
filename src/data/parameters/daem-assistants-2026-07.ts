@@ -4,6 +4,7 @@ export interface DaemAssistantPeriodParameters {
   reviewedAt: string;
   minimumIncome: {
     monthly: number;
+    reducedMonthly: number;
     maximumWeeklyHours: number;
     proportionalUpToWeeklyHours: number;
   };
@@ -26,6 +27,7 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
   reviewedAt: "2026-07-22",
   minimumIncome: {
     monthly: 553_553,
+    reducedMonthly: 412_938,
     maximumWeeklyHours: 44,
     proportionalUpToWeeklyHours: 30,
   },
