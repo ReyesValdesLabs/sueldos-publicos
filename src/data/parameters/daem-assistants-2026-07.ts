@@ -6,7 +6,6 @@ export interface DaemAssistantPeriodParameters {
     monthly: number;
     reducedMonthly: number;
     maximumWeeklyHours: number;
-    proportionalUpToWeeklyHours: number;
   };
   article59Bonus: {
     maximum44h: number;
@@ -29,7 +28,6 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
     monthly: 553_553,
     reducedMonthly: 412_938,
     maximumWeeklyHours: 44,
-    proportionalUpToWeeklyHours: 30,
   },
   article59Bonus: {
     maximum44h: 38_320,
@@ -47,7 +45,7 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
       url: "https://www.bcn.cl/leychile/navegar?idNorma=1225354",
     },
     {
-      label: "Dirección del Trabajo · ingreso mínimo de asistentes",
+      label: "Dirección del Trabajo · ORD. N.º 422, ingreso mínimo de asistentes",
       url: "https://www.dt.gob.cl/legislacion/1624/w3-article-121990.html",
     },
     {

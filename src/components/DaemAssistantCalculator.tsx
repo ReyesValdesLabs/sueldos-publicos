@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CircleHelp, ExternalLink, FileText, Info, Plus, Printer, ShieldCheck, Trash2, X } from "lucide-react";
 import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D } from "@/data/parameters/daem-assistants-2026-07";
-import { calculateDaemAssistantSalary, calculateDaemMinimumIncome } from "@/lib/daem-assistant-calculation/calculate";
+import { calculateDaemAssistantSalary, calculateDaemMinimumIncome, resolveDaemMinimumIncomeAutofill } from "@/lib/daem-assistant-calculation/calculate";
 import type { DaemAssistantCalculationInput } from "@/lib/daem-assistant-calculation/types";
 import type { ManualItem, ManualKind } from "@/lib/calculation/types";
 import { sitePath } from "@/lib/site-path";
@@ -138,15 +138,15 @@ export default function DaemAssistantCalculator({ embedded = false }: { embedded
   const updateHours = (value: number) => setInput((current) => ({
     ...current,
     weeklyHours: value,
-    contractRemuneration: remunerationEdited ? current.contractRemuneration : calculateDaemMinimumIncome(value, current.minimumIncomeAgeBracket),
-    previousMonthGross: previousGrossEdited ? current.previousMonthGross : calculateDaemMinimumIncome(value, current.minimumIncomeAgeBracket),
+    contractRemuneration: resolveDaemMinimumIncomeAutofill(current.contractRemuneration, remunerationEdited, value, current.minimumIncomeAgeBracket),
+    previousMonthGross: resolveDaemMinimumIncomeAutofill(current.previousMonthGross, previousGrossEdited, value, current.minimumIncomeAgeBracket),
   }));
   const updateMinimumIncomeAgeBracket = (value: DaemAssistantCalculationInput["minimumIncomeAgeBracket"]) => {
     setInput((current) => ({
       ...current,
       minimumIncomeAgeBracket: value,
-      contractRemuneration: remunerationEdited ? current.contractRemuneration : calculateDaemMinimumIncome(current.weeklyHours, value),
-      previousMonthGross: previousGrossEdited ? current.previousMonthGross : calculateDaemMinimumIncome(current.weeklyHours, value),
+      contractRemuneration: resolveDaemMinimumIncomeAutofill(current.contractRemuneration, remunerationEdited, current.weeklyHours, value),
+      previousMonthGross: resolveDaemMinimumIncomeAutofill(current.previousMonthGross, previousGrossEdited, current.weeklyHours, value),
     }));
   };
   const updateContractRemuneration = (value: number) => {
@@ -185,8 +185,8 @@ export default function DaemAssistantCalculator({ embedded = false }: { embedded
         {step === 0 && <><CardHeader><CardTitle>¿Esta calculadora corresponde a tu contrato?</CardTitle><CardDescription>Revisa estas tres condiciones antes de completar los datos.</CardDescription></CardHeader><CardContent className="space-y-6">
           <section className="scope-eligibility" aria-labelledby="daem-scope-title"><h3 id="daem-scope-title">Debes cumplir las tres:</h3><ol className="scope-criteria"><li><span>1</span><div><strong>Empleador</strong><small>Tu contrato es con un DAEM o DEM de una municipalidad.</small></div></li><li><span>2</span><div><strong>Lugar de trabajo</strong><small>Trabajas en una escuela o liceo municipal todavía no traspasado a SLEP.</small></div></li><li><span>3</span><div><strong>Función</strong><small>Tu contrato indica funciones técnicas o de asistente de la educación.</small></div></li></ol></section>
           <div className="scope-exclusion"><Info size={18} /><p><strong>No uses esta calculadora</strong> si tu empleador ya es un SLEP, si trabajas en un jardín VTF, JUNJI o Integra, o si eres educadora de párvulos profesional afecta a Carrera Docente.</p></div>
-          <div className="form-grid"><NumberField id="daem-hours" label="Horas semanales de contrato" value={input.weeklyHours} onChange={updateHours} min={1} max={44} suffix="horas" error={hoursError} /><SelectField id="daem-age-bracket" label="Tramo de edad para el ingreso mínimo" value={input.minimumIncomeAgeBracket} onChange={(value) => updateMinimumIncomeAgeBracket(value as DaemAssistantCalculationInput["minimumIncomeAgeBracket"])} help="La ley fija un monto distinto para menores de 18 años y mayores de 65."><option value="adult18To65">De 18 a 65 años</option><option value="outside18To65">Menor de 18 o mayor de 65 años</option></SelectField><NumberField id="daem-contract-remuneration" label="Sueldo base mensual" value={input.contractRemuneration} onChange={updateContractRemuneration} suffix="$" help={`Autocompletado con el ingreso mínimo legal estimado: ${currency.format(minimumIncomeForHours)} para tu jornada y tramo de edad. Edítalo si tu contrato indica un monto superior.`} error={remunerationError} /></div>
-          <NumberField id="daem-previous-gross" label="Remuneración bruta del mes anterior" value={input.previousMonthGross} onChange={(value) => { setPreviousGrossEdited(true); update("previousMonthGross", value); }} suffix="$" help={`Autocompletado con el mínimo legal estimado para tu jornada. Reemplázalo por el bruto efectivo del mes anterior; el límite 2026 para el bono es ${currency.format(D.article59Bonus.previousMonthGrossLimit)}.`} error={previousGrossError} />
+          <div className="form-grid"><NumberField id="daem-hours" label="Horas semanales de contrato" value={input.weeklyHours} onChange={updateHours} min={1} max={44} suffix="horas" error={hoursError} /><SelectField id="daem-age-bracket" label="Tramo de edad para el ingreso mínimo" value={input.minimumIncomeAgeBracket} onChange={(value) => updateMinimumIncomeAgeBracket(value as DaemAssistantCalculationInput["minimumIncomeAgeBracket"])} help="La ley fija un monto distinto para menores de 18 años y mayores de 65."><option value="adult18To65">De 18 a 65 años</option><option value="outside18To65">Menor de 18 o mayor de 65 años</option></SelectField><NumberField id="daem-contract-remuneration" label="Sueldo base mensual" value={input.contractRemuneration} onChange={updateContractRemuneration} suffix="$" help={`Autocompletado con el ingreso mínimo legal estimado: ${currency.format(minimumIncomeForHours)} para tu tramo de edad. No se prorratea entre 1 y 44 horas; edítalo si tu contrato indica un monto superior.`} error={remunerationError} /></div>
+          <NumberField id="daem-previous-gross" label="Remuneración bruta del mes anterior" value={input.previousMonthGross} onChange={(value) => { setPreviousGrossEdited(true); update("previousMonthGross", value); }} suffix="$" help={`Autocompletado con el mínimo legal del tramo etario. Reemplázalo por el bruto efectivo del mes anterior; el límite 2026 para el bono es ${currency.format(D.article59Bonus.previousMonthGrossLimit)}.`} error={previousGrossError} />
           <div className="legal-value-card"><div className="legal-value-summary"><span>Bono artículo 59 estimado</span><strong>{currency.format(result.article59Bonus)}</strong><small>Hasta {currency.format(D.article59Bonus.maximum44h)} a 44 h, proporcional a tu jornada.</small></div><a className="check-field no-underline" href={sitePath("legal/asistentes-daem-bonos-2026/")}><FileText size={20} className="text-primary" /><span><strong>Por qué pedimos el mes anterior</strong><small>El límite de acceso se revisa con esa remuneración bruta.</small></span></a></div>
         </CardContent></>}
 

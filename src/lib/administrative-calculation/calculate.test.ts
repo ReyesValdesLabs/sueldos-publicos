@@ -34,7 +34,7 @@ const baseInput: AdministrativeCalculationInput = {
 describe("calculateAdministrativeSalary", () => {
   it("uses the Code of Labor minimum only for the DAEM routes", () => {
     expect(calculateAdministrativeMinimumIncome(44)).toBe(553_553);
-    expect(calculateAdministrativeMinimumIncome(30)).toBe(377_423);
+    expect(calculateAdministrativeMinimumIncome(30)).toBe(553_553);
     expect(calculateAdministrativeMinimumIncome(42, "daemCentral")).toBe(553_553);
     expect(calculateAdministrativeMinimumIncome(30, "daemCentral")).toBe(395_395);
 

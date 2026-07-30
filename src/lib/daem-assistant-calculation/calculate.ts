@@ -16,12 +16,23 @@ export function calculateDaemMinimumIncome(
   daemParameters: DaemAssistantPeriodParameters = D,
 ) {
   const hours = Math.min(daemParameters.minimumIncome.maximumWeeklyHours, money(weeklyHours));
+  if (hours < 1) return 0;
   const monthly = ageBracket === "adult18To65"
     ? daemParameters.minimumIncome.monthly
     : daemParameters.minimumIncome.reducedMonthly;
-  return hours <= daemParameters.minimumIncome.proportionalUpToWeeklyHours
-    ? money(monthly * hours / daemParameters.minimumIncome.maximumWeeklyHours)
-    : monthly;
+  return monthly;
+}
+
+export function resolveDaemMinimumIncomeAutofill(
+  currentValue: number,
+  edited: boolean,
+  weeklyHours: number,
+  ageBracket: MinimumIncomeAgeBracket,
+  daemParameters: DaemAssistantPeriodParameters = D,
+) {
+  return edited
+    ? currentValue
+    : calculateDaemMinimumIncome(weeklyHours, ageBracket, daemParameters);
 }
 
 export function calculateDaemAssistantSalary(
@@ -153,7 +164,7 @@ export function calculateDaemAssistantSalary(
   const totalDiscounts = sum(discounts);
   const warnings: string[] = ["Esta estimación DAEM/DEM no aplica el mínimo técnico ni los bienios propios de los SLEP."];
   const minimumIncome = calculateDaemMinimumIncome(hours, input.minimumIncomeAgeBracket, daemParameters);
-  if (input.contractRemuneration < minimumIncome) warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para esta jornada.`);
+  if (input.contractRemuneration < minimumIncome) warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para el tramo etario seleccionado.`);
   if (declaredHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   if (input.previousMonthGross > daemParameters.article59Bonus.previousMonthGrossLimit) warnings.push("No se agregó el bono del artículo 59 porque el bruto informado del mes anterior supera el límite vigente.");
   if (input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
