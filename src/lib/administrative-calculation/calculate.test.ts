@@ -290,6 +290,28 @@ describe("calculateAdministrativeSalary", () => {
       .toBe(true);
   });
 
+  it("keeps AFP and health but removes AFC when an old-age or total-disability pensioner continues contributing", () => {
+    const ordinary = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+    });
+    const contributingPensioner = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      pensionStatus: "afpOldAgeOrTotalDisabilityPensionerContributor",
+    });
+
+    expect(contributingPensioner.discounts.find((line) => line.id === "afp")?.amount)
+      .toBe(ordinary.discounts.find((line) => line.id === "afp")?.amount);
+    expect(contributingPensioner.discounts.find((line) => line.id === "health")?.amount)
+      .toBe(ordinary.discounts.find((line) => line.id === "health")?.amount);
+    expect(contributingPensioner.discounts.some((line) => line.id === "afc")).toBe(false);
+    expect(contributingPensioner.warnings.some((warning) => warning.includes("continúas cotizando")))
+      .toBe(true);
+  });
+
   it("keeps an AFP partial-disability pensioner as an ordinary contributor", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,

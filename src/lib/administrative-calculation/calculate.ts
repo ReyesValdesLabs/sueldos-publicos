@@ -183,6 +183,8 @@ export function calculateAdministrativeSalary(
   const pensionCalculationSupported = input.pensionStatus !== "ips";
   const pensionContributionsExempt = input.pensionStatus
     === "afpOldAgeOrTotalDisabilityPensionerExempt";
+  const pensionerExemptFromAfc = pensionContributionsExempt
+    || input.pensionStatus === "afpOldAgeOrTotalDisabilityPensionerContributor";
 
   const nonRemunerativeManualEarnings = input.manualItems
     .filter(isManualEarning)
@@ -250,7 +252,7 @@ export function calculateAdministrativeSalary(
     payrollParameters.unemploymentCapUf * payrollParameters.uf,
   );
   const afc = !isMunicipalStatute
-    && !pensionContributionsExempt
+    && !pensionerExemptFromAfc
     && input.ageBracket !== "under18"
     && input.contractType === "indefinite"
     && !input.afcContributionEnded
@@ -354,6 +356,8 @@ export function calculateAdministrativeSalary(
     warnings.push("Cálculo detenido: este recorrido todavía no modela las tasas ni los topes del régimen previsional antiguo administrado por IPS.");
   } else if (pensionContributionsExempt) {
     warnings.push("No se descontaron cotizaciones AFP ni AFC porque declaraste una pensión de vejez o invalidez total y la exención correspondiente; la cotización de salud se mantiene.");
+  } else if (input.pensionStatus === "afpOldAgeOrTotalDisabilityPensionerContributor") {
+    warnings.push("Se mantuvieron las cotizaciones AFP y salud porque declaraste que continúas cotizando como pensionado de vejez o invalidez total; no se descontó AFC.");
   } else if (input.pensionStatus === "afpPartialDisabilityPensioner") {
     warnings.push("Se mantuvieron las cotizaciones AFP, salud y, cuando corresponde, AFC porque declaraste una pensión de invalidez parcial.");
   }
@@ -366,15 +370,15 @@ export function calculateAdministrativeSalary(
     if (input.baseSalary < minimumIncome) {
       warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para esta jornada.`);
     }
-    if (!pensionContributionsExempt && input.contractType === "fixed") {
+    if (!pensionerExemptFromAfc && input.contractType === "fixed") {
       warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
     }
-    if (!pensionContributionsExempt
+    if (!pensionerExemptFromAfc
       && input.contractType === "indefinite"
       && input.afcContributionEnded) {
       warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
     }
-    if (!pensionContributionsExempt && input.ageBracket === "under18") {
+    if (!pensionerExemptFromAfc && input.ageBracket === "under18") {
       warnings.push("No se descontó AFC porque las personas menores de 18 años están excluidas del Seguro de Cesantía.");
     }
   }

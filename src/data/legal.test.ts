@@ -53,6 +53,7 @@ describe("Respaldo de administrativos DAEM y municipales", () => {
     expect(explanation).toContain("cuota completa pagada en julio");
     expect(explanation).toContain("ORD. N.º 422");
     expect(explanation).toContain("pensión de invalidez parcial");
+    expect(explanation).toContain("se descuentan AFP y salud, pero no AFC");
     expect(notes).toContain("no se les descuenta AFC");
     expect(notes).toContain("subtotal líquido");
     expect(notes).toContain("nivel central DAEM/DEM no concede");

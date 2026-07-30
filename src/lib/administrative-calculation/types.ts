@@ -8,6 +8,7 @@ export type AdministrativeRegime =
 export type AdministrativePensionStatus =
   | "afpContributor"
   | "afpOldAgeOrTotalDisabilityPensionerExempt"
+  | "afpOldAgeOrTotalDisabilityPensionerContributor"
   | "afpPartialDisabilityPensioner"
   | "ips";
 export type AdministrativeAgeBracket = "adult" | "under18" | "over65";

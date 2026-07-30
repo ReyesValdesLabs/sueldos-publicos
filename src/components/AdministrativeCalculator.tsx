@@ -227,6 +227,8 @@ export default function AdministrativeCalculator() {
   const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(regime);
   const pensionContributionsExempt = input.pensionStatus
     === "afpOldAgeOrTotalDisabilityPensionerExempt";
+  const pensionerExemptFromAfc = pensionContributionsExempt
+    || input.pensionStatus === "afpOldAgeOrTotalDisabilityPensionerContributor";
   const hasPendingManagementReliquidations = !result.calculationComplete
     && input.managementAllowanceQuarterlyPayment > 0;
 
@@ -506,6 +508,7 @@ export default function AdministrativeCalculator() {
                 >
                   <option value="afpContributor">AFP · cotizante ordinario</option>
                   <option value="afpOldAgeOrTotalDisabilityPensionerExempt">AFP · pensión de vejez o invalidez total con exención declarada</option>
+                  <option value="afpOldAgeOrTotalDisabilityPensionerContributor">AFP · pensión de vejez o invalidez total, continúa cotizando</option>
                   <option value="afpPartialDisabilityPensioner">AFP · pensión de invalidez parcial, continúa cotizando</option>
                   <option value="ips">IPS / régimen antiguo</option>
                 </SelectField>
@@ -538,7 +541,7 @@ export default function AdministrativeCalculator() {
                 {input.contractType === "indefinite"
                   && !isMunicipalStatute
                   && input.ageBracket !== "under18"
-                  && !pensionContributionsExempt
+                  && !pensionerExemptFromAfc
                   && <CheckField id="administrative-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal termina para esa relación laboral." />}
                 <CheckField id="administrative-apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="El APV rebaja la base tributable" help="Actívalo solo si corresponde al régimen informado por tu institución." />
               </div>
