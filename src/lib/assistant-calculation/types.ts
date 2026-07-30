@@ -1,5 +1,10 @@
 import type { Afp, HealthSystem, ManualItem, ResultLine } from "@/lib/calculation/types";
 
+export type AssistantPensionStatus =
+  | "afpContributor"
+  | "pensionerExempt"
+  | "unmodeledRegime";
+
 export interface AssistantCalculationInput {
   weeklyHours: number;
   countedRemuneration: number;
@@ -11,6 +16,7 @@ export interface AssistantCalculationInput {
   territorialAllowance: number;
   academicExcellenceBonus: number;
   law19464Increase: number;
+  pensionStatus: AssistantPensionStatus;
   afp: Afp;
   healthSystem: HealthSystem;
   isaprePlanUf: number;
@@ -22,6 +28,7 @@ export interface AssistantCalculationInput {
 }
 
 export interface AssistantCalculationResult {
+  supported: boolean;
   minimumTarget: number;
   earnings: ResultLine[];
   discounts: ResultLine[];

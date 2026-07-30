@@ -20,6 +20,22 @@ export const ASSISTANT_EXPERIENCE_FIELD = {
   help: "Incluye los que el SLEP reconoce por servicios previos al traspaso como asistente con el sostenedor municipal; 2% del mínimo técnico por bienio, máximo 15.",
 } as const;
 
+export function isAssistantStepInvalid(
+  step: number,
+  input: Pick<
+    AssistantCalculationInput,
+    "weeklyHours" | "biennia" | "difficultConditionsPercentage" | "zonePercentage" | "zonePreviousMonthGross"
+  >,
+) {
+  const hoursInvalid = !Number.isInteger(input.weeklyHours) || input.weeklyHours < 1 || input.weeklyHours > 44;
+  const bienniaInvalid = !Number.isInteger(input.biennia) || input.biennia < 0 || input.biennia > 15;
+  const difficultInvalid = input.difficultConditionsPercentage < 0 || input.difficultConditionsPercentage > 100;
+  const zoneInvalid = input.zonePercentage < 0 || input.zonePercentage > 600;
+  const zoneGrossMissing = input.zonePercentage > 0 && input.zonePreviousMonthGross <= 0;
+  return (step === 0 && hoursInvalid)
+    || (step === 1 && (bienniaInvalid || difficultInvalid || zoneInvalid || zoneGrossMissing));
+}
+
 function parseMoney(value: string) {
   const parsed = Number(value.replace(/\D/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -32,10 +48,11 @@ const initialInput: AssistantCalculationInput = {
   priorityAllowance: 0,
   difficultConditionsPercentage: 0,
   zonePercentage: 0,
-  zonePreviousMonthGross: A.technicalMinimum44h,
+  zonePreviousMonthGross: 0,
   territorialAllowance: 0,
   academicExcellenceBonus: 0,
   law19464Increase: 0,
+  pensionStatus: "afpContributor",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -90,7 +107,6 @@ function CheckField({ id, checked, onChange, label, help }: { id: string; checke
 export default function AssistantCalculator({ embedded = false }: { embedded?: boolean }) {
   const [step, setStep] = useState(0);
   const [remunerationEdited, setRemunerationEdited] = useState(false);
-  const [zoneGrossEdited, setZoneGrossEdited] = useState(false);
   const [input, setInput] = useState<AssistantCalculationInput>(initialInput);
   const result = useMemo(() => calculateAssistantSalary(input), [input]);
   const update = <K extends keyof AssistantCalculationInput>(key: K, value: AssistantCalculationInput[K]) => setInput((current) => ({ ...current, [key]: value }));
@@ -99,7 +115,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
   const difficultError = input.difficultConditionsPercentage < 0 || input.difficultConditionsPercentage > 100 ? "Ingresa un porcentaje entre 0 y 100." : undefined;
   const zoneError = input.zonePercentage < 0 || input.zonePercentage > 600 ? "Ingresa un porcentaje entre 0 y 600." : undefined;
   const zoneGrossError = input.zonePercentage > 0 && input.zonePreviousMonthGross <= 0 ? "Ingresa la remuneración bruta efectiva del mes anterior." : undefined;
-  const currentStepInvalid = (step === 0 && Boolean(hoursError)) || (step === 1 && Boolean(bienniaError || difficultError || zoneError || zoneGrossError));
+  const currentStepInvalid = isAssistantStepInvalid(step, input);
   const minimumForHours = Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, input.weeklyHours || 0)) / 44);
 
   const updateHours = (value: number) => {
@@ -107,7 +123,6 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
       ...current,
       weeklyHours: value,
       countedRemuneration: remunerationEdited ? current.countedRemuneration : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
-      zonePreviousMonthGross: zoneGrossEdited ? current.zonePreviousMonthGross : Math.round(A.technicalMinimum44h * Math.min(44, Math.max(0, value || 0)) / 44),
     }));
   };
   const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
@@ -170,7 +185,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
                 <div className="form-grid">
                   <NumberField id="assistant-difficult" label="Porcentaje de desempeño difícil 2026" value={input.difficultConditionsPercentage} onChange={(value) => update("difficultConditionsPercentage", value)} min={0} max={100} suffix="%" help="Solo si el establecimiento fue calificado y conoces el porcentaje oficial." error={difficultError} />
                   <NumberField id="assistant-zone-percentage" label="Porcentaje de zona Ley N.º 21.819" value={input.zonePercentage} onChange={(value) => update("zonePercentage", value)} min={0} max={600} suffix="%" help="Usa el porcentaje oficial del artículo 7 del DL N.º 249 para la localidad." error={zoneError} />
-                  {input.zonePercentage > 0 && <NumberField id="assistant-zone-previous-gross" label="Bruto del mes anterior para zona" value={input.zonePreviousMonthGross} onChange={(value) => { setZoneGrossEdited(true); update("zonePreviousMonthGross", value); }} suffix="$" help={`La bonificación completa llega hasta $${integerMoney.format(A.zoneBonus.lowerGrossThreshold)} y se reduce hasta desaparecer en $${integerMoney.format(A.zoneBonus.upperGrossThreshold)}.`} error={zoneGrossError} />}
+                  {input.zonePercentage > 0 && <NumberField id="assistant-zone-previous-gross" label="Bruto efectivo del mes anterior para zona" value={input.zonePreviousMonthGross} onChange={(value) => update("zonePreviousMonthGross", value)} suffix="$" help={`No se autocompleta: excluye la propia bonificación de zona. El beneficio completo llega hasta $${integerMoney.format(A.zoneBonus.lowerGrossThreshold)} y se reduce hasta desaparecer en $${integerMoney.format(A.zoneBonus.upperGrossThreshold)}.`} error={zoneGrossError} />}
                   <NumberField id="assistant-territorial" label="Beneficio territorial" value={input.territorialAllowance} onChange={(value) => update("territorialAllowance", value)} suffix="$" help="Ingresa el monto que figura en tu liquidación." />
                   <NumberField id="assistant-excellence" label="Bonificación de excelencia académica" value={input.academicExcellenceBonus} onChange={(value) => update("academicExcellenceBonus", value)} suffix="$" />
                   <NumberField id="assistant-law-19464" label="Aumento Ley N.º 19.464" value={input.law19464Increase} onChange={(value) => update("law19464Increase", value)} suffix="$" />
@@ -185,16 +200,21 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
           <CardHeader><CardTitle>Previsión y otros conceptos</CardTitle><CardDescription>Completa los descuentos personales y agrega los conceptos particulares de tu liquidación.</CardDescription></CardHeader>
           <CardContent className="space-y-7">
             <div className="form-grid">
-              <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>
-              <SelectField id="assistant-health" label="Sistema de salud" value={input.healthSystem} onChange={(value) => update("healthSystem", value as AssistantCalculationInput["healthSystem"])}><option value="fonasa">Fonasa</option><option value="isapre">Isapre</option></SelectField>
+              <SelectField id="assistant-pension-status" label="Situación previsional" value={input.pensionStatus} onChange={(value) => update("pensionStatus", value as AssistantCalculationInput["pensionStatus"])} help="La exención corresponde a pensionados por vejez o invalidez total; la invalidez parcial sigue cotizando.">
+                <option value="afpContributor">Cotizante AFP</option>
+                <option value="pensionerExempt">Pensionado/a exento/a de AFP</option>
+                <option value="unmodeledRegime">Otro régimen no modelado</option>
+              </SelectField>
+              {input.pensionStatus === "afpContributor" && <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>}
+              {input.pensionStatus !== "unmodeledRegime" && <SelectField id="assistant-health" label="Sistema de salud" value={input.healthSystem} onChange={(value) => update("healthSystem", value as AssistantCalculationInput["healthSystem"])}><option value="fonasa">Fonasa</option><option value="isapre">Isapre</option></SelectField>}
             </div>
-            {input.healthSystem === "isapre" && <NumberField id="assistant-isapre" label="Precio total del plan Isapre" value={input.isaprePlanUf} onChange={(value) => update("isaprePlanUf", value)} suffix="UF" />}
+            {input.pensionStatus !== "unmodeledRegime" && input.healthSystem === "isapre" && <NumberField id="assistant-isapre" label="Precio total del plan Isapre" value={input.isaprePlanUf} onChange={(value) => update("isaprePlanUf", value)} suffix="UF" />}
             <div className="form-grid">
-              <SelectField id="assistant-contract-type" label="Tipo de contrato" value={input.contractType} onChange={(value) => update("contractType", value as AssistantCalculationInput["contractType"])} help="El aporte personal de AFC de 0,6% se descuenta en contratos indefinidos."><option value="indefinite">Indefinido</option><option value="fixed">Plazo fijo</option></SelectField>
+              {input.pensionStatus === "afpContributor" && <SelectField id="assistant-contract-type" label="Tipo de contrato" value={input.contractType} onChange={(value) => update("contractType", value as AssistantCalculationInput["contractType"])} help="El aporte personal de AFC de 0,6% se descuenta en contratos indefinidos."><option value="indefinite">Indefinido</option><option value="fixed">Plazo fijo</option></SelectField>}
               <NumberField id="assistant-apv" label="APV descontado por empleador" value={input.apv} onChange={(value) => update("apv", value)} suffix="$" />
             </div>
             <div className="option-grid">
-              {input.contractType === "indefinite" && <CheckField id="assistant-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal deja de cobrarse para esa relación laboral." />}
+              {input.pensionStatus === "afpContributor" && input.contractType === "indefinite" && <CheckField id="assistant-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal deja de cobrarse para esa relación laboral." />}
               <CheckField id="assistant-apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="El APV rebaja la base tributable" help="Actívalo solo si corresponde al régimen informado por tu institución." />
             </div>
 
@@ -215,7 +235,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
         </>}
 
         {step === 3 && <>
-          <CardHeader className="result-heading"><Badge>Estimación lista</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {A.label.toLowerCase()}.</CardDescription></CardHeader>
+          <CardHeader className="result-heading"><Badge>{result.supported ? "Estimación lista" : "Estimación previsional incompleta"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {A.label.toLowerCase()}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
             <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />
