@@ -14,7 +14,7 @@ export function calculateAssistantZoneBonus(
   const hoursRatio = Math.min(44, money(input.weeklyHours)) / 44;
   const percentage = Math.max(0, input.zonePercentage);
   const previousGross = money(input.zonePreviousMonthGross);
-  if (percentage === 0 || previousGross >= assistantParameters.zoneBonus.upperGrossThreshold) return 0;
+  if (percentage === 0 || previousGross <= 0 || previousGross >= assistantParameters.zoneBonus.upperGrossThreshold) return 0;
 
   const incomeFactor = previousGross <= assistantParameters.zoneBonus.lowerGrossThreshold
     ? 1
@@ -108,6 +108,11 @@ export function calculateAssistantSalary(
   });
 
   const zoneBonus = calculateAssistantZoneBonus(input, assistantParameters);
+  const zoneCalculationStatus = input.zonePercentage <= 0
+    ? "notApplicable"
+    : input.zonePreviousMonthGross <= 0
+      ? "missingPreviousGross"
+      : "calculated";
   if (zoneBonus > 0) earnings.push({
     id: "assistant-zone-21819",
     label: "Bonificación de zona Ley N.º 21.819",
@@ -165,22 +170,44 @@ export function calculateAssistantSalary(
   const imposableEarnings = sum(earnings.filter((line) => line.imposable));
   const taxableEarnings = sum(earnings.filter((line) => line.taxable));
   const imposableBase = money(Math.min(imposableEarnings, payrollParameters.pensionCapUf * payrollParameters.uf));
-  const afp = money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]));
+  const pensionCalculationSupported = input.pensionStatus !== "unmodeledRegime";
+  const contributesToAfp = input.pensionStatus === "afpContributor"
+    || input.pensionStatus === "oldAgeOrTotalDisabilityPensionerContributing";
+  const afp = contributesToAfp
+    ? money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]))
+    : 0;
   const healthLegal = money(imposableBase * 0.07);
-  const health = input.healthSystem === "isapre" ? money(Math.max(healthLegal, input.isaprePlanUf * payrollParameters.uf)) : healthLegal;
+  const health = pensionCalculationSupported
+    ? input.healthSystem === "isapre"
+      ? money(Math.max(healthLegal, input.isaprePlanUf * payrollParameters.uf))
+      : healthLegal
+    : 0;
+  const healthTaxReduction = money(Math.min(
+    health,
+    payrollParameters.pensionCapUf * payrollParameters.uf * 0.07,
+  ));
   const afcBase = Math.min(imposableEarnings, payrollParameters.unemploymentCapUf * payrollParameters.uf);
-  const afc = input.contractType === "indefinite" && !input.afcContributionEnded ? money(afcBase * 0.006) : 0;
+  const afc = input.pensionStatus === "afpContributor"
+    && input.contractType === "indefinite"
+    && !input.afcContributionEnded
+    ? money(afcBase * 0.006)
+    : 0;
   const apv = money(input.apv);
   const apvTaxReduction = input.apvTaxDeductible ? Math.min(apv, money(payrollParameters.uf * 50)) : 0;
-  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthLegal - afc - apvTaxReduction));
+  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthTaxReduction - afc - apvTaxReduction));
   const bracket = payrollParameters.taxBrackets.find((candidate) => taxableBase <= candidate.upTo) ?? payrollParameters.taxBrackets.at(-1)!;
-  const tax = money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
+  const tax = pensionCalculationSupported
+    ? money(Math.max(0, taxableBase * bracket.factor - bracket.rebate))
+    : 0;
 
   const afpName = input.afp[0].toUpperCase() + input.afp.slice(1);
-  const discounts: ResultLine[] = [
-    { id: "afp", label: `AFP ${afpName}`, amount: afp, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "cotizaciones-previsionales" },
-    { id: "health", label: input.healthSystem === "fonasa" ? "Fonasa (7%)" : "Plan Isapre", amount: health, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "cotizaciones-previsionales" },
-  ];
+  const discounts: ResultLine[] = [];
+  if (contributesToAfp) {
+    discounts.push({ id: "afp", label: `AFP ${afpName}`, amount: afp, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "cotizaciones-previsionales" });
+  }
+  if (pensionCalculationSupported) {
+    discounts.push({ id: "health", label: input.healthSystem === "fonasa" ? "Fonasa (7%)" : "Plan Isapre", amount: health, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "cotizaciones-previsionales" });
+  }
   if (afc > 0) discounts.push({ id: "afc", label: "Seguro de cesantía (0,6%)", amount: afc, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "asistentes-seguro-cesantia" });
   if (apv > 0) discounts.push({ id: "apv", label: "APV", amount: apv, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "apv" });
   if (tax > 0) discounts.push({ id: "tax", label: "Impuesto Único de Segunda Categoría", amount: tax, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "impuesto-unico" });
@@ -191,14 +218,20 @@ export function calculateAssistantSalary(
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
+  if (input.pensionStatus === "pensionerExempt") warnings.push("No se descontó AFP ni AFC porque declaraste una pensión de vejez o invalidez total con exención; la cotización de salud se mantiene.");
+  if (input.pensionStatus === "oldAgeOrTotalDisabilityPensionerContributing") warnings.push("Se descontó AFP porque declaraste que continúas cotizando tras pensionarte por vejez o invalidez total; no se descontó AFC y la cotización de salud se mantiene.");
+  if (!pensionCalculationSupported) warnings.push("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
+  if (zoneCalculationStatus === "missingPreviousGross") warnings.push("Cálculo incompleto: falta la remuneración bruta efectiva del mes anterior para determinar la bonificación de zona.");
   if (declaredHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   if (minimumCounted < minimumTarget) warnings.push("Se agregó un complemento estimado para alcanzar el mínimo bruto legal de la categoría técnica.");
-  if (input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
-  if (input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
+  if (input.pensionStatus === "afpContributor" && input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
+  if (input.pensionStatus === "afpContributor" && input.contractType === "indefinite" && input.afcContributionEnded) warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
   if (zoneBonus > 0 && input.zonePercentage > assistantParameters.zoneBonus.fullImplementationUpToPercentage) warnings.push("La bonificación de zona aplica el 50% de gradualidad vigente durante los primeros doce meses por superar 15% de zona.");
   if (input.priorityAllowance || input.territorialAllowance || input.academicExcellenceBonus || input.law19464Increase) warnings.push("Las asignaciones ingresadas desde tu liquidación se usan tal como las declaraste; confirma su tratamiento imponible y tributario con el empleador.");
 
   return {
+    supported: pensionCalculationSupported && zoneCalculationStatus !== "missingPreviousGross",
+    zoneCalculationStatus,
     minimumTarget,
     earnings,
     discounts,

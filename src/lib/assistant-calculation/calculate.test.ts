@@ -15,6 +15,7 @@ const baseInput: AssistantCalculationInput = {
   territorialAllowance: 0,
   academicExcellenceBonus: 0,
   law19464Increase: 0,
+  pensionStatus: "afpContributor",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -84,6 +85,14 @@ describe("calculateAssistantSalary", () => {
     expect(zone?.amount).toBe(Math.round(A.zoneBonus.grade24Base * 0.617 * 0.1));
     expect(zone).toMatchObject({ imposable: false, taxable: false, countsForMinimum: false });
     expect(result.lowIncomeBonus).toBe(62_903);
+  });
+
+  it("does not calculate zone when the effective previous gross was not informed", () => {
+    expect(calculateAssistantZoneBonus({
+      weeklyHours: 44,
+      zonePercentage: 20,
+      zonePreviousMonthGross: 0,
+    })).toBe(0);
   });
 
   it("includes ordinary remunerative benefits in the gross used by the 2026 low-income bonus", () => {
@@ -158,5 +167,87 @@ describe("calculateAssistantSalary", () => {
     const fixed = calculateAssistantSalary({ ...baseInput, contractType: "fixed" });
     expect(indefinite.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
     expect(fixed.discounts.some((line) => line.id === "afc")).toBe(false);
+  });
+
+  it("deducts additional Isapre contributions from IUSC only up to the health cap", () => {
+    const fonasa = calculateAssistantSalary({ ...baseInput, countedRemuneration: 3_000_000 });
+    const isapre = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 6,
+    });
+    const overCap = calculateAssistantSalary({
+      ...baseInput,
+      countedRemuneration: 3_000_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 10,
+    });
+    const maximumHealthReduction = Math.round(P.pensionCapUf * P.uf * 0.07);
+    const taxableEarnings = overCap.earnings
+      .filter((line) => line.taxable)
+      .reduce((total, line) => total + line.amount, 0);
+
+    expect(isapre.taxableBase).toBeLessThan(fonasa.taxableBase);
+    expect(overCap.taxableBase).toBe(Math.round(
+      taxableEarnings
+      - (overCap.discounts.find((line) => line.id === "afp")?.amount ?? 0)
+      - maximumHealthReduction
+      - (overCap.discounts.find((line) => line.id === "afc")?.amount ?? 0),
+    ));
+  });
+
+  it("keeps health but removes AFP and AFC for an exempt pensioner", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "pensionerExempt",
+    });
+    expect(result.supported).toBe(true);
+    expect(result.discounts.some((line) => line.id === "afp")).toBe(false);
+    expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+  });
+
+  it("marks an unmodeled pension regime as unsupported", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "unmodeledRegime",
+    });
+    expect(result.supported).toBe(false);
+    expect(result.discounts.some((line) => line.id === "tax")).toBe(false);
+    expect(result.warnings).toContain("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
+  });
+
+  it("keeps AFP and health but excludes AFC for an old-age or total-disability pensioner who continues contributing", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "oldAgeOrTotalDisabilityPensionerContributing",
+    });
+    expect(result.supported).toBe(true);
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+  });
+
+  it("keeps AFC for a partial-disability pensioner represented by the ordinary AFP contributor flow", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "afpContributor",
+      contractType: "indefinite",
+    });
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
+  });
+
+  it("marks a zone calculation without the effective previous gross as unsupported", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      zonePercentage: 20,
+      zonePreviousMonthGross: 0,
+    });
+    expect(result.supported).toBe(false);
+    expect(result.zoneCalculationStatus).toBe("missingPreviousGross");
+    expect(result.warnings).toContain("Cálculo incompleto: falta la remuneración bruta efectiva del mes anterior para determinar la bonificación de zona.");
   });
 });
