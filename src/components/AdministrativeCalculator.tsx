@@ -46,7 +46,6 @@ const currency = new Intl.NumberFormat("es-CL", {
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const steps = ["Régimen", "Haberes", "Previsión", "Resultado"];
 const initialMinimumIncome = calculateAdministrativeMinimumIncome(44);
-const reducedMinimumIncome = 412_938;
 
 const regimeDetails = {
   educationEstablishment: {
@@ -71,6 +70,7 @@ const regimeDetails = {
 
 const initialInput: AdministrativeCalculationInput = {
   regime: "educationEstablishment",
+  ageBracket: "adult",
   weeklyHours: 44,
   baseSalary: initialMinimumIncome,
   previousMonthGross: initialMinimumIncome,
@@ -409,6 +409,17 @@ export default function AdministrativeCalculator() {
                   suffix="horas"
                   error={hoursError}
                 />
+                {!isMunicipalStatute && <SelectField
+                  id="administrative-age-bracket"
+                  label="Tramo etario"
+                  value={input.ageBracket}
+                  onChange={(value) => update("ageBracket", value as AdministrativeCalculationInput["ageBracket"])}
+                  help="Determina el ingreso mínimo aplicable. Ser mayor de 65 años no exime por sí solo del Seguro de Cesantía."
+                >
+                  <option value="adult">De 18 a 65 años</option>
+                  <option value="under18">Menor de 18 años</option>
+                  <option value="over65">Mayor de 65 años</option>
+                </SelectField>}
                 {isMunicipalStatute && <NumberField
                   id="municipal-grade"
                   label="Grado municipal"
@@ -427,7 +438,7 @@ export default function AdministrativeCalculator() {
                   suffix="$"
                   help={isMunicipalStatute
                     ? "Cópialo de la escala de remuneraciones vigente publicada por tu municipalidad."
-                    : `Como referencia para mayores de 18 y hasta 65 años, el ingreso mínimo a ${maximumWeeklyHours} horas es ${currency.format(initialMinimumIncome)}. Para menores de 18 o mayores de 65 años es ${currency.format(reducedMinimumIncome)}; reemplaza el monto si corresponde.`}
+                    : `El ingreso mínimo estimado para el tramo etario y la jornada seleccionados es ${currency.format(calculateAdministrativeMinimumIncome(input.weeklyHours, regime, input.ageBracket))}.`}
                   error={baseSalaryError}
                 />
               </div>
@@ -469,7 +480,7 @@ export default function AdministrativeCalculator() {
                 <div className="form-grid">
                   <NumberField id="municipal-allowance" label="Asignación municipal" value={input.municipalAllowance} onChange={(value) => update("municipalAllowance", value)} suffix="$" help="Monto exacto de tu estamento y grado; se trata como no imponible y tributable." />
                   <NumberField id="municipal-biennia" label="Bienios reconocidos" value={input.municipalBiennia} onChange={(value) => update("municipalBiennia", Math.trunc(value))} min={0} max={15} step={1} help={`Ingresa solo bienios completos. La estimación actual es ${currency.format(result.municipalBienniaAllowance)}: 2% del sueldo base por bienio, con máximo de 15.`} />
-                  <NumberField id="municipal-management" label="Cuota de gestión pagada en julio" value={input.managementAllowanceQuarterlyPayment} onChange={(value) => update("managementAllowanceQuarterlyPayment", value)} suffix="$" help="Ingresa la cuota completa correspondiente a abril-junio. La calculadora la incluye completa en el bruto de julio y la divide en tres solo para estimar la reliquidación previsional y tributaria." />
+                  <NumberField id="municipal-management" label="Cuota de gestión pagada en julio" value={input.managementAllowanceQuarterlyPayment} onChange={(value) => update("managementAllowanceQuarterlyPayment", value)} suffix="$" help="Ingresa la cuota completa correspondiente a abril-junio. Se incluye como haber, pero esta estimación no calcula sus cotizaciones, bonificación compensatoria ni reliquidación tributaria sin las liquidaciones históricas." />
                 </div>
               </section>}
             </CardContent>
@@ -518,7 +529,10 @@ export default function AdministrativeCalculator() {
               </div>}
               <div className="option-grid">
                 {!isDaemCentral && <CheckField id="administrative-low-income" checked={input.applyLowIncomeBonus} onChange={(value) => update("applyLowIncomeBonus", value)} label="Mi vínculo está cubierto por el bono de bajas remuneraciones 2026" help="Desactívalo si remuneraciones confirmó que tu esquema contractual queda fuera." />}
-                {input.contractType === "indefinite" && !isMunicipalStatute && <CheckField id="administrative-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal termina para esa relación laboral." />}
+                {input.contractType === "indefinite"
+                  && !isMunicipalStatute
+                  && input.ageBracket !== "under18"
+                  && <CheckField id="administrative-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal termina para esa relación laboral." />}
                 <CheckField id="administrative-apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="El APV rebaja la base tributable" help="Actívalo solo si corresponde al régimen informado por tu institución." />
               </div>
               {isDaemCentral && <div className="scope-exclusion">
@@ -579,8 +593,6 @@ export default function AdministrativeCalculator() {
                 <div><span>Base tributable de julio</span><strong>{currency.format(result.taxableBase)}</strong></div>
                 <div><span>Bono artículo 59</span><strong>{currency.format(result.article59Bonus)}</strong></div>
                 <div><span>Bono bajas rentas</span><strong>{currency.format(result.lowIncomeBonus)}</strong></div>
-                {result.managementMonthlyEquivalent > 0 && <div><span>Gestión distribuida por mes</span><strong>{currency.format(result.managementMonthlyEquivalent)}</strong></div>}
-                {result.managementContributionCompensation > 0 && <div><span>Compensación cotizaciones gestión</span><strong>{currency.format(result.managementContributionCompensation)}</strong></div>}
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button type="button" onClick={() => window.print()}><Printer size={18} /> Imprimir o guardar PDF</Button>

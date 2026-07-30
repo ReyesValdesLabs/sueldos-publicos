@@ -6,9 +6,11 @@ export type AdministrativeRegime =
   | "municipalStatute";
 
 export type AdministrativePensionRegime = "afp" | "ips";
+export type AdministrativeAgeBracket = "adult" | "under18" | "over65";
 
 export interface AdministrativeCalculationInput {
   regime: AdministrativeRegime;
+  ageBracket: AdministrativeAgeBracket;
   weeklyHours: number;
   baseSalary: number;
   previousMonthGross: number;
@@ -42,8 +44,6 @@ export interface AdministrativeCalculationResult {
   netSalary: number;
   imposableBase: number;
   taxableBase: number;
-  managementMonthlyEquivalent: number;
-  managementContributionCompensation: number;
   article59Bonus: number;
   lowIncomeBonus: number;
   municipalBienniaAllowance: number;

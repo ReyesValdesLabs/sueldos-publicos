@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import type { AdministrativeCalculationInput } from "./types";
 import {
   calculateAdministrativeMinimumIncome,
@@ -7,6 +8,7 @@ import {
 
 const baseInput: AdministrativeCalculationInput = {
   regime: "educationEstablishment",
+  ageBracket: "adult",
   weeklyHours: 44,
   baseSalary: 553_553,
   previousMonthGross: 553_553,
@@ -150,19 +152,20 @@ describe("calculateAdministrativeSalary", () => {
     });
   });
 
-  it("adds the non-imposable compensation for the quarterly management payment", () => {
+  it("keeps the quarterly management payment without inferring historical reliquidations", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
       regime: "municipalStatute",
       baseSalary: 1_000_000,
       managementAllowanceQuarterlyPayment: 300_000,
     });
-    const compensation = result.earnings.find(
+    expect(result.earnings.find((line) => line.id === "management-allowance")?.amount)
+      .toBe(300_000);
+    expect(result.earnings.some(
       (line) => line.id === "management-contribution-compensation",
-    );
-    expect(compensation?.amount).toBeGreaterThan(51_000);
-    expect(compensation).toMatchObject({ imposable: false, taxable: true });
-    expect(result.managementMonthlyEquivalent).toBe(100_000);
+    )).toBe(false);
+    expect(result.warnings.some((warning) => warning.includes("No se calcularon sus cotizaciones")))
+      .toBe(true);
   });
 
   it("uses the full July management payment when testing the 2026 bonus threshold", () => {
@@ -172,10 +175,6 @@ describe("calculateAdministrativeSalary", () => {
       baseSalary: 640_000,
       managementAllowanceQuarterlyPayment: 150_000,
     });
-    const compensation = result.earnings.find(
-      (line) => line.id === "management-contribution-compensation",
-    )?.amount ?? 0;
-    expect(compensation).toBeGreaterThan(0);
     expect(result.earnings.find((line) => line.id === "management-allowance")?.amount)
       .toBe(150_000);
     expect(result.lowIncomeBonus).toBe(0);
@@ -215,8 +214,89 @@ describe("calculateAdministrativeSalary", () => {
     });
     expect(result.supported).toBe(false);
     expect(result.discounts.some((line) => line.id === "afp")).toBe(false);
-    expect(result.managementContributionCompensation).toBe(0);
     expect(result.warnings.some((warning) => warning.includes("IPS"))).toBe(true);
+  });
+
+  it("uses the reduced minimum and excludes minors from AFC", () => {
+    expect(calculateAdministrativeMinimumIncome(
+      44,
+      "educationEstablishment",
+      "under18",
+    )).toBe(412_938);
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      ageBracket: "under18",
+      baseSalary: 412_938,
+      previousMonthGross: 600_000,
+    });
+    expect(result.warnings.some((warning) => warning.includes("inferior al ingreso mínimo")))
+      .toBe(false);
+    expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+    expect(result.warnings.some((warning) => warning.includes("menores de 18 años")))
+      .toBe(true);
+  });
+
+  it("uses the reduced minimum for people over 65 without assuming an AFC exemption", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      ageBracket: "over65",
+      baseSalary: 412_938,
+      previousMonthGross: 600_000,
+    });
+    expect(result.warnings.some((warning) => warning.includes("inferior al ingreso mínimo")))
+      .toBe(false);
+    expect(result.discounts.some((line) => line.id === "afc")).toBe(true);
+  });
+
+  it("deducts Isapre contributions from tax only up to 7% of the pension cap", () => {
+    const taxableEarning = {
+      id: "high-income",
+      name: "Renta alta",
+      amount: 5_000_000,
+      kind: "imposableTaxable" as const,
+    };
+    const fonasa = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      manualItems: [taxableEarning],
+    });
+    const isapreBelowCap = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 6,
+      manualItems: [{ ...taxableEarning, amount: 2_000_000 }],
+    });
+    const isapreAboveCap = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 8,
+      manualItems: [taxableEarning],
+    });
+    const healthTaxCap = Math.round(P.pensionCapUf * P.uf * 0.07);
+
+    expect(fonasa.taxableBase).toBe(
+      fonasa.earnings.filter((line) => line.taxable).reduce((total, line) => total + line.amount, 0)
+      - fonasa.discounts.find((line) => line.id === "afp")!.amount
+      - Math.round(fonasa.imposableBase * 0.07)
+      - fonasa.discounts.find((line) => line.id === "afc")!.amount,
+    );
+    expect(isapreBelowCap.taxableBase).toBe(
+      isapreBelowCap.earnings.filter((line) => line.taxable).reduce((total, line) => total + line.amount, 0)
+      - isapreBelowCap.discounts.find((line) => line.id === "afp")!.amount
+      - Math.round(6 * P.uf)
+      - isapreBelowCap.discounts.find((line) => line.id === "afc")!.amount,
+    );
+    expect(isapreAboveCap.taxableBase).toBe(
+      isapreAboveCap.earnings.filter((line) => line.taxable).reduce((total, line) => total + line.amount, 0)
+      - isapreAboveCap.discounts.find((line) => line.id === "afp")!.amount
+      - healthTaxCap
+      - isapreAboveCap.discounts.find((line) => line.id === "afc")!.amount,
+    );
   });
 
   it("lets the worker disable the annual low-income bonus when the link is not covered", () => {
