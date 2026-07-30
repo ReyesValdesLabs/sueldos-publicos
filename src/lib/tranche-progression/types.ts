@@ -12,6 +12,17 @@ export type EcepResult =
   | { category: EcepCategory; status: "rendered" }
   | { category: "A" | "B"; status: "retained-following-process" };
 
+export type Article19SHistory =
+  | {
+    kind: "ordinary";
+    systemEntryCohort: "before-2025" | "from-2025";
+    previousProcessWithoutAdvancement: boolean;
+  }
+  | {
+    kind: "reentry-after-early-exit";
+    reentryEvaluationDue: boolean;
+  };
+
 export interface TrancheProgressionInput {
   currentTranche: Tranche;
   experienceYears: number;
@@ -20,7 +31,7 @@ export interface TrancheProgressionInput {
   ecepResult: EcepResult;
   enteredEarlyWithA: boolean;
   enteredAdvancedWithDoubleA: boolean;
-  previousProcessWithoutAdvancement: boolean;
+  article19SHistory: Article19SHistory;
   accessDeadlineExpired: boolean;
 }
 

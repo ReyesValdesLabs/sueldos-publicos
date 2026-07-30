@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RESULT_MATRIX, assessGoal, calculateTrancheProgression, experienceCeiling, isValidEcepResult, isValidPortfolioResult, minimumExperienceFor } from "./calculate";
+import { RESULT_MATRIX, assessGoal, calculateTrancheProgression, experienceCeiling, isValidEcepResult, isValidPortfolioResult, minimumCombinationFor, minimumExperienceFor } from "./calculate";
 import type { TrancheProgressionInput } from "./types";
 
 const base: TrancheProgressionInput = {
@@ -10,7 +10,11 @@ const base: TrancheProgressionInput = {
   ecepResult: { category: "B", status: "rendered" },
   enteredEarlyWithA: false,
   enteredAdvancedWithDoubleA: false,
-  previousProcessWithoutAdvancement: false,
+  article19SHistory: {
+    kind: "ordinary",
+    systemEntryCohort: "before-2025",
+    previousProcessWithoutAdvancement: false,
+  },
   accessDeadlineExpired: false,
 };
 
@@ -30,6 +34,15 @@ describe("cálculo de progresión", () => {
   it("aplica los umbrales de experiencia", () => {
     expect([3, 4, 7, 8, 11, 12].map(experienceCeiling)).toEqual(["initial", "advanced", "advanced", "expert1", "expert1", "expert2"]);
     expect(minimumExperienceFor("early")).toBe(4);
+  });
+
+  it("normaliza experiencia no finita o negativa", () => {
+    expect([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, -1].map(experienceCeiling)).toEqual([
+      "initial",
+      "initial",
+      "initial",
+      "initial",
+    ]);
   });
 
   it("permite la excepción de Inicial a Avanzado", () => {
@@ -87,24 +100,62 @@ describe("cálculo de progresión", () => {
     expect(result).toMatchObject({ resultTranche: "initial", legalStatus: "access-reassigned", advances: false });
   });
 
-  it("reports the statutory exit on a second consecutive failed process in Initial or Early", () => {
+  it("aplica la salida ordinaria en Inicial y en Temprano solo para cohortes desde 2025", () => {
     const insufficientResults = {
       portfolioResult: { category: "E", status: "rendered" },
       ecepResult: { category: "D", status: "rendered" },
     } as const;
-    const initialExit = calculateTrancheProgression({ ...base, ...insufficientResults, previousProcessWithoutAdvancement: true });
-    const earlyExit = calculateTrancheProgression({ ...base, ...insufficientResults, currentTranche: "early", previousProcessWithoutAdvancement: true });
+    const initialExit = calculateTrancheProgression({
+      ...base,
+      ...insufficientResults,
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "before-2025", previousProcessWithoutAdvancement: true },
+    });
+    const earlyBefore2025 = calculateTrancheProgression({
+      ...base,
+      ...insufficientResults,
+      currentTranche: "early",
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "before-2025", previousProcessWithoutAdvancement: true },
+    });
+    const earlyExit = calculateTrancheProgression({
+      ...base,
+      ...insufficientResults,
+      currentTranche: "early",
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "from-2025", previousProcessWithoutAdvancement: true },
+    });
     expect(initialExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
+    expect(earlyBefore2025).toMatchObject({ resultTranche: "early", legalStatus: "active", advances: false });
     expect(earlyExit).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
-    expect(assessGoal({ ...base, ...insufficientResults, previousProcessWithoutAdvancement: true }, "advanced").legalContinuity).toBe(false);
+    expect(assessGoal({
+      ...base,
+      ...insufficientResults,
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "before-2025", previousProcessWithoutAdvancement: true },
+    }, "advanced").legalContinuity).toBe(false);
+  });
+
+  it("aplica la salida al fallar la oportunidad evaluativa especial después del reingreso", () => {
+    const result = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+      article19SHistory: { kind: "reentry-after-early-exit", reentryEvaluationDue: true },
+    });
+    expect(result).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
+    expect(result.reasons[0]).toContain("posterior al reingreso");
   });
 
   it("does not apply the exit when the current process advances", () => {
-    expect(calculateTrancheProgression({ ...base, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "advanced", legalStatus: "active" });
+    expect(calculateTrancheProgression({
+      ...base,
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "from-2025", previousProcessWithoutAdvancement: true },
+    })).toMatchObject({ resultTranche: "advanced", legalStatus: "active" });
   });
 
   it("does not treat an experience ceiling as an insufficient professional result", () => {
-    expect(calculateTrancheProgression({ ...base, experienceYears: 3, previousProcessWithoutAdvancement: true })).toMatchObject({ resultTranche: "initial", legalStatus: "active" });
+    expect(calculateTrancheProgression({
+      ...base,
+      experienceYears: 3,
+      article19SHistory: { kind: "ordinary", systemEntryCohort: "from-2025", previousProcessWithoutAdvancement: true },
+    })).toMatchObject({ resultTranche: "initial", legalStatus: "active" });
   });
 
   it("solo conserva Portafolio A o dos B consecutivas para el proceso siguiente", () => {
@@ -153,5 +204,12 @@ describe("cálculo de progresión", () => {
 
   it("evalúa un tramo objetivo con los cuatro requisitos", () => {
     expect(assessGoal(base, "advanced")).toMatchObject({ experience: true, results: true, progressionAndPermanence: true, currentInstrument: true, reachableNextProcess: true });
+  });
+
+  it("describe el mínimo orientativo sin omitir combinaciones válidas de la matriz", () => {
+    expect(minimumCombinationFor("initial")).toBe("cualquier combinación válida de la matriz");
+    expect(minimumCombinationFor("early")).toContain("Temprano o superior");
+    expect(RESULT_MATRIX.D.B).toBe("early");
+    expect(RESULT_MATRIX.A.D).toBe("early");
   });
 });

@@ -41,9 +41,10 @@ export function isValidEcepResult(result: EcepResult): boolean {
 }
 
 export function experienceCeiling(years: number): TrancheProgressionResult["experienceCeiling"] {
-  if (years < 4) return "initial";
-  if (years < 8) return "advanced";
-  if (years < 12) return "expert1";
+  const safeYears = Number.isFinite(years) && years > 0 ? years : 0;
+  if (safeYears < 4) return "initial";
+  if (safeYears < 8) return "advanced";
+  if (safeYears < 12) return "expert1";
   return "expert2";
 }
 
@@ -59,19 +60,23 @@ export function progressionCeiling(input: TrancheProgressionInput): TrancheProgr
 }
 
 export function permanenceCeiling(input: TrancheProgressionInput): TrancheProgressionResult["permanenceCeiling"] {
+  const yearsInCurrentTranche = Number.isFinite(input.yearsInCurrentTranche)
+    && input.yearsInCurrentTranche > 0
+    ? input.yearsInCurrentTranche
+    : 0;
   if (input.currentTranche === "advanced") {
     const required = input.enteredAdvancedWithDoubleA ? 2 : 4;
-    return input.yearsInCurrentTranche >= required ? "expert2" : "advanced";
+    return yearsInCurrentTranche >= required ? "expert2" : "advanced";
   }
   if (input.currentTranche === "expert1") {
-    return input.yearsInCurrentTranche >= 4 ? "expert2" : "expert1";
+    return yearsInCurrentTranche >= 4 ? "expert2" : "expert1";
   }
   return "expert2";
 }
 
 export function calculateTrancheProgression(input: TrancheProgressionInput): TrancheProgressionResult {
   const matrixCeiling = RESULT_MATRIX[input.portfolioResult.category][input.ecepResult.category];
-  const expCeiling = experienceCeiling(Math.max(0, input.experienceYears));
+  const expCeiling = experienceCeiling(input.experienceYears);
   const linearCeiling = progressionCeiling(input);
   const tenureCeiling = permanenceCeiling(input);
   const instrumentResultsValid = isValidPortfolioResult(input.portfolioResult) && isValidEcepResult(input.ecepResult);
@@ -83,7 +88,20 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
     (input.currentTranche === "initial" && rank(matrixCeiling) <= rank("initial"))
     || (input.currentTranche === "early" && rank(matrixCeiling) < rank("advanced"))
   );
-  const mustExit = input.previousProcessWithoutAdvancement && failsCurrentProcess;
+  const mustExitOrdinaryInitial = input.currentTranche === "initial"
+    && input.article19SHistory.kind === "ordinary"
+    && input.article19SHistory.previousProcessWithoutAdvancement
+    && failsCurrentProcess;
+  const mustExitOrdinaryEarly = input.currentTranche === "early"
+    && input.article19SHistory.kind === "ordinary"
+    && input.article19SHistory.systemEntryCohort === "from-2025"
+    && input.article19SHistory.previousProcessWithoutAdvancement
+    && failsCurrentProcess;
+  const mustExitAfterReentry = input.currentTranche === "initial"
+    && input.article19SHistory.kind === "reentry-after-early-exit"
+    && input.article19SHistory.reentryEvaluationDue
+    && failsCurrentProcess;
+  const mustExit = mustExitOrdinaryInitial || mustExitOrdinaryEarly || mustExitAfterReentry;
   const accessReassigned = input.currentTranche === "access" && input.accessDeadlineExpired && !hasCurrentInstrument;
 
   let resultTranche: Tranche | null;
@@ -96,7 +114,8 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const legalStatus = mustExit ? "exit" : accessReassigned ? "access-reassigned" : "active";
 
   const reasons: string[] = [];
-  if (mustExit) reasons.push(`Este es el segundo proceso consecutivo cuyos resultados no permiten avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
+  if (mustExitAfterReentry) reasons.push("Los resultados de la oportunidad evaluativa posterior al reingreso no permiten avanzar desde Inicial; el artículo 19 S dispone una nueva desvinculación.");
+  else if (mustExit) reasons.push(`Este es el segundo proceso consecutivo cuyos resultados no permiten avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
   else if (accessReassigned) reasons.push("Venció el plazo máximo de cuatro años en Acceso sin rendir los instrumentos disponibles; corresponde la asignación a Inicial.");
   else if (!instrumentResultsValid) reasons.push("La categoría declarada no habilita conservar este resultado según el artículo 19 Ñ.");
   else if (!hasCurrentInstrument) reasons.push("Debes rendir al menos uno de los dos instrumentos en este proceso.");
@@ -147,13 +166,8 @@ export function minimumExperienceFor(target: Exclude<Tranche, "access">) {
 }
 
 export function minimumCombinationFor(target: Exclude<Tranche, "access">) {
-  switch (target) {
-    case "initial": return "C + D o cualquier combinación superior";
-    case "early": return "B + D, C + C o cualquier combinación superior";
-    case "advanced": return "B + C, C + B o cualquier combinación superior";
-    case "expert1": return "A + C, B + B, C + A o cualquier combinación superior";
-    case "expert2": return "A + B, B + A o A + A";
-  }
+  if (target === "initial") return "cualquier combinación válida de la matriz";
+  return `cualquier combinación cuya celda sea ${TRANCHE_NAMES[target]} o superior`;
 }
 
 export function nextGoal(current: Tranche): Exclude<Tranche, "access"> {
