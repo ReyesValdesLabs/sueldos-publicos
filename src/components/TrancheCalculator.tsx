@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, Check, CircleAlert, CircleCheck, ExternalLink, Flag, Grid3X3, Info, Scale, SlidersHorizontal, X } from "lucide-react";
 import type { Tranche } from "@/lib/calculation/types";
 import { assessGoal, calculateTrancheProgression, minimumCombinationFor, minimumExperienceFor, nextGoal, RESULT_MATRIX, TRANCHE_NAMES, TRANCHE_ORDER } from "@/lib/tranche-progression/calculate";
-import type { Article19SHistory, EcepCategory, EcepResult, PortfolioCategory, PortfolioResult, TrancheProgressionInput } from "@/lib/tranche-progression/types";
+import type { Article19SHistory, EcepCategory, EcepResult, PortfolioCategory, PortfolioResult, TrancheProgressionInput, TrancheProgressionResult } from "@/lib/tranche-progression/types";
 import { sitePath } from "@/lib/site-path";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,6 +79,19 @@ export function buildEcepResult(category: EcepCategory, status: EcepResult["stat
   return { category, status: "rendered" };
 }
 
+export function trancheResultStatus(
+  result: Pick<TrancheProgressionResult, "legalStatus" | "exitConsequence" | "instrumentResultsValid" | "hasCurrentInstrument" | "advances">,
+  currentTranche: Tranche,
+) {
+  if (result.exitConsequence === "reentry-first-same-sponsor") return "DESVINCULACIÓN — MISMO SOSTENEDOR";
+  if (result.legalStatus === "exit") return "SALIDA DEL SISTEMA";
+  if (result.legalStatus === "access-reassigned") return "REASIGNACIÓN LEGAL";
+  if (!result.instrumentResultsValid) return "RESULTADO NO VÁLIDO";
+  if (!result.hasCurrentInstrument) return "FALTA INSTRUMENTO";
+  if (result.advances) return "SUBE";
+  return currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
+}
+
 function Requirement({ met, title, children }: { met: boolean; title: string; children: ReactNode }) {
   return <li className={met ? "is-met" : "is-missing"}>
     <span aria-hidden="true">{met ? <CircleCheck size={22} /> : <CircleAlert size={22} />}</span>
@@ -128,7 +141,7 @@ export default function TrancheCalculator() {
         ? "El segundo proceso insuficiente desde Temprano causa salida, pérdida de tramo y antigüedad; el reingreso solo puede ocurrir después de dos años."
         : "El segundo proceso consecutivo con resultados insuficientes configura la causal del artículo 19 S.";
 
-  const status = result.legalStatus === "exit" ? "SALIDA DEL SISTEMA" : result.legalStatus === "access-reassigned" ? "REASIGNACIÓN LEGAL" : !result.instrumentResultsValid ? "RESULTADO NO VÁLIDO" : !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
+  const status = trancheResultStatus(result, input.currentTranche);
   const resultCopy = result.legalStatus === "exit"
     ? "Los antecedentes declarados configuran la causal del artículo 19 S. El sostenedor y la resolución oficial determinan su aplicación."
     : result.legalStatus === "access-reassigned"
