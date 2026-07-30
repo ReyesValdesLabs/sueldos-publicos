@@ -1,17 +1,38 @@
 import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D, type DaemAssistantPeriodParameters } from "@/data/parameters/daem-assistants-2026-07";
 import { JULY_2026_PARAMETERS as P, type PeriodParameters } from "@/data/parameters/2026-07";
 import { isManualEarning, MANUAL_EARNING_TREATMENT, type ResultLine } from "@/lib/calculation/types";
-import type { DaemAssistantCalculationInput, DaemAssistantCalculationResult } from "./types";
+import type {
+  DaemAssistantCalculationInput,
+  DaemAssistantCalculationResult,
+  MinimumIncomeAgeBracket,
+} from "./types";
 
 const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
 
 export function calculateDaemMinimumIncome(
   weeklyHours: number,
+  ageBracket: MinimumIncomeAgeBracket = "adult18To65",
   daemParameters: DaemAssistantPeriodParameters = D,
 ) {
   const hours = Math.min(daemParameters.minimumIncome.maximumWeeklyHours, money(weeklyHours));
-  return hours >= 1 ? daemParameters.minimumIncome.monthly : 0;
+  if (hours < 1) return 0;
+  const monthly = ageBracket === "adult18To65"
+    ? daemParameters.minimumIncome.monthly
+    : daemParameters.minimumIncome.reducedMonthly;
+  return monthly;
+}
+
+export function resolveDaemMinimumIncomeAutofill(
+  currentValue: number,
+  edited: boolean,
+  weeklyHours: number,
+  ageBracket: MinimumIncomeAgeBracket,
+  daemParameters: DaemAssistantPeriodParameters = D,
+) {
+  return edited
+    ? currentValue
+    : calculateDaemMinimumIncome(weeklyHours, ageBracket, daemParameters);
 }
 
 export function calculateDaemAssistantSalary(
@@ -115,11 +136,15 @@ export function calculateDaemAssistantSalary(
   const afp = money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]));
   const healthLegal = money(imposableBase * 0.07);
   const health = input.healthSystem === "isapre" ? money(Math.max(healthLegal, input.isaprePlanUf * payrollParameters.uf)) : healthLegal;
+  const healthTaxReduction = Math.min(
+    health,
+    money(payrollParameters.pensionCapUf * payrollParameters.uf * 0.07),
+  );
   const afcBase = Math.min(imposableEarnings, payrollParameters.unemploymentCapUf * payrollParameters.uf);
   const afc = input.contractType === "indefinite" && !input.afcContributionEnded ? money(afcBase * 0.006) : 0;
   const apv = money(input.apv);
   const apvTaxReduction = input.apvTaxDeductible ? Math.min(apv, money(payrollParameters.uf * 50)) : 0;
-  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthLegal - afc - apvTaxReduction));
+  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthTaxReduction - afc - apvTaxReduction));
   const bracket = payrollParameters.taxBrackets.find((candidate) => taxableBase <= candidate.upTo) ?? payrollParameters.taxBrackets.at(-1)!;
   const tax = money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
 
@@ -138,8 +163,8 @@ export function calculateDaemAssistantSalary(
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
   const warnings: string[] = ["Esta estimación DAEM/DEM no aplica el mínimo técnico ni los bienios propios de los SLEP."];
-  const minimumIncome = calculateDaemMinimumIncome(hours, daemParameters);
-  if (input.contractRemuneration < minimumIncome) warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para esta jornada.`);
+  const minimumIncome = calculateDaemMinimumIncome(hours, input.minimumIncomeAgeBracket, daemParameters);
+  if (input.contractRemuneration < minimumIncome) warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para el tramo etario seleccionado.`);
   if (declaredHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   if (input.previousMonthGross > daemParameters.article59Bonus.previousMonthGrossLimit) warnings.push("No se agregó el bono del artículo 59 porque el bruto informado del mes anterior supera el límite vigente.");
   if (input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");

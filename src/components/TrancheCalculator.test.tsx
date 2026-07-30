@@ -4,6 +4,7 @@ import {
   availablePortfolioStatuses,
   buildEcepResult,
   buildPortfolioResult,
+  trancheResultStatus,
 } from "./TrancheCalculator";
 
 describe("controles de vigencia de resultados conservados", () => {
@@ -26,5 +27,27 @@ describe("controles de vigencia de resultados conservados", () => {
     expect(buildPortfolioResult("C", "retained-a-next-process")).toEqual({ category: "C", status: "rendered" });
     expect(buildPortfolioResult("A", "retained-consecutive-b-next-process")).toEqual({ category: "A", status: "rendered" });
     expect(buildEcepResult("C", "retained-following-process")).toEqual({ category: "C", status: "rendered" });
+  });
+});
+
+describe("estado visible de las consecuencias del artículo 19 S", () => {
+  it("no presenta como salida general la primera desvinculación posterior al reingreso", () => {
+    expect(trancheResultStatus({
+      legalStatus: "exit",
+      exitConsequence: "reentry-first-same-sponsor",
+      instrumentResultsValid: true,
+      hasCurrentInstrument: true,
+      advances: false,
+    }, "initial")).toBe("DESVINCULACIÓN — MISMO SOSTENEDOR");
+  });
+
+  it("mantiene la salida general para la segunda evaluación insuficiente desde el reingreso", () => {
+    expect(trancheResultStatus({
+      legalStatus: "exit",
+      exitConsequence: "reentry-second-all-system",
+      instrumentResultsValid: true,
+      hasCurrentInstrument: true,
+      advances: false,
+    }, "initial")).toBe("SALIDA DEL SISTEMA");
   });
 });

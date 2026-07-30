@@ -31,6 +31,19 @@ export function directorPriorityResponsibilityPercentage(enrollment: number, pri
 
 const advancedTranches: Tranche[] = ["advanced", "expert1", "expert2"];
 
+export function applyTrancheSelection(input: CalculationInput, tranche: CalculationInput["tranche"]): CalculationInput {
+  const isInitialOrEarly = tranche === "initial" || tranche === "early";
+  const isAdvancedOrExpert = tranche !== null && advancedTranches.includes(tranche);
+  return {
+    ...input,
+    tranche,
+    trancheSuspended: isInitialOrEarly ? input.trancheSuspended : false,
+    priorityExpired: isInitialOrEarly ? input.priorityExpired : false,
+    trancheFixedComponentReduced: isAdvancedOrExpert ? input.trancheFixedComponentReduced : false,
+    responsibilityAppointment: isAdvancedOrExpert ? "regular" : input.responsibilityAppointment,
+  };
+}
+
 export function calculateTeacherSalary(input: CalculationInput, parameters: PeriodParameters = P): CalculationResult {
   const declaredBasicHours = money(input.basicHours);
   const declaredSecondaryHours = money(input.secondaryHours);
@@ -44,9 +57,11 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const paidBase = input.paidBaseSalary == null ? legalRbmn : money(input.paidBaseSalary);
   const expPct = experiencePercentage(biennia);
   const experience = money(legalRbmn * expPct);
-  const hasPayableTranche = input.tranche !== null && !input.trancheSuspended;
+  const article19PApplicable = input.tranche === "initial" || input.tranche === "early";
+  const trancheSuspended = article19PApplicable && input.trancheSuspended;
+  const hasPayableTranche = input.tranche !== null && !trancheSuspended;
   const trancheExperience = hasPayableTranche ? experience : 0;
-  const progression = input.tranche !== null && !input.trancheSuspended ? money(parameters.progression[input.tranche] * (hours / 44) * (biennia / 15)) : 0;
+  const progression = input.tranche !== null && !trancheSuspended ? money(parameters.progression[input.tranche] * (hours / 44) * (biennia / 15)) : 0;
   const reducedFixedTranche = input.tranche === "expert2" ? "expert1" : input.tranche === "expert1" ? "advanced" : "early";
   const fixedParameter = input.tranche !== null && input.trancheFixedComponentReduced
     ? parameters.fixedComponent[reducedFixedTranche]
@@ -77,6 +92,7 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const hasResponsibilityRole = input.responsibilityRole !== "none";
   const isExceptionalAppointmentWithoutAdvancedTranche = hasResponsibilityRole
     && input.responsibilityRole !== "director"
+    && input.responsibilityAppointment === "exceptionalWithoutAdvancedTranche"
     && (input.tranche === null || !advancedTranches.includes(input.tranche));
   if (hasResponsibilityRole && !isExceptionalAppointmentWithoutAdvancedTranche && input.responsibilityPercentage > 0) {
     const responsibilityLabel = input.responsibilityRole === "director" || input.responsibilityRole === "otherDirector"
@@ -92,7 +108,8 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
     earnings.push({ id: "responsibility-priority", label: "Responsabilidad directiva · adicional prioritarios", amount: money(legalRbmn * directorPriorityPercentage / 100), imposable: true, taxable: true, countsForMinimum: true, legalSlug: "responsabilidad-directiva" });
   }
 
-  if (!input.priorityExpired) {
+  const priorityExpired = article19PApplicable && input.priorityExpired;
+  if (!priorityExpired) {
     let priorityAmount = 0;
     if (input.rural && input.priorityPercentage >= 45 && input.priorityPercentage < 60) {
       priorityAmount = trancheTotal * 0.1;
@@ -124,11 +141,14 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   const afp = money(imposableBase * (0.1 + parameters.afpCommission[input.afp]));
   const healthLegal = money(imposableBase * 0.07);
   const health = input.healthSystem === "isapre" ? money(Math.max(healthLegal, input.isaprePlanUf * parameters.uf)) : healthLegal;
+  const healthTaxDeduction = input.healthSystem === "isapre"
+    ? Math.min(health, money(parameters.pensionCapUf * parameters.uf * 0.07))
+    : healthLegal;
   const afcBase = Math.min(imposableEarnings, parameters.unemploymentCapUf * parameters.uf);
   const afc = input.afcEnabled && input.contractType === "indefinite" && !input.afcContributionEnded ? money(afcBase * 0.006) : 0;
   const apv = money(input.apv);
   const apvTaxReduction = input.apvTaxDeductible ? Math.min(apv, money(parameters.uf * 50)) : 0;
-  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthLegal - afc - apvTaxReduction));
+  const taxableBase = money(Math.max(0, taxableEarnings - afp - healthTaxDeduction - afc - apvTaxReduction));
   const bracket = parameters.taxBrackets.find((candidate) => taxableBase <= candidate.upTo) ?? parameters.taxBrackets.at(-1)!;
   const tax = money(Math.max(0, taxableBase * bracket.factor - bracket.rebate));
 
@@ -148,9 +168,9 @@ export function calculateTeacherSalary(input: CalculationInput, parameters: Peri
   if (paidBase < legalRbmn) warnings.push("El sueldo base pagado es inferior a la RBMN legal. Para el mes completo sin días no remunerados que simula esta herramienta, el artículo 35 exige al menos la RBMN calculada. La planilla complementaria de RTM no reemplaza esa diferencia. Si la liquidación corresponde a un mes parcial o incluye días sin derecho a remuneración, esta calculadora no prorratea ese caso.");
   else if (paidBase > legalRbmn) warnings.push("El sueldo base pagado es superior a la RBMN legal. Las asignaciones que la ley refiere a la RBMN siguen usando la base legal calculada.");
   if (input.tranche === null) warnings.push("No se calculó la asignación por tramo porque falta seleccionar el tramo reconocido.");
-  else if (input.trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
+  else if (trancheSuspended) warnings.push("La asignación por tramo se calculó en cero porque indicaste que está suspendida.");
   else if (input.trancheFixedComponentReduced && ["advanced", "expert1", "expert2"].includes(input.tranche)) warnings.push("El componente fijo se redujo al monto del tramo inmediatamente anterior por incumplimiento del ciclo de profundización.");
-  if (input.priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
+  if (priorityExpired) warnings.push("No se incluyó la asignación por alumnos prioritarios por pérdida temporal del derecho.");
   if (isExceptionalAppointmentWithoutAdvancedTranche) warnings.push("No se incluyó la asignación de responsabilidad: los cargos directivos distintos de director y los técnico-pedagógicos designados excepcionalmente sin tramo Avanzado no tienen derecho a percibirla.");
   if (input.responsibilityRole === "director" && input.establishmentEnrollment > 150 && input.establishmentEnrollment < 400) warnings.push("Para una dirección con 151 a 399 estudiantes, confirma con el sostenedor el porcentaje anual entre 25% y 37,5%; depende también de la asistencia media del año anterior.");
   const suggestedResponsibility = suggestedResponsibilityPercentage(input.responsibilityRole, input.establishmentEnrollment);

@@ -1,7 +1,10 @@
 import type { Afp, HealthSystem, ManualItem, ResultLine } from "@/lib/calculation/types";
 
+export type MinimumIncomeAgeBracket = "adult18To65" | "outside18To65";
+
 export interface DaemAssistantCalculationInput {
   weeklyHours: number;
+  minimumIncomeAgeBracket: MinimumIncomeAgeBracket;
   contractRemuneration: number;
   previousMonthGross: number;
   law19464Increase: number;
