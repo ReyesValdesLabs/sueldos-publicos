@@ -120,6 +120,13 @@ export default function TrancheCalculator() {
     }));
     if (rank(target) <= rank(value)) setTarget(nextGoal(value));
   };
+  const exitContinuityCopy = result.exitConsequence === "reentry-first-same-sponsor"
+    ? "La primera evaluación posterior al reingreso no permitió avanzar; la prohibición de contratación se limita al mismo sostenedor."
+    : result.exitConsequence === "reentry-second-all-system"
+      ? "La segunda evaluación desde el reingreso no permitió avanzar; la prohibición alcanza a los establecimientos regidos por este Título."
+      : result.exitConsequence === "ordinary-early-loss-and-two-year-wait"
+        ? "El segundo proceso insuficiente desde Temprano causa salida, pérdida de tramo y antigüedad; el reingreso solo puede ocurrir después de dos años."
+        : "El segundo proceso consecutivo con resultados insuficientes configura la causal del artículo 19 S.";
 
   const status = result.legalStatus === "exit" ? "SALIDA DEL SISTEMA" : result.legalStatus === "access-reassigned" ? "REASIGNACIÓN LEGAL" : !result.instrumentResultsValid ? "RESULTADO NO VÁLIDO" : !result.hasCurrentInstrument ? "FALTA INSTRUMENTO" : result.advances ? "SUBE" : input.currentTranche === "access" ? "PRIMER RECONOCIMIENTO" : "MANTIENE";
   const resultCopy = result.legalStatus === "exit"
@@ -157,17 +164,17 @@ export default function TrancheCalculator() {
 
           {input.currentTranche === "early" && <CheckField id="early-with-a" checked={input.enteredEarlyWithA} onChange={(value) => patch("enteredEarlyWithA", value)} label="Ingresé a Temprano con una A" help="Marca solo si en el proceso que te asignó Temprano obtuviste A en Portafolio o ECEP." />}
           {input.currentTranche === "advanced" && <CheckField id="advanced-double-a" checked={input.enteredAdvancedWithDoubleA} onChange={(value) => patch("enteredAdvancedWithDoubleA", value)} label="Ingresé a Avanzado con A + A" help="Esta excepción reduce a dos años la permanencia exigida para optar a Experto I." />}
-          {input.currentTranche === "initial" && <SelectField
+          {(input.currentTranche === "initial" || input.currentTranche === "early") && <SelectField
             id="article-19-s-situation"
             label="Situación para la continuidad del artículo 19 S"
             value={input.article19SHistory.kind}
-            onChange={(value) => patchArticle19SHistory(value === "reentry-after-early-exit"
-              ? { kind: "reentry-after-early-exit", reentryEvaluationDue: false }
+            onChange={(value) => patchArticle19SHistory(value === "reentry-from-2025-after-early-exit"
+              ? { kind: "reentry-from-2025-after-early-exit", evaluationAttempt: input.currentTranche === "early" ? "second" : "first", reentryEvaluationDue: false }
               : { kind: "ordinary", systemEntryCohort: "before-2025", previousProcessWithoutAdvancement: false })}
-            help="El reingreso posterior a una salida desde Temprano tiene una oportunidad evaluativa especial."
+            help="El reingreso posterior a una salida desde Temprano se aplica a cohortes que ingresaron al Sistema desde 2025."
           >
             <option value="ordinary">Proceso ordinario</option>
-            <option value="reentry-after-early-exit">Reingresé después de una salida desde Temprano</option>
+            <option value="reentry-from-2025-after-early-exit">Reingresé después de una salida desde Temprano (cohorte desde 2025)</option>
           </SelectField>}
           {input.currentTranche === "early" && input.article19SHistory.kind === "ordinary" && <SelectField
             id="system-entry-cohort"
@@ -192,13 +199,35 @@ export default function TrancheCalculator() {
               label="Mis resultados del proceso anterior tampoco permitieron avanzar"
               help="Si los resultados de este proceso vuelven a ser insuficientes, el artículo 19 S dispone la desvinculación."
             />}
-          {input.currentTranche === "initial" && input.article19SHistory.kind === "reentry-after-early-exit" && <CheckField
-            id="reentry-evaluation-due"
-            checked={input.article19SHistory.reentryEvaluationDue}
-            onChange={(value) => patchArticle19SHistory({ kind: "reentry-after-early-exit", reentryEvaluationDue: value })}
-            label="Este proceso corresponde a la oportunidad evaluativa exigida tras mi reingreso"
-            help="Marca solo si CPEIP o Portal Docente indica que debes rendir esta evaluación dentro del plazo especial de cuatro años."
-          />}
+          {input.article19SHistory.kind === "reentry-from-2025-after-early-exit" && <>
+            <SelectField
+              id="reentry-evaluation-attempt"
+              label="Evaluación desde el reingreso"
+              value={input.article19SHistory.evaluationAttempt}
+              onChange={(value) => patchArticle19SHistory({
+                kind: "reentry-from-2025-after-early-exit",
+                evaluationAttempt: value as "first" | "second",
+                reentryEvaluationDue: false,
+              })}
+              help="La primera y la segunda evaluación fallidas tienen prohibiciones de contratación distintas."
+            >
+              {input.currentTranche === "initial" && <option value="first">Primera evaluación posterior al reingreso</option>}
+              <option value="second">Segunda evaluación desde el reingreso</option>
+            </SelectField>
+            <CheckField
+              id="reentry-evaluation-due"
+              checked={input.article19SHistory.reentryEvaluationDue}
+              onChange={(value) => patchArticle19SHistory({
+                kind: "reentry-from-2025-after-early-exit",
+                evaluationAttempt: input.article19SHistory.kind === "reentry-from-2025-after-early-exit"
+                  ? input.article19SHistory.evaluationAttempt
+                  : "first",
+                reentryEvaluationDue: value,
+              })}
+              label="Este proceso corresponde a esa evaluación exigida tras mi reingreso"
+              help="Marca solo si CPEIP o Portal Docente indica que debes rendirla dentro del plazo aplicable."
+            />
+          </>}
           {input.currentTranche === "access" && <CheckField id="access-deadline" checked={input.accessDeadlineExpired} onChange={(value) => patch("accessDeadlineExpired", value)} label="Venció mi plazo máximo de cuatro años en Acceso" help="Marca solo si no rendiste instrumentos disponibles dentro del plazo informado por CPEIP o Portal Docente." />}
 
           <div>
@@ -291,7 +320,7 @@ export default function TrancheCalculator() {
           <Requirement met={goal.results} title="Resultados Portafolio + ECEP">Mínimo orientativo: {minimumCombinationFor(target)}. Tu combinación es {input.portfolioResult.category} + {input.ecepResult.category}.</Requirement>
           <Requirement met={goal.progressionAndPermanence} title="Progresión y permanencia">{goal.progressionAndPermanence ? "La trayectoria declarada permite llegar a este tramo en el próximo proceso." : "La linealidad, una excepción histórica o la permanencia todavía impiden llegar en un solo proceso."}</Requirement>
           <Requirement met={goal.currentInstrument} title="Instrumento rendido en este proceso">{goal.currentInstrument ? "Declaraste al menos un instrumento rendido actualmente." : "Debes rendir Portafolio o ECEP en este proceso."}</Requirement>
-          <Requirement met={goal.legalContinuity} title="Continuidad en el sistema">{goal.legalContinuity ? "No se configura una causal de salida con los antecedentes declarados." : "El segundo proceso consecutivo con resultados insuficientes configura la causal del artículo 19 S."}</Requirement>
+          <Requirement met={goal.legalContinuity} title="Continuidad en el sistema">{goal.legalContinuity ? "No se configura una causal de salida con los antecedentes declarados." : exitContinuityCopy}</Requirement>
         </ul>
         <p className={`goal-summary ${goal.reachableNextProcess ? "is-reachable" : ""}`}>{goal.reachableNextProcess ? <CircleCheck size={20} /> : <X size={20} />}<span><strong>{goal.reachableNextProcess ? "Alcanzable en el próximo proceso" : "Aún no aparece alcanzable en el próximo proceso"}</strong> según los datos ingresados y sujeto a validación oficial.</span></p>
       </CardContent>

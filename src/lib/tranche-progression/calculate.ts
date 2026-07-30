@@ -83,6 +83,9 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const hasCurrentInstrument = instrumentResultsValid && (
     input.portfolioResult.status === "rendered" || input.ecepResult.status === "rendered"
   );
+  const article19SHistoryValid = input.article19SHistory.kind === "ordinary"
+    || input.article19SHistory.evaluationAttempt === "second"
+    || input.currentTranche === "initial";
   const calculated = minRecognized(matrixCeiling, expCeiling, linearCeiling, tenureCeiling);
   const failsCurrentProcess = hasCurrentInstrument && (
     (input.currentTranche === "initial" && rank(matrixCeiling) <= rank("initial"))
@@ -97,16 +100,27 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
     && input.article19SHistory.systemEntryCohort === "from-2025"
     && input.article19SHistory.previousProcessWithoutAdvancement
     && failsCurrentProcess;
-  const mustExitAfterReentry = input.currentTranche === "initial"
-    && input.article19SHistory.kind === "reentry-after-early-exit"
+  const mustExitAfterReentry = (input.currentTranche === "initial" || input.currentTranche === "early")
+    && input.article19SHistory.kind === "reentry-from-2025-after-early-exit"
+    && article19SHistoryValid
     && input.article19SHistory.reentryEvaluationDue
     && failsCurrentProcess;
   const mustExit = mustExitOrdinaryInitial || mustExitOrdinaryEarly || mustExitAfterReentry;
+  const exitConsequence = mustExitOrdinaryInitial
+    ? "ordinary-initial-all-system"
+    : mustExitOrdinaryEarly
+      ? "ordinary-early-loss-and-two-year-wait"
+      : mustExitAfterReentry && input.article19SHistory.kind === "reentry-from-2025-after-early-exit"
+        ? input.article19SHistory.evaluationAttempt === "first"
+          ? "reentry-first-same-sponsor"
+          : "reentry-second-all-system"
+        : null;
   const accessReassigned = input.currentTranche === "access" && input.accessDeadlineExpired && !hasCurrentInstrument;
 
   let resultTranche: Tranche | null;
   if (mustExit) resultTranche = null;
   else if (accessReassigned) resultTranche = "initial";
+  else if (!article19SHistoryValid) resultTranche = input.currentTranche;
   else if (!instrumentResultsValid) resultTranche = input.currentTranche;
   else if (!hasCurrentInstrument) resultTranche = input.currentTranche;
   else if (input.currentTranche === "access") resultTranche = calculated;
@@ -114,7 +128,10 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
   const legalStatus = mustExit ? "exit" : accessReassigned ? "access-reassigned" : "active";
 
   const reasons: string[] = [];
-  if (mustExitAfterReentry) reasons.push("Los resultados de la oportunidad evaluativa posterior al reingreso no permiten avanzar desde Inicial; el artículo 19 S dispone una nueva desvinculación.");
+  if (!article19SHistoryValid) reasons.push("La primera evaluación posterior al reingreso solo puede declararse mientras el tramo actual es Inicial.");
+  else if (exitConsequence === "reentry-first-same-sponsor") reasons.push("La primera evaluación posterior al reingreso no permite avanzar de tramo; corresponde la desvinculación y la prohibición de contratación alcanza al mismo sostenedor.");
+  else if (exitConsequence === "reentry-second-all-system") reasons.push("La segunda evaluación desde el reingreso no permite avanzar de tramo; corresponde la desvinculación y la prohibición de contratación alcanza a los establecimientos regidos por este Título.");
+  else if (exitConsequence === "ordinary-early-loss-and-two-year-wait") reasons.push("Este es el segundo proceso consecutivo cuyos resultados no permiten acceder a Avanzado desde Temprano; corresponde la desvinculación, la pérdida del tramo y la antigüedad, y el reingreso solo puede ocurrir después de dos años.");
   else if (mustExit) reasons.push(`Este es el segundo proceso consecutivo cuyos resultados no permiten avanzar desde ${TRANCHE_NAMES[input.currentTranche]}; el artículo 19 S dispone la desvinculación.`);
   else if (accessReassigned) reasons.push("Venció el plazo máximo de cuatro años en Acceso sin rendir los instrumentos disponibles; corresponde la asignación a Inicial.");
   else if (!instrumentResultsValid) reasons.push("La categoría declarada no habilita conservar este resultado según el artículo 19 Ñ.");
@@ -130,10 +147,12 @@ export function calculateTrancheProgression(input: TrancheProgressionInput): Tra
     experienceCeiling: expCeiling,
     progressionCeiling: linearCeiling,
     permanenceCeiling: tenureCeiling,
+    article19SHistoryValid,
     instrumentResultsValid,
     hasCurrentInstrument,
-    advances: instrumentResultsValid && legalStatus === "active" && resultTranche !== null && rank(resultTranche) > rank(input.currentTranche),
+    advances: article19SHistoryValid && instrumentResultsValid && legalStatus === "active" && resultTranche !== null && rank(resultTranche) > rank(input.currentTranche),
     legalStatus,
+    exitConsequence,
     reasons,
   };
 }
@@ -147,7 +166,8 @@ export function assessGoal(input: TrancheProgressionInput, target: Exclude<Tranc
   const currentInstrument = validResults && (
     input.portfolioResult.status === "rendered" || input.ecepResult.status === "rendered"
   );
-  const legalContinuity = calculateTrancheProgression(input).legalStatus !== "exit";
+  const progression = calculateTrancheProgression(input);
+  const legalContinuity = progression.article19SHistoryValid && progression.legalStatus !== "exit";
   return {
     experience,
     results,

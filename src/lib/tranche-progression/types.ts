@@ -19,9 +19,16 @@ export type Article19SHistory =
     previousProcessWithoutAdvancement: boolean;
   }
   | {
-    kind: "reentry-after-early-exit";
+    kind: "reentry-from-2025-after-early-exit";
+    evaluationAttempt: "first" | "second";
     reentryEvaluationDue: boolean;
   };
+
+export type Article19SExitConsequence =
+  | "ordinary-initial-all-system"
+  | "ordinary-early-loss-and-two-year-wait"
+  | "reentry-first-same-sponsor"
+  | "reentry-second-all-system";
 
 export interface TrancheProgressionInput {
   currentTranche: Tranche;
@@ -41,10 +48,12 @@ export interface TrancheProgressionResult {
   experienceCeiling: Exclude<Tranche, "access" | "early">;
   progressionCeiling: Exclude<Tranche, "access">;
   permanenceCeiling: Exclude<Tranche, "access">;
+  article19SHistoryValid: boolean;
   instrumentResultsValid: boolean;
   hasCurrentInstrument: boolean;
   advances: boolean;
   legalStatus: "active" | "access-reassigned" | "exit";
+  exitConsequence: Article19SExitConsequence | null;
   reasons: string[];
 }
 

@@ -132,15 +132,94 @@ describe("cálculo de progresión", () => {
     }, "advanced").legalContinuity).toBe(false);
   });
 
-  it("aplica la salida al fallar la oportunidad evaluativa especial después del reingreso", () => {
-    const result = calculateTrancheProgression({
+  it("distingue la primera y segunda evaluación después del reingreso", () => {
+    const first = calculateTrancheProgression({
       ...base,
       portfolioResult: { category: "E", status: "rendered" },
       ecepResult: { category: "D", status: "rendered" },
-      article19SHistory: { kind: "reentry-after-early-exit", reentryEvaluationDue: true },
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "first",
+        reentryEvaluationDue: true,
+      },
     });
-    expect(result).toMatchObject({ resultTranche: null, legalStatus: "exit", advances: false });
-    expect(result.reasons[0]).toContain("posterior al reingreso");
+    const secondFromInitial = calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "second",
+        reentryEvaluationDue: true,
+      },
+    });
+    const secondFromEarly = calculateTrancheProgression({
+      ...base,
+      currentTranche: "early",
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "second",
+        reentryEvaluationDue: true,
+      },
+    });
+
+    expect(first).toMatchObject({
+      resultTranche: null,
+      legalStatus: "exit",
+      exitConsequence: "reentry-first-same-sponsor",
+    });
+    expect(secondFromInitial).toMatchObject({
+      resultTranche: null,
+      legalStatus: "exit",
+      exitConsequence: "reentry-second-all-system",
+    });
+    expect(secondFromEarly).toMatchObject({
+      resultTranche: null,
+      legalStatus: "exit",
+      exitConsequence: "reentry-second-all-system",
+    });
+  });
+
+  it("no aplica la salida cuando la evaluación de reingreso aún no corresponde", () => {
+    expect(calculateTrancheProgression({
+      ...base,
+      portfolioResult: { category: "E", status: "rendered" },
+      ecepResult: { category: "D", status: "rendered" },
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "first",
+        reentryEvaluationDue: false,
+      },
+    })).toMatchObject({ legalStatus: "active", resultTranche: "initial", exitConsequence: null });
+  });
+
+  it("rechaza una primera evaluación de reingreso declarada fuera de Inicial", () => {
+    const result = calculateTrancheProgression({
+      ...base,
+      currentTranche: "early",
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "first",
+        reentryEvaluationDue: true,
+      },
+    });
+    expect(result).toMatchObject({
+      article19SHistoryValid: false,
+      legalStatus: "active",
+      resultTranche: "early",
+      advances: false,
+    });
+    expect(assessGoal({
+      ...base,
+      currentTranche: "early",
+      article19SHistory: {
+        kind: "reentry-from-2025-after-early-exit",
+        evaluationAttempt: "first",
+        reentryEvaluationDue: true,
+      },
+    }, "advanced").legalContinuity).toBe(false);
   });
 
   it("does not apply the exit when the current process advances", () => {
@@ -156,6 +235,15 @@ describe("cálculo de progresión", () => {
       experienceYears: 3,
       article19SHistory: { kind: "ordinary", systemEntryCohort: "from-2025", previousProcessWithoutAdvancement: true },
     })).toMatchObject({ resultTranche: "initial", legalStatus: "active" });
+  });
+
+  it("normaliza permanencia no finita", () => {
+    expect(calculateTrancheProgression({
+      ...base,
+      currentTranche: "advanced",
+      experienceYears: 12,
+      yearsInCurrentTranche: Number.POSITIVE_INFINITY,
+    }).resultTranche).toBe("advanced");
   });
 
   it("solo conserva Portafolio A o dos B consecutivas para el proceso siguiente", () => {
