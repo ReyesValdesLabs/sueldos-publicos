@@ -6,6 +6,7 @@ export interface DaemAssistantPeriodParameters {
     monthly: number;
     reducedMonthly: number;
     maximumWeeklyHours: number;
+    daemCentralProportionalUpToWeeklyHours: number;
   };
   article59Bonus: {
     maximum44h: number;
@@ -28,6 +29,7 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
     monthly: 553_553,
     reducedMonthly: 412_938,
     maximumWeeklyHours: 44,
+    daemCentralProportionalUpToWeeklyHours: 30,
   },
   article59Bonus: {
     maximum44h: 38_320,
@@ -45,8 +47,12 @@ export const JULY_2026_DAEM_ASSISTANT_PARAMETERS: DaemAssistantPeriodParameters 
       url: "https://www.bcn.cl/leychile/navegar?idNorma=1225354",
     },
     {
-      label: "Dirección del Trabajo · ORD. N.º 422, ingreso mínimo de asistentes",
+      label: "Dirección del Trabajo · ORD. N.º 422 sobre IMM completo para asistentes",
       url: "https://www.dt.gob.cl/legislacion/1624/w3-article-121990.html",
+    },
+    {
+      label: "Dirección del Trabajo · IMM proporcional en jornada parcial general",
+      url: "https://www.dt.gob.cl/portal/1628/w3-article-60136.html",
     },
     {
       label: "Ley N.º 20.883 · artículo 59",

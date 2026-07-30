@@ -26,8 +26,10 @@ const baseInput: DaemAssistantCalculationInput = {
 describe("calculateDaemAssistantSalary", () => {
   it("uses the full adult legal minimum for every valid weekly schedule", () => {
     expect(calculateDaemMinimumIncome(44)).toBe(553_553);
+    expect(calculateDaemMinimumIncome(31)).toBe(553_553);
     expect(calculateDaemMinimumIncome(30)).toBe(553_553);
     expect(calculateDaemMinimumIncome(22)).toBe(553_553);
+    expect(calculateDaemMinimumIncome(1)).toBe(553_553);
   });
 
   it("uses the full reduced legal minimum for every valid weekly schedule outside the 18-to-65 age bracket", () => {
