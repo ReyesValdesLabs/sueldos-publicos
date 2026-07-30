@@ -11,9 +11,7 @@ export function calculateDaemMinimumIncome(
   daemParameters: DaemAssistantPeriodParameters = D,
 ) {
   const hours = Math.min(daemParameters.minimumIncome.maximumWeeklyHours, money(weeklyHours));
-  return hours <= daemParameters.minimumIncome.proportionalUpToWeeklyHours
-    ? money(daemParameters.minimumIncome.monthly * hours / daemParameters.minimumIncome.maximumWeeklyHours)
-    : daemParameters.minimumIncome.monthly;
+  return hours >= 1 ? daemParameters.minimumIncome.monthly : 0;
 }
 
 export function calculateDaemAssistantSalary(

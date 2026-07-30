@@ -38,8 +38,10 @@ export function calculateAdministrativeMinimumIncome(
   const monthlyIncome = ageBracket === "adult"
     ? D.minimumIncome.monthly
     : D.minimumIncome.reducedMonthly;
-  return hours <= D.minimumIncome.proportionalUpToWeeklyHours
-    ? money(monthlyIncome * hours / maximumWeeklyHours)
+  if (hours < 1 || regime === "municipalStatute") return 0;
+  if (regime === "educationEstablishment") return monthlyIncome;
+  return hours <= D.minimumIncome.daemCentralProportionalUpToWeeklyHours
+    ? money(monthlyIncome * hours / DAEM_CENTRAL_MAXIMUM_WEEKLY_HOURS)
     : monthlyIncome;
 }
 
@@ -178,7 +180,9 @@ export function calculateAdministrativeSalary(
     });
   }
 
-  const pensionCalculationSupported = input.pensionRegime === "afp";
+  const pensionCalculationSupported = input.pensionStatus !== "ips";
+  const pensionContributionsExempt = input.pensionStatus
+    === "afpOldAgeOrTotalDisabilityPensionerExempt";
 
   const nonRemunerativeManualEarnings = input.manualItems
     .filter(isManualEarning)
@@ -226,7 +230,7 @@ export function calculateAdministrativeSalary(
     currentImposableEarnings,
     payrollParameters.pensionCapUf * payrollParameters.uf,
   ));
-  const currentAfp = pensionCalculationSupported
+  const currentAfp = pensionCalculationSupported && !pensionContributionsExempt
     ? money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]))
     : 0;
   const afp = currentAfp;
@@ -246,6 +250,7 @@ export function calculateAdministrativeSalary(
     payrollParameters.unemploymentCapUf * payrollParameters.uf,
   );
   const afc = !isMunicipalStatute
+    && !pensionContributionsExempt
     && input.ageBracket !== "under18"
     && input.contractType === "indefinite"
     && !input.afcContributionEnded
@@ -342,11 +347,15 @@ export function calculateAdministrativeSalary(
     warnings.push(`El grado ${Math.min(20, Math.max(1, money(input.municipalGrade)))} es informativo: confirma sueldo base y asignación municipal en la escala de transparencia vigente de tu municipalidad.`);
     warnings.push("No se descontó Seguro de Cesantía: planta y contrata municipal se rigen por la Ley N.º 18.883, no por un contrato sujeto al Código del Trabajo.");
     if (input.managementAllowanceQuarterlyPayment > 0) {
-      warnings.push("La cuota de gestión se incluyó completa en los haberes y en el líquido mostrado. No se calcularon sus cotizaciones, bonificación compensatoria ni reliquidación tributaria: para hacerlo correctamente se necesitan las remuneraciones, parámetros y descuentos efectivos de abril, mayo y junio.");
+      warnings.push("La cuota de gestión se incluyó completa en los haberes, pero el monto mostrado es solo un subtotal líquido antes de reliquidaciones. Faltan sus cotizaciones, bonificación compensatoria y reliquidación tributaria, que requieren las remuneraciones, parámetros y descuentos efectivos de abril, mayo y junio.");
     }
   }
   if (!pensionCalculationSupported) {
     warnings.push("Cálculo detenido: este recorrido todavía no modela las tasas ni los topes del régimen previsional antiguo administrado por IPS.");
+  } else if (pensionContributionsExempt) {
+    warnings.push("No se descontaron cotizaciones AFP ni AFC porque declaraste una pensión de vejez o invalidez total y la exención correspondiente; la cotización de salud se mantiene.");
+  } else if (input.pensionStatus === "afpPartialDisabilityPensioner") {
+    warnings.push("Se mantuvieron las cotizaciones AFP, salud y, cuando corresponde, AFC porque declaraste una pensión de invalidez parcial.");
   }
   if (!isMunicipalStatute) {
     const minimumIncome = calculateAdministrativeMinimumIncome(
@@ -357,13 +366,15 @@ export function calculateAdministrativeSalary(
     if (input.baseSalary < minimumIncome) {
       warnings.push(`El sueldo base informado es inferior al ingreso mínimo estimado de $${minimumIncome.toLocaleString("es-CL")} para esta jornada.`);
     }
-    if (input.contractType === "fixed") {
+    if (!pensionContributionsExempt && input.contractType === "fixed") {
       warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
     }
-    if (input.contractType === "indefinite" && input.afcContributionEnded) {
+    if (!pensionContributionsExempt
+      && input.contractType === "indefinite"
+      && input.afcContributionEnded) {
       warnings.push("No se descontó AFC porque indicaste que se cumplió el límite de 11 años de cotizaciones en esta relación laboral.");
     }
-    if (input.ageBracket === "under18") {
+    if (!pensionContributionsExempt && input.ageBracket === "under18") {
       warnings.push("No se descontó AFC porque las personas menores de 18 años están excluidas del Seguro de Cesantía.");
     }
   }
@@ -376,8 +387,13 @@ export function calculateAdministrativeSalary(
 
   const totalEarnings = sum(earnings);
   const totalDiscounts = sum(discounts);
+  const hasPendingManagementReliquidations = isMunicipalStatute
+    && input.managementAllowanceQuarterlyPayment > 0;
+  const calculationComplete = pensionCalculationSupported
+    && !hasPendingManagementReliquidations;
   return {
     supported: pensionCalculationSupported,
+    calculationComplete,
     earnings,
     discounts,
     totalEarnings,

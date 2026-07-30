@@ -51,11 +51,15 @@ describe("Respaldo de administrativos DAEM y municipales", () => {
     expect(explanation).toContain("destinada al DAEM/DEM");
     expect(explanation).toContain("2% del sueldo base");
     expect(explanation).toContain("cuota completa pagada en julio");
+    expect(explanation).toContain("ORD. N.º 422");
+    expect(explanation).toContain("pensión de invalidez parcial");
     expect(notes).toContain("no se les descuenta AFC");
+    expect(notes).toContain("subtotal líquido");
     expect(notes).toContain("nivel central DAEM/DEM no concede");
     expect(notes).toContain("artículo 48 de la Ley N.º 21.109");
     expect(notes).toContain("IPS queda fuera");
     expect(entry?.sources.some((source) => source.label.includes("Resolución Exenta N.º 80"))).toBe(true);
     expect(entry?.sources.some((source) => source.label.includes("Superintendencia de Pensiones"))).toBe(true);
+    expect(entry?.sources.some((source) => source.label.includes("ORD. N.º 2.988"))).toBe(true);
   });
 });

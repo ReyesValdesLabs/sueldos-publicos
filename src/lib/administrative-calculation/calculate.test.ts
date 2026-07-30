@@ -22,7 +22,7 @@ const baseInput: AdministrativeCalculationInput = {
   municipalBiennia: 0,
   managementAllowanceQuarterlyPayment: 0,
   applyLowIncomeBonus: true,
-  pensionRegime: "afp",
+  pensionStatus: "afpContributor",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -34,18 +34,36 @@ const baseInput: AdministrativeCalculationInput = {
 };
 
 describe("calculateAdministrativeSalary", () => {
-  it("uses the Code of Labor minimum only for the DAEM routes", () => {
+  it("uses the full age-bracket IMM for every valid establishment schedule", () => {
     expect(calculateAdministrativeMinimumIncome(44)).toBe(553_553);
-    expect(calculateAdministrativeMinimumIncome(30)).toBe(377_423);
+    expect(calculateAdministrativeMinimumIncome(30)).toBe(553_553);
+    expect(calculateAdministrativeMinimumIncome(1)).toBe(553_553);
+    expect(calculateAdministrativeMinimumIncome(
+      1,
+      "educationEstablishment",
+      "under18",
+    )).toBe(412_938);
+  });
+
+  it("prorates the central DAEM IMM up to 30 hours over 42 and uses the full amount above that", () => {
     expect(calculateAdministrativeMinimumIncome(42, "daemCentral")).toBe(553_553);
     expect(calculateAdministrativeMinimumIncome(30, "daemCentral")).toBe(395_395);
+    expect(calculateAdministrativeMinimumIncome(31, "daemCentral")).toBe(553_553);
+    expect(calculateAdministrativeMinimumIncome(
+      30,
+      "daemCentral",
+      "over65",
+    )).toBe(294_956);
+  });
 
+  it("does not apply the Code of Labor IMM test to municipal statute appointments", () => {
     const result = calculateAdministrativeSalary({
       ...baseInput,
       regime: "municipalStatute",
       baseSalary: 300_000,
     });
     expect(result.warnings.some((warning) => warning.includes("ingreso mínimo"))).toBe(false);
+    expect(calculateAdministrativeMinimumIncome(44, "municipalStatute")).toBe(0);
   });
 
   it("includes establishment benefits only for administrative education assistants", () => {
@@ -164,7 +182,8 @@ describe("calculateAdministrativeSalary", () => {
     expect(result.earnings.some(
       (line) => line.id === "management-contribution-compensation",
     )).toBe(false);
-    expect(result.warnings.some((warning) => warning.includes("No se calcularon sus cotizaciones")))
+    expect(result.calculationComplete).toBe(false);
+    expect(result.warnings.some((warning) => warning.includes("subtotal líquido antes de reliquidaciones")))
       .toBe(true);
   });
 
@@ -209,7 +228,7 @@ describe("calculateAdministrativeSalary", () => {
       ...baseInput,
       regime,
       baseSalary: 1_000_000,
-      pensionRegime: "ips",
+      pensionStatus: "ips",
       managementAllowanceQuarterlyPayment: regime === "municipalStatute" ? 300_000 : 0,
     });
     expect(result.supported).toBe(false);
@@ -246,6 +265,43 @@ describe("calculateAdministrativeSalary", () => {
     expect(result.warnings.some((warning) => warning.includes("inferior al ingreso mínimo")))
       .toBe(false);
     expect(result.discounts.some((line) => line.id === "afc")).toBe(true);
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+  });
+
+  it("keeps health but removes AFP and AFC only when an eligible pensioner declares the exemption", () => {
+    const ordinary = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+    });
+    const exemptPensioner = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      pensionStatus: "afpOldAgeOrTotalDisabilityPensionerExempt",
+    });
+
+    expect(exemptPensioner.supported).toBe(true);
+    expect(exemptPensioner.discounts.find((line) => line.id === "afp")?.amount).toBe(0);
+    expect(exemptPensioner.discounts.find((line) => line.id === "health")?.amount)
+      .toBe(ordinary.discounts.find((line) => line.id === "health")?.amount);
+    expect(exemptPensioner.discounts.some((line) => line.id === "afc")).toBe(false);
+    expect(exemptPensioner.warnings.some((warning) => warning.includes("exención correspondiente")))
+      .toBe(true);
+  });
+
+  it("keeps an AFP partial-disability pensioner as an ordinary contributor", () => {
+    const result = calculateAdministrativeSalary({
+      ...baseInput,
+      baseSalary: 1_000_000,
+      previousMonthGross: 1_000_000,
+      pensionStatus: "afpPartialDisabilityPensioner",
+    });
+
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
+    expect(result.warnings.some((warning) => warning.includes("invalidez parcial"))).toBe(true);
   });
 
   it("deducts Isapre contributions from tax only up to 7% of the pension cap", () => {

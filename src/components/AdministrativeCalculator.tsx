@@ -84,7 +84,7 @@ const initialInput: AdministrativeCalculationInput = {
   municipalBiennia: 0,
   managementAllowanceQuarterlyPayment: 0,
   applyLowIncomeBonus: true,
-  pensionRegime: "afp",
+  pensionStatus: "afpContributor",
   afp: "habitat",
   healthSystem: "fonasa",
   isaprePlanUf: 0,
@@ -225,6 +225,10 @@ export default function AdministrativeCalculator() {
   const isEducationEstablishment = regime === "educationEstablishment";
   const isDaemCentral = regime === "daemCentral";
   const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(regime);
+  const pensionContributionsExempt = input.pensionStatus
+    === "afpOldAgeOrTotalDisabilityPensionerExempt";
+  const hasPendingManagementReliquidations = !result.calculationComplete
+    && input.managementAllowanceQuarterlyPayment > 0;
 
   useEffect(() => {
     const urlRegime = regimeFromUrl();
@@ -494,16 +498,18 @@ export default function AdministrativeCalculator() {
             <CardContent className="space-y-6">
               <div className="form-grid">
                 <SelectField
-                  id="administrative-pension-regime"
-                  label="Régimen previsional"
-                  value={input.pensionRegime}
-                  onChange={(value) => update("pensionRegime", value as AdministrativeCalculationInput["pensionRegime"])}
-                  help="El régimen antiguo administrado por IPS usa tasas y topes distintos de una AFP."
+                  id="administrative-pension-status"
+                  label="Situación previsional"
+                  value={input.pensionStatus}
+                  onChange={(value) => update("pensionStatus", value as AdministrativeCalculationInput["pensionStatus"])}
+                  help="La edad no activa una exención. Elige una condición pensionaria solo si la tienes reconocida y, cuando corresponda, declaraste la exención a tu empleador y AFP."
                 >
-                  <option value="afp">AFP</option>
+                  <option value="afpContributor">AFP · cotizante ordinario</option>
+                  <option value="afpOldAgeOrTotalDisabilityPensionerExempt">AFP · pensión de vejez o invalidez total con exención declarada</option>
+                  <option value="afpPartialDisabilityPensioner">AFP · pensión de invalidez parcial, continúa cotizando</option>
                   <option value="ips">IPS / régimen antiguo</option>
                 </SelectField>
-                {input.pensionRegime === "afp" && <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
+                {input.pensionStatus !== "ips" && !pensionContributionsExempt && <SelectField id="administrative-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AdministrativeCalculationInput["afp"])}>
                     <option value="capital">Capital</option>
                     <option value="cuprum">Cuprum</option>
                     <option value="habitat">Habitat</option>
@@ -532,6 +538,7 @@ export default function AdministrativeCalculator() {
                 {input.contractType === "indefinite"
                   && !isMunicipalStatute
                   && input.ageBracket !== "under18"
+                  && !pensionContributionsExempt
                   && <CheckField id="administrative-afc-ended" checked={input.afcContributionEnded} onChange={(value) => update("afcContributionEnded", value)} label="Cumplí 11 años de cotizaciones AFC" help="El aporte personal termina para esa relación laboral." />}
                 <CheckField id="administrative-apv-tax" checked={input.apvTaxDeductible} onChange={(value) => update("apvTaxDeductible", value)} label="El APV rebaja la base tributable" help="Actívalo solo si corresponde al régimen informado por tu institución." />
               </div>
@@ -573,10 +580,12 @@ export default function AdministrativeCalculator() {
 
           {step === 3 && <>
             <CardHeader className="result-heading">
-              <Badge>Estimación lista</Badge>
-              <CardTitle className="text-3xl">Sueldo líquido estimado</CardTitle>
+              <Badge>{hasPendingManagementReliquidations ? "Estimación incompleta" : "Estimación lista"}</Badge>
+              <CardTitle className="text-3xl">{hasPendingManagementReliquidations ? "Subtotal líquido antes de reliquidaciones" : "Sueldo líquido estimado"}</CardTitle>
               <div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div>
-              <CardDescription>Mes completo calculado con parámetros de julio de 2026.</CardDescription>
+              <CardDescription>{hasPendingManagementReliquidations
+                ? "Incluye la cuota pagada en julio, pero faltan las reliquidaciones previsionales y tributarias del trimestre."
+                : "Mes completo calculado con parámetros de julio de 2026."}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {result.warnings.length > 0 && <div className="warning-list" role="status">
@@ -586,11 +595,11 @@ export default function AdministrativeCalculator() {
                   <ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
                 </div>
               </div>}
-              <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />
-              <ResultTable title="Descuentos" lines={result.discounts} total={result.totalDiscounts} />
+              <ResultTable title={hasPendingManagementReliquidations ? "Haberes incluidos en el subtotal" : "Haberes"} lines={result.earnings} total={result.totalEarnings} positive />
+              <ResultTable title={hasPendingManagementReliquidations ? "Descuentos calculados antes de reliquidaciones" : "Descuentos"} lines={result.discounts} total={result.totalDiscounts} />
               <div className="base-grid daem-base-grid">
-                <div><span>Base imponible de julio</span><strong>{currency.format(result.imposableBase)}</strong></div>
-                <div><span>Base tributable de julio</span><strong>{currency.format(result.taxableBase)}</strong></div>
+                <div><span>{hasPendingManagementReliquidations ? "Base imponible corriente, sin reliquidar cuota" : "Base imponible de julio"}</span><strong>{currency.format(result.imposableBase)}</strong></div>
+                <div><span>{hasPendingManagementReliquidations ? "Base tributable corriente, sin reliquidar cuota" : "Base tributable de julio"}</span><strong>{currency.format(result.taxableBase)}</strong></div>
                 <div><span>Bono artículo 59</span><strong>{currency.format(result.article59Bonus)}</strong></div>
                 <div><span>Bono bajas rentas</span><strong>{currency.format(result.lowIncomeBonus)}</strong></div>
               </div>
@@ -622,15 +631,17 @@ export default function AdministrativeCalculator() {
           <div className="space-y-4 lg:sticky lg:top-24">
             <Card className="overflow-hidden">
               <div className="bg-primary p-6 text-primary-foreground">
-                <p className="text-sm font-medium opacity-80">Líquido estimado</p>
+                <p className="text-sm font-medium opacity-80">{hasPendingManagementReliquidations ? "Subtotal líquido antes de reliquidaciones" : "Líquido estimado"}</p>
                 <p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{currency.format(result.netSalary)}</p>
               </div>
               <CardContent className="space-y-4 pt-7 md:pt-7">
-                <SummaryRow label="Total haberes" value={result.totalEarnings} positive />
-                <SummaryRow label="Total descuentos" value={result.totalDiscounts} />
-                <SummaryRow label="Base imponible de julio" value={result.imposableBase} />
+                <SummaryRow label={hasPendingManagementReliquidations ? "Haberes incluidos en el subtotal" : "Total haberes"} value={result.totalEarnings} positive />
+                <SummaryRow label={hasPendingManagementReliquidations ? "Descuentos antes de reliquidaciones" : "Total descuentos"} value={result.totalDiscounts} />
+                <SummaryRow label={hasPendingManagementReliquidations ? "Base imponible corriente, sin reliquidar cuota" : "Base imponible de julio"} value={result.imposableBase} />
                 <div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-                  <Info size={15} className="mb-1 inline text-primary" /> Resumen final de esta estimación.
+                  <Info size={15} className="mb-1 inline text-primary" /> {hasPendingManagementReliquidations
+                    ? "Este subtotal no es el líquido final: faltan las reliquidaciones de la cuota de gestión."
+                    : "Resumen final de esta estimación."}
                 </div>
               </CardContent>
             </Card>
