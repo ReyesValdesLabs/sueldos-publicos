@@ -115,9 +115,9 @@ function NumberField({ id, label, value, onChange, min = 0, max, step = 1, suffi
         aria-invalid={Boolean(error)}
         onInput={(event) => handleInput(event.currentTarget.value)}
         onBlur={() => setDraftValue(null)}
-        className={`form-control${suffix ? " pr-16" : ""}`}
+        className={`form-control${suffix ? (isMoney ? " form-control--suffix" : " form-control--number-suffix") : ""}`}
       />
-      {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{suffix}</span>}
+      {suffix && <span className={`field-suffix pointer-events-none absolute top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground${isMoney ? "" : " field-suffix--number"}`}>{suffix}</span>}
     </div>
     {help && <p id={`${id}-help`} className="field-help">{help}</p>}
     {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
@@ -255,7 +255,7 @@ export default function TeacherCalculator() {
       </button>)}
     </nav>
 
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
+    <div className="grid gap-6">
       <Card className="overflow-hidden">
         {step === 0 && <>
           <CardHeader><CardTitle>Tu contrato</CardTitle><CardDescription>Separa las horas por nivel para calcular la RBMN con el valor legal que corresponde a cada una.</CardDescription></CardHeader>
@@ -427,25 +427,8 @@ export default function TeacherCalculator() {
         </div>
       </Card>
 
-      <aside className="hidden lg:block print:hidden" aria-label="Resumen en vivo">
-        <div className="sticky top-24 space-y-4">
-          <Card className="overflow-hidden">
-            <div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">Líquido estimado</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{currency.format(result.netSalary)}</p></div>
-            <CardContent className="space-y-4 pt-6">
-              <SummaryRow label="Total haberes" value={result.totalEarnings} positive />
-              <SummaryRow label="Total descuentos" value={result.totalDiscounts} />
-              <div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> Se actualiza mientras completas tus antecedentes.</div>
-            </CardContent>
-          </Card>
-          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 text-sm"><div className="flex items-center gap-2 font-bold text-primary"><FileText size={17} /> Cálculo trazable</div><p className="mt-2 leading-6 text-muted-foreground">Cada concepto automático enlaza a su fórmula y fuente legal.</p></div>
-        </div>
-      </aside>
     </div>
   </section>;
-}
-
-function SummaryRow({ label, value, positive = false }: { label: string; value: number; positive?: boolean }) {
-  return <div className="flex items-center justify-between gap-4 text-sm"><span className="text-muted-foreground">{label}</span><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : ""}>{currency.format(value)}</strong></div>;
 }
 
 function ResultTable({ title, lines, total, positive = false }: { title: string; lines: ReturnType<typeof calculateTeacherSalary>["earnings"]; total: number; positive?: boolean }) {

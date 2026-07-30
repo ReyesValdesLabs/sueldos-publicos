@@ -89,8 +89,8 @@ function NumberField({ id, label, value, onChange, min = 0, max, suffix, help, e
   return <div className="field-group">
     <Label htmlFor={id}>{label}</Label>
     <div className="relative">
-      <Input id={id} type={money ? "text" : "number"} inputMode={money ? "numeric" : undefined} min={money ? undefined : min} max={money ? undefined : max} value={display} onInput={(event) => handleInput(event.currentTarget.value)} onBlur={() => setDraft(null)} aria-describedby={describedBy} aria-invalid={Boolean(error)} className={`form-control${suffix ? " pr-16" : ""}`} />
-      {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{suffix}</span>}
+      <Input id={id} type={money ? "text" : "number"} inputMode={money ? "numeric" : undefined} min={money ? undefined : min} max={money ? undefined : max} value={display} onInput={(event) => handleInput(event.currentTarget.value)} onBlur={() => setDraft(null)} aria-describedby={describedBy} aria-invalid={Boolean(error)} className={`form-control${suffix ? (money ? " form-control--suffix" : " form-control--number-suffix") : ""}`} />
+      {suffix && <span className={`field-suffix pointer-events-none absolute top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground${money ? "" : " field-suffix--number"}`}>{suffix}</span>}
     </div>
     {help && <p id={`${id}-help`} className="field-help">{help}</p>}
     {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
@@ -255,18 +255,13 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
         </div>
       </Card>
 
-      <aside className="order-first block print:hidden lg:order-none" aria-label="Resumen en vivo">
+      <aside className="order-first block print:hidden lg:order-none" aria-label="Información de alcance">
         <div className="space-y-4 lg:sticky lg:top-24">
-          <Card className="overflow-hidden"><div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">{result.supported ? "Líquido estimado" : "Líquido no disponible"}</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{result.supported ? currency.format(result.netSalary) : "No disponible"}</p></div><CardContent className="space-y-4 pt-7 md:pt-7"><SummaryRow label="Total haberes" value={result.totalEarnings} positive /><SummaryRow label="Total descuentos" value={result.totalDiscounts} /><SummaryRow label="Experiencia" value={result.earnings.find((line) => line.id === "assistant-experience")?.amount ?? 0} positive /><div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> {result.supported ? "Se actualiza mientras completas tus antecedentes." : "Completa los antecedentes obligatorios para obtener una estimación."}</div></CardContent></Card>
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 text-sm"><div className="flex items-center gap-2 font-bold text-primary"><FileText size={17} /> Alcance acotado</div><p className="mt-2 leading-6 text-muted-foreground">Categoría técnica en establecimientos escolares dependientes de SLEP. Otros sostenedores usan reglas distintas.</p></div>
         </div>
       </aside>
     </div>
   </section>;
-}
-
-function SummaryRow({ label, value, positive = false }: { label: string; value: number; positive?: boolean }) {
-  return <div className="flex items-center justify-between gap-4 text-sm"><span className="text-muted-foreground">{label}</span><strong className={positive ? "text-emerald-700 dark:text-emerald-400" : ""}>{currency.format(value)}</strong></div>;
 }
 
 function ResultTable({ title, lines, total, positive = false }: { title: string; lines: ReturnType<typeof calculateAssistantSalary>["earnings"]; total: number; positive?: boolean }) {

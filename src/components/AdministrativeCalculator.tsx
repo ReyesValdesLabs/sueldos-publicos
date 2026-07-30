@@ -152,9 +152,9 @@ function NumberField({
         onChange={(event) => onChange(money ? parseMoney(event.target.value) : Number(event.target.value))}
         aria-describedby={describedBy}
         aria-invalid={Boolean(error)}
-        className={suffix ? "pr-16" : undefined}
+        className={suffix ? (money ? "form-control--suffix" : "form-control--number-suffix") : undefined}
       />
-      {suffix && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">{suffix}</span>}
+      {suffix && <span className={`field-suffix pointer-events-none absolute top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground${money ? "" : " field-suffix--number"}`}>{suffix}</span>}
     </div>
     {help && <p id={`${id}-help`} className="field-help">{help}</p>}
     {error && <p id={`${id}-error`} className="field-error" role="alert">{error}</p>}
