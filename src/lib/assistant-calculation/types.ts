@@ -2,6 +2,7 @@ import type { Afp, HealthSystem, ManualItem, ResultLine } from "@/lib/calculatio
 
 export type AssistantPensionStatus =
   | "afpContributor"
+  | "pensionerContributing"
   | "pensionerExempt"
   | "unmodeledRegime";
 
@@ -29,6 +30,7 @@ export interface AssistantCalculationInput {
 
 export interface AssistantCalculationResult {
   supported: boolean;
+  zoneCalculationStatus: "notApplicable" | "calculated" | "missingPreviousGross";
   minimumTarget: number;
   earnings: ResultLine[];
   discounts: ResultLine[];

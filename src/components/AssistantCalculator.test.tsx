@@ -24,9 +24,24 @@ describe("AssistantCalculator experience guidance", () => {
       difficultConditionsPercentage: 0,
       zonePercentage: 20,
       zonePreviousMonthGross: 0,
+      pensionStatus: "afpContributor" as const,
     };
 
     expect(isAssistantStepInvalid(1, base)).toBe(true);
     expect(isAssistantStepInvalid(1, { ...base, zonePreviousMonthGross: 1_419_600 })).toBe(false);
+  });
+
+  it("blocks the result for a pension regime that the calculator does not model", () => {
+    const base = {
+      weeklyHours: 44,
+      biennia: 0,
+      difficultConditionsPercentage: 0,
+      zonePercentage: 0,
+      zonePreviousMonthGross: 0,
+      pensionStatus: "unmodeledRegime" as const,
+    };
+
+    expect(isAssistantStepInvalid(2, base)).toBe(true);
+    expect(isAssistantStepInvalid(2, { ...base, pensionStatus: "afpContributor" })).toBe(false);
   });
 });

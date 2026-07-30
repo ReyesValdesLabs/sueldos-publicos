@@ -24,7 +24,7 @@ export function isAssistantStepInvalid(
   step: number,
   input: Pick<
     AssistantCalculationInput,
-    "weeklyHours" | "biennia" | "difficultConditionsPercentage" | "zonePercentage" | "zonePreviousMonthGross"
+    "weeklyHours" | "biennia" | "difficultConditionsPercentage" | "zonePercentage" | "zonePreviousMonthGross" | "pensionStatus"
   >,
 ) {
   const hoursInvalid = !Number.isInteger(input.weeklyHours) || input.weeklyHours < 1 || input.weeklyHours > 44;
@@ -33,7 +33,8 @@ export function isAssistantStepInvalid(
   const zoneInvalid = input.zonePercentage < 0 || input.zonePercentage > 600;
   const zoneGrossMissing = input.zonePercentage > 0 && input.zonePreviousMonthGross <= 0;
   return (step === 0 && hoursInvalid)
-    || (step === 1 && (bienniaInvalid || difficultInvalid || zoneInvalid || zoneGrossMissing));
+    || (step === 1 && (bienniaInvalid || difficultInvalid || zoneInvalid || zoneGrossMissing))
+    || (step === 2 && input.pensionStatus === "unmodeledRegime");
 }
 
 function parseMoney(value: string) {
@@ -202,13 +203,15 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
             <div className="form-grid">
               <SelectField id="assistant-pension-status" label="Situación previsional" value={input.pensionStatus} onChange={(value) => update("pensionStatus", value as AssistantCalculationInput["pensionStatus"])} help="La exención corresponde a pensionados por vejez o invalidez total; la invalidez parcial sigue cotizando.">
                 <option value="afpContributor">Cotizante AFP</option>
+                <option value="pensionerContributing">Pensionado/a que continúa cotizando AFP</option>
                 <option value="pensionerExempt">Pensionado/a exento/a de AFP</option>
                 <option value="unmodeledRegime">Otro régimen no modelado</option>
               </SelectField>
-              {input.pensionStatus === "afpContributor" && <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>}
+              {(input.pensionStatus === "afpContributor" || input.pensionStatus === "pensionerContributing") && <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>}
               {input.pensionStatus !== "unmodeledRegime" && <SelectField id="assistant-health" label="Sistema de salud" value={input.healthSystem} onChange={(value) => update("healthSystem", value as AssistantCalculationInput["healthSystem"])}><option value="fonasa">Fonasa</option><option value="isapre">Isapre</option></SelectField>}
             </div>
             {input.pensionStatus !== "unmodeledRegime" && input.healthSystem === "isapre" && <NumberField id="assistant-isapre" label="Precio total del plan Isapre" value={input.isaprePlanUf} onChange={(value) => update("isaprePlanUf", value)} suffix="UF" />}
+            {input.pensionStatus === "unmodeledRegime" && <div className="warning-inline" role="alert"><AlertTriangle size={18} /><p>No es posible estimar un sueldo líquido sin las tasas y topes del régimen previsional aplicable. Usa una alternativa AFP respaldada por tu situación o consulta tu liquidación.</p></div>}
             <div className="form-grid">
               {input.pensionStatus === "afpContributor" && <SelectField id="assistant-contract-type" label="Tipo de contrato" value={input.contractType} onChange={(value) => update("contractType", value as AssistantCalculationInput["contractType"])} help="El aporte personal de AFC de 0,6% se descuenta en contratos indefinidos."><option value="indefinite">Indefinido</option><option value="fixed">Plazo fijo</option></SelectField>}
               <NumberField id="assistant-apv" label="APV descontado por empleador" value={input.apv} onChange={(value) => update("apv", value)} suffix="$" />
@@ -235,7 +238,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
         </>}
 
         {step === 3 && <>
-          <CardHeader className="result-heading"><Badge>{result.supported ? "Estimación lista" : "Estimación previsional incompleta"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {A.label.toLowerCase()}.</CardDescription></CardHeader>
+          <CardHeader className="result-heading"><Badge>{result.supported ? "Estimación lista" : "Estimación incompleta"}</Badge><CardTitle className="text-3xl">{result.supported ? "Tu sueldo líquido estimado" : "Sueldo líquido no disponible"}</CardTitle><div className="result-total" aria-live="polite">{result.supported ? currency.format(result.netSalary) : "No disponible"}</div><CardDescription>Mes completo calculado con valores de {A.label.toLowerCase()}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
             <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />
@@ -254,7 +257,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
 
       <aside className="order-first block print:hidden lg:order-none" aria-label="Resumen en vivo">
         <div className="space-y-4 lg:sticky lg:top-24">
-          <Card className="overflow-hidden"><div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">Líquido estimado</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{currency.format(result.netSalary)}</p></div><CardContent className="space-y-4 pt-7 md:pt-7"><SummaryRow label="Total haberes" value={result.totalEarnings} positive /><SummaryRow label="Total descuentos" value={result.totalDiscounts} /><SummaryRow label="Experiencia" value={result.earnings.find((line) => line.id === "assistant-experience")?.amount ?? 0} positive /><div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> Se actualiza mientras completas tus antecedentes.</div></CardContent></Card>
+          <Card className="overflow-hidden"><div className="bg-primary p-6 text-primary-foreground"><p className="text-sm font-medium opacity-80">{result.supported ? "Líquido estimado" : "Líquido no disponible"}</p><p className="mt-2 text-3xl font-extrabold tracking-tight" aria-live="polite">{result.supported ? currency.format(result.netSalary) : "No disponible"}</p></div><CardContent className="space-y-4 pt-7 md:pt-7"><SummaryRow label="Total haberes" value={result.totalEarnings} positive /><SummaryRow label="Total descuentos" value={result.totalDiscounts} /><SummaryRow label="Experiencia" value={result.earnings.find((line) => line.id === "assistant-experience")?.amount ?? 0} positive /><div className="border-t border-border pt-4 text-xs leading-5 text-muted-foreground"><Info size={15} className="mb-1 inline text-primary" /> {result.supported ? "Se actualiza mientras completas tus antecedentes." : "Completa los antecedentes obligatorios para obtener una estimación."}</div></CardContent></Card>
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-5 text-sm"><div className="flex items-center gap-2 font-bold text-primary"><FileText size={17} /> Alcance acotado</div><p className="mt-2 leading-6 text-muted-foreground">Categoría técnica en establecimientos escolares dependientes de SLEP. Otros sostenedores usan reglas distintas.</p></div>
         </div>
       </aside>

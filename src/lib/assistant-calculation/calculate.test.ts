@@ -217,4 +217,26 @@ describe("calculateAssistantSalary", () => {
     expect(result.discounts.some((line) => line.id === "tax")).toBe(false);
     expect(result.warnings).toContain("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
   });
+
+  it("keeps AFP and health but excludes AFC for a pensioner who continues contributing", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "pensionerContributing",
+    });
+    expect(result.supported).toBe(true);
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+  });
+
+  it("marks a zone calculation without the effective previous gross as unsupported", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      zonePercentage: 20,
+      zonePreviousMonthGross: 0,
+    });
+    expect(result.supported).toBe(false);
+    expect(result.zoneCalculationStatus).toBe("missingPreviousGross");
+    expect(result.warnings).toContain("Cálculo incompleto: falta la remuneración bruta efectiva del mes anterior para determinar la bonificación de zona.");
+  });
 });

@@ -108,6 +108,11 @@ export function calculateAssistantSalary(
   });
 
   const zoneBonus = calculateAssistantZoneBonus(input, assistantParameters);
+  const zoneCalculationStatus = input.zonePercentage <= 0
+    ? "notApplicable"
+    : input.zonePreviousMonthGross <= 0
+      ? "missingPreviousGross"
+      : "calculated";
   if (zoneBonus > 0) earnings.push({
     id: "assistant-zone-21819",
     label: "Bonificación de zona Ley N.º 21.819",
@@ -166,7 +171,9 @@ export function calculateAssistantSalary(
   const taxableEarnings = sum(earnings.filter((line) => line.taxable));
   const imposableBase = money(Math.min(imposableEarnings, payrollParameters.pensionCapUf * payrollParameters.uf));
   const pensionCalculationSupported = input.pensionStatus !== "unmodeledRegime";
-  const afp = input.pensionStatus === "afpContributor"
+  const contributesToAfp = input.pensionStatus === "afpContributor"
+    || input.pensionStatus === "pensionerContributing";
+  const afp = contributesToAfp
     ? money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]))
     : 0;
   const healthLegal = money(imposableBase * 0.07);
@@ -195,7 +202,7 @@ export function calculateAssistantSalary(
 
   const afpName = input.afp[0].toUpperCase() + input.afp.slice(1);
   const discounts: ResultLine[] = [];
-  if (input.pensionStatus === "afpContributor") {
+  if (contributesToAfp) {
     discounts.push({ id: "afp", label: `AFP ${afpName}`, amount: afp, imposable: false, taxable: false, countsForMinimum: false, legalSlug: "cotizaciones-previsionales" });
   }
   if (pensionCalculationSupported) {
@@ -212,7 +219,9 @@ export function calculateAssistantSalary(
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
   if (input.pensionStatus === "pensionerExempt") warnings.push("No se descontó AFP ni AFC porque declaraste una pensión de vejez o invalidez total con exención; la cotización de salud se mantiene.");
+  if (input.pensionStatus === "pensionerContributing") warnings.push("Se descontó AFP porque declaraste que continúas cotizando como pensionado/a; no se descontó AFC y la cotización de salud se mantiene.");
   if (!pensionCalculationSupported) warnings.push("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
+  if (zoneCalculationStatus === "missingPreviousGross") warnings.push("Cálculo incompleto: falta la remuneración bruta efectiva del mes anterior para determinar la bonificación de zona.");
   if (declaredHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
   if (minimumCounted < minimumTarget) warnings.push("Se agregó un complemento estimado para alcanzar el mínimo bruto legal de la categoría técnica.");
   if (input.pensionStatus === "afpContributor" && input.contractType === "fixed") warnings.push("No se descontó el 0,6% personal de AFC porque indicaste un contrato a plazo fijo.");
@@ -221,7 +230,8 @@ export function calculateAssistantSalary(
   if (input.priorityAllowance || input.territorialAllowance || input.academicExcellenceBonus || input.law19464Increase) warnings.push("Las asignaciones ingresadas desde tu liquidación se usan tal como las declaraste; confirma su tratamiento imponible y tributario con el empleador.");
 
   return {
-    supported: pensionCalculationSupported,
+    supported: pensionCalculationSupported && zoneCalculationStatus !== "missingPreviousGross",
+    zoneCalculationStatus,
     minimumTarget,
     earnings,
     discounts,
