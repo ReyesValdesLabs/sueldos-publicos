@@ -15,6 +15,7 @@ const money = (value: number) => Math.round(Math.max(0, value));
 const sum = (lines: ResultLine[]) => lines.reduce((total, line) => total + line.amount, 0);
 const MANAGEMENT_QUARTER_MONTHS = 3;
 const DAEM_CENTRAL_MAXIMUM_WEEKLY_HOURS = 42;
+const LABOR_CODE_PART_TIME_MAXIMUM_WEEKLY_HOURS = 30;
 
 function calculateIncomeTax(taxableBase: number, payrollParameters: PeriodParameters) {
   const bracket = payrollParameters.taxBrackets.find(
@@ -35,7 +36,8 @@ export function calculateAdministrativeMinimumIncome(
 ) {
   const maximumWeeklyHours = getAdministrativeMaximumWeeklyHours(regime);
   const hours = Math.min(maximumWeeklyHours, money(weeklyHours));
-  return hours <= D.minimumIncome.proportionalUpToWeeklyHours
+  if (hours < 1) return 0;
+  return regime === "daemCentral" && hours <= LABOR_CODE_PART_TIME_MAXIMUM_WEEKLY_HOURS
     ? money(D.minimumIncome.monthly * hours / maximumWeeklyHours)
     : D.minimumIncome.monthly;
 }

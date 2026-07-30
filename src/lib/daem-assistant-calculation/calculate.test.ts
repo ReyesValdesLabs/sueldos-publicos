@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
-import { calculateDaemAssistantSalary, calculateDaemMinimumIncome } from "./calculate";
+import { calculateDaemAssistantSalary, calculateDaemMinimumIncome, resolveDaemMinimumIncomeAutofill } from "./calculate";
 import type { DaemAssistantCalculationInput } from "./types";
 
 const baseInput: DaemAssistantCalculationInput = {
   weeklyHours: 44,
+  minimumIncomeAgeBracket: "adult18To65",
   contractRemuneration: 500_000,
   previousMonthGross: 500_000,
   law19464Increase: 0,
@@ -23,11 +24,37 @@ const baseInput: DaemAssistantCalculationInput = {
 };
 
 describe("calculateDaemAssistantSalary", () => {
-  it("uses the full legal minimum above 30 hours and prorates true part-time work", () => {
+  it("uses the full adult legal minimum for every valid weekly schedule", () => {
     expect(calculateDaemMinimumIncome(44)).toBe(553_553);
-    expect(calculateDaemMinimumIncome(31)).toBe(553_553);
-    expect(calculateDaemMinimumIncome(30)).toBe(377_423);
-    expect(calculateDaemMinimumIncome(22)).toBe(276_777);
+    expect(calculateDaemMinimumIncome(30)).toBe(553_553);
+    expect(calculateDaemMinimumIncome(22)).toBe(553_553);
+  });
+
+  it("uses the full reduced legal minimum for every valid weekly schedule outside the 18-to-65 age bracket", () => {
+    expect(calculateDaemMinimumIncome(44, "outside18To65")).toBe(412_938);
+    expect(calculateDaemMinimumIncome(30, "outside18To65")).toBe(412_938);
+    expect(calculateDaemMinimumIncome(22, "outside18To65")).toBe(412_938);
+  });
+
+  it("preserves an edited remuneration while updating untouched autocompleted values", () => {
+    expect(resolveDaemMinimumIncomeAutofill(700_000, true, 22, "outside18To65")).toBe(700_000);
+    expect(resolveDaemMinimumIncomeAutofill(553_553, false, 22, "outside18To65")).toBe(412_938);
+    expect(resolveDaemMinimumIncomeAutofill(412_938, false, 30, "adult18To65")).toBe(553_553);
+  });
+
+  it("warns against the minimum for the selected age bracket", () => {
+    const reduced = calculateDaemAssistantSalary({
+      ...baseInput,
+      minimumIncomeAgeBracket: "outside18To65",
+      contractRemuneration: 412_937,
+    });
+    const adult = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 553_552,
+    });
+
+    expect(reduced.warnings).toContain("El sueldo base informado es inferior al ingreso mínimo estimado de $412.938 para el tramo etario seleccionado.");
+    expect(adult.warnings).toContain("El sueldo base informado es inferior al ingreso mínimo estimado de $553.553 para el tramo etario seleccionado.");
   });
 
   it("does not add the SLEP technical minimum or experience biennia", () => {
@@ -102,6 +129,58 @@ describe("calculateDaemAssistantSalary", () => {
     expect(withTaxableAllowance.taxableBase).toBe(regular.taxableBase + 500_000);
     expect(withTaxableAllowance.discounts.find((line) => line.id === "tax")?.amount)
       .toBe(Math.round(Math.max(0, withTaxableAllowance.taxableBase * bracket.factor - bracket.rebate)));
+  });
+
+  it("deducts an Isapre plan above 7% from the IUSC base within the legal health cap", () => {
+    const fonasa = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 1_500_000,
+      previousMonthGross: 1_500_000,
+    });
+    const isapre = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 1_500_000,
+      previousMonthGross: 1_500_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 4,
+    });
+
+    const expectedAdditionalReduction = Math.round(4 * P.uf) - Math.round(fonasa.imposableBase * 0.07);
+    expect(isapre.taxableBase).toBe(fonasa.taxableBase - expectedAdditionalReduction);
+  });
+
+  it("keeps the legal 7% IUSC reduction when the Isapre plan is lower", () => {
+    const fonasa = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 1_500_000,
+      previousMonthGross: 1_500_000,
+    });
+    const isapre = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 1_500_000,
+      previousMonthGross: 1_500_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 1,
+    });
+
+    expect(isapre.taxableBase).toBe(fonasa.taxableBase);
+    expect(isapre.discounts.find((line) => line.id === "health")?.amount)
+      .toBe(fonasa.discounts.find((line) => line.id === "health")?.amount);
+  });
+
+  it("caps the Isapre reduction from the IUSC base at 7% of the pension cap", () => {
+    const result = calculateDaemAssistantSalary({
+      ...baseInput,
+      contractRemuneration: 5_000_000,
+      previousMonthGross: 5_000_000,
+      healthSystem: "isapre",
+      isaprePlanUf: 20,
+    });
+    const afp = result.discounts.find((line) => line.id === "afp")!.amount;
+    const afc = result.discounts.find((line) => line.id === "afc")!.amount;
+    const maximumHealthReduction = Math.round(P.pensionCapUf * P.uf * 0.07);
+
+    expect(result.taxableBase).toBe(5_000_000 - afp - afc - maximumHealthReduction);
   });
 
   it("applies the personal AFC contribution only to indefinite contracts", () => {
