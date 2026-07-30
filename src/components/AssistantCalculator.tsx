@@ -203,11 +203,11 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
             <div className="form-grid">
               <SelectField id="assistant-pension-status" label="Situación previsional" value={input.pensionStatus} onChange={(value) => update("pensionStatus", value as AssistantCalculationInput["pensionStatus"])} help="La exención corresponde a pensionados por vejez o invalidez total; la invalidez parcial sigue cotizando.">
                 <option value="afpContributor">Cotizante AFP</option>
-                <option value="pensionerContributing">Pensionado/a que continúa cotizando AFP</option>
+                <option value="oldAgeOrTotalDisabilityPensionerContributing">Pensionado/a por vejez/invalidez total que continúa AFP</option>
                 <option value="pensionerExempt">Pensionado/a exento/a de AFP</option>
                 <option value="unmodeledRegime">Otro régimen no modelado</option>
               </SelectField>
-              {(input.pensionStatus === "afpContributor" || input.pensionStatus === "pensionerContributing") && <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>}
+              {(input.pensionStatus === "afpContributor" || input.pensionStatus === "oldAgeOrTotalDisabilityPensionerContributing") && <SelectField id="assistant-afp" label="AFP" value={input.afp} onChange={(value) => update("afp", value as AssistantCalculationInput["afp"])}>{Object.entries(afpNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>}
               {input.pensionStatus !== "unmodeledRegime" && <SelectField id="assistant-health" label="Sistema de salud" value={input.healthSystem} onChange={(value) => update("healthSystem", value as AssistantCalculationInput["healthSystem"])}><option value="fonasa">Fonasa</option><option value="isapre">Isapre</option></SelectField>}
             </div>
             {input.pensionStatus !== "unmodeledRegime" && input.healthSystem === "isapre" && <NumberField id="assistant-isapre" label="Precio total del plan Isapre" value={input.isaprePlanUf} onChange={(value) => update("isaprePlanUf", value)} suffix="UF" />}

@@ -2,7 +2,7 @@ import type { Afp, HealthSystem, ManualItem, ResultLine } from "@/lib/calculatio
 
 export type AssistantPensionStatus =
   | "afpContributor"
-  | "pensionerContributing"
+  | "oldAgeOrTotalDisabilityPensionerContributing"
   | "pensionerExempt"
   | "unmodeledRegime";
 

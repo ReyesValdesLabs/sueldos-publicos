@@ -218,15 +218,26 @@ describe("calculateAssistantSalary", () => {
     expect(result.warnings).toContain("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
   });
 
-  it("keeps AFP and health but excludes AFC for a pensioner who continues contributing", () => {
+  it("keeps AFP and health but excludes AFC for an old-age or total-disability pensioner who continues contributing", () => {
     const result = calculateAssistantSalary({
       ...baseInput,
-      pensionStatus: "pensionerContributing",
+      pensionStatus: "oldAgeOrTotalDisabilityPensionerContributing",
     });
     expect(result.supported).toBe(true);
     expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
     expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
     expect(result.discounts.some((line) => line.id === "afc")).toBe(false);
+  });
+
+  it("keeps AFC for a partial-disability pensioner represented by the ordinary AFP contributor flow", () => {
+    const result = calculateAssistantSalary({
+      ...baseInput,
+      pensionStatus: "afpContributor",
+      contractType: "indefinite",
+    });
+    expect(result.discounts.find((line) => line.id === "afp")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "health")?.amount).toBeGreaterThan(0);
+    expect(result.discounts.find((line) => line.id === "afc")?.amount).toBeGreaterThan(0);
   });
 
   it("marks a zone calculation without the effective previous gross as unsupported", () => {

@@ -172,7 +172,7 @@ export function calculateAssistantSalary(
   const imposableBase = money(Math.min(imposableEarnings, payrollParameters.pensionCapUf * payrollParameters.uf));
   const pensionCalculationSupported = input.pensionStatus !== "unmodeledRegime";
   const contributesToAfp = input.pensionStatus === "afpContributor"
-    || input.pensionStatus === "pensionerContributing";
+    || input.pensionStatus === "oldAgeOrTotalDisabilityPensionerContributing";
   const afp = contributesToAfp
     ? money(imposableBase * (0.1 + payrollParameters.afpCommission[input.afp]))
     : 0;
@@ -219,7 +219,7 @@ export function calculateAssistantSalary(
   const totalDiscounts = sum(discounts);
   const warnings: string[] = [];
   if (input.pensionStatus === "pensionerExempt") warnings.push("No se descontó AFP ni AFC porque declaraste una pensión de vejez o invalidez total con exención; la cotización de salud se mantiene.");
-  if (input.pensionStatus === "pensionerContributing") warnings.push("Se descontó AFP porque declaraste que continúas cotizando como pensionado/a; no se descontó AFC y la cotización de salud se mantiene.");
+  if (input.pensionStatus === "oldAgeOrTotalDisabilityPensionerContributing") warnings.push("Se descontó AFP porque declaraste que continúas cotizando tras pensionarte por vejez o invalidez total; no se descontó AFC y la cotización de salud se mantiene.");
   if (!pensionCalculationSupported) warnings.push("Cálculo previsional incompleto: este recorrido no modela tasas ni topes de un régimen distinto de AFP.");
   if (zoneCalculationStatus === "missingPreviousGross") warnings.push("Cálculo incompleto: falta la remuneración bruta efectiva del mes anterior para determinar la bonificación de zona.");
   if (declaredHours > 44) warnings.push("La jornada se limitó a 44 horas para un mismo empleador.");
