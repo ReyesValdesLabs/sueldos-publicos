@@ -14,13 +14,14 @@ export const SITE = {
 
 export const LEGAL_CONTENT_PUBLISHED_AT = "2026-07-18";
 export const LEGAL_CONTENT_REVIEWED_AT = "2026-07-26";
+export const CALCULATOR_CONTENT_REVIEWED_AT = "2026-08-05";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
   "": SITE.updatedAt,
-  "calculadoras/docentes/": SITE.updatedAt,
-  "calculadoras/tecnicos-parvulos/": SITE.updatedAt,
-  "calculadoras/administrativos-municipales/": "2026-07-26",
-  "calculadoras/tramos-docentes/": SITE.updatedAt,
+  "calculadoras/docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
+  "calculadoras/tecnicos-parvulos/": CALCULATOR_CONTENT_REVIEWED_AT,
+  "calculadoras/administrativos-municipales/": CALCULATOR_CONTENT_REVIEWED_AT,
+  "calculadoras/tramos-docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
   "legal/": LEGAL_CONTENT_REVIEWED_AT,
   "acerca-de/": SITE.updatedAt,
   "metodologia/": SITE.updatedAt,

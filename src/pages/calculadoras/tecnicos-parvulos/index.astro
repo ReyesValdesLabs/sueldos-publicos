@@ -1,14 +1,22 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TechnicalAssistantCalculator from "@/components/TechnicalAssistantCalculator";
+import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
 
 const title = "Calculadora para técnicos en párvulos | Sueldos Públicos";
 const description = "Estima la liquidación de técnicos y técnicas en educación parvularia según su empleador SLEP o DAEM/DEM, con reglas y fórmulas separadas.";
 const path = "calculadoras/tecnicos-parvulos/";
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
   calculatorStructuredData({ name: "Calculadora para técnicos en párvulos", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -17,7 +25,54 @@ const structuredData = [
 ];
 ---
 <BaseLayout title={title} description={description} structuredData={structuredData} adsense>
-  <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p></header>
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p></header>
   <div class="page-shell calculator-page-content"><TechnicalAssistantCalculator client:load /></div>
+  <section class="calculator-guide section-muted" aria-labelledby="guia-calculo-tecnicos">
+    <div class="page-shell calculator-guide-content">
+      <div class="section-heading">
+        <span class="eyebrow">Guía de uso</span>
+        <h2 id="guia-calculo-tecnicos">El empleador del contrato define el recorrido</h2>
+        <p>“Técnico en párvulos” describe una función o categoría, pero no identifica por sí sola el régimen remuneracional. La calculadora separa a quienes son contratados directamente por un SLEP de quienes mantienen un contrato con una municipalidad, DAEM o DEM.</p>
+      </div>
+
+      <div class="calculator-guide-grid">
+        <article>
+          <h3>Contrato directo con SLEP</h3>
+          <p>Selecciona este recorrido si el Servicio Local figura como empleador. Puede considerar el mínimo bruto de la categoría técnica, experiencia computable, beneficios del establecimiento y Seguro de Cesantía conforme al estatuto de asistentes.</p>
+        </article>
+        <article>
+          <h3>Contrato DAEM o DEM</h3>
+          <p>Úsalo si el empleador sigue siendo municipal. Este recorrido no traslada el mínimo técnico ni los bienios SLEP: parte del ingreso mínimo aplicable y pide ingresar los montos municipales que dependen de la liquidación o de la distribución del sostenedor.</p>
+        </article>
+        <article>
+          <h3>Otros sostenedores</h3>
+          <p>La calculadora no cubre contratos directos con JUNJI, Integra, jardines VTF, corporaciones privadas, fundaciones ni honorarios. Tampoco debes elegir SLEP solo porque el establecimiento será traspasado en el futuro.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-columns">
+        <article>
+          <h3>Documentos útiles para completar los datos</h3>
+          <ul>
+            <li>Contrato, anexo o acto de traspaso donde aparezca el empleador y la categoría contractual.</li>
+            <li>Jornada semanal y tipo de contrato para determinar proporciones y Seguro de Cesantía.</li>
+            <li>Última liquidación, especialmente los montos de Ley N.º 19.464, bonos locales y descuentos.</li>
+            <li>Reconocimiento de bienios y antecedentes del establecimiento cuando uses el recorrido SLEP.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Cómo interpretar el resultado</h3>
+          <p>Revisa por separado sueldo base o complemento al mínimo, experiencia, bonos y asignaciones. Después compara las bases imponible y tributable con tu liquidación. La primera alimenta las cotizaciones; la segunda se usa para estimar el Impuesto Único, y no siempre contienen exactamente los mismos haberes.</p>
+          <p>Los descuentos previsionales usan parámetros mensuales y dependen de la AFP, salud y demás opciones informadas. Lee el detalle de <a href={sitePath("legal/cotizaciones-previsionales/")}>cotizaciones previsionales</a> antes de comparar solo el líquido.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-note">
+        <h3>Una diferencia frecuente: servicios anteriores al traspaso</h3>
+        <p>En el recorrido SLEP, los servicios computables no se resuelven únicamente contando años de trabajo. La regla general y la situación transitoria de personal traspasado tienen fundamentos distintos. Revisa el detalle sobre <a href={sitePath("legal/asistentes-minimo-experiencia/")}>mínimo técnico y experiencia</a> y usa solo los bienios reconocidos o documentables.</p>
+      </div>
+      <p class="calculator-guide-footer">Consulta también las <a href={sitePath("legal/asistentes-asignaciones-establecimiento/")}>asignaciones del establecimiento</a>, las <a href={sitePath("legal/asistentes-daem-remuneraciones/")}>remuneraciones DAEM/DEM</a> y nuestra <a href={sitePath("metodologia/")}>metodología de actualización</a>.</p>
+    </div>
+  </section>
   <AdSlot placement="después de la calculadora técnica" />
 </BaseLayout>

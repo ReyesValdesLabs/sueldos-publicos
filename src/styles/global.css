@@ -439,7 +439,34 @@ html.dark .theme-icon-sun { display: block; }
 .calculator-page-header { position: relative; padding: 4rem 0 1.75rem; }
 .calculator-page-header h1 { max-width: 21ch; margin: .75rem 0; font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.04; letter-spacing: -.045em; }
 .calculator-page-header p { max-width: 50rem; color: var(--muted-foreground); font-size: 1.05rem; line-height: 1.65; }
+.calculator-page-header .content-meta { margin-top: 1rem; font-size: .82rem; line-height: 1.55; }
+.calculator-page-header .content-meta a { color: var(--brand-blue); font-weight: 800; }
 .calculator-page-content { padding-block: 1.5rem 5rem; }
+.calculator-guide { padding-block: 4.5rem; }
+.calculator-guide-content { display: grid; gap: 2rem; }
+.calculator-guide-content .section-heading { max-width: 54rem; }
+.calculator-guide-content p, .calculator-guide-content li { color: var(--muted-foreground); line-height: 1.72; }
+.calculator-guide-content a { color: var(--brand-blue); font-weight: 750; }
+.calculator-guide-content strong { color: var(--foreground); }
+.calculator-guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.calculator-guide-grid article { border: 1px solid var(--border); border-radius: 1rem; background: var(--card); padding: 1.2rem; box-shadow: 0 10px 26px rgb(var(--shadow-color) / .045); }
+.calculator-guide-grid h3, .calculator-guide-columns h3, .calculator-guide-note h3 { margin: 0 0 .55rem; font-size: 1.05rem; }
+.calculator-guide-grid p { margin: 0; font-size: .88rem; }
+.calculator-guide-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+.calculator-guide-columns article { min-width: 0; }
+.calculator-guide-columns p { margin-block: 0 .8rem; }
+.calculator-guide-columns ol, .calculator-guide-columns ul { margin: .4rem 0 0; padding-left: 1.25rem; }
+.calculator-guide-columns li + li { margin-top: .55rem; }
+.calculator-guide-note { border-left: 4px solid var(--brand-teal); border-radius: .35rem 1rem 1rem .35rem; background: color-mix(in srgb, var(--brand-teal) 9%, var(--card)); padding: 1.1rem 1.2rem; }
+.calculator-guide-note p { margin: 0; }
+.calculator-guide-footer { margin: 0; font-size: .9rem; }
+.calculator-guide-table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 1rem; background: var(--card); }
+.calculator-guide-table { width: 100%; min-width: 44rem; border-collapse: collapse; }
+.calculator-guide-table th, .calculator-guide-table td { border-bottom: 1px solid var(--border); padding: .9rem 1rem; text-align: left; vertical-align: top; }
+.calculator-guide-table thead th { background: color-mix(in srgb, var(--brand-blue) 9%, var(--card)); color: var(--foreground); font-size: .76rem; letter-spacing: .04em; text-transform: uppercase; }
+.calculator-guide-table tbody th { width: 22%; color: var(--foreground); font-size: .88rem; }
+.calculator-guide-table td { color: var(--muted-foreground); font-size: .84rem; line-height: 1.55; }
+.calculator-guide-table tbody tr:last-child th, .calculator-guide-table tbody tr:last-child td { border-bottom: 0; }
 .page-header p { max-width: 47rem; color: var(--muted-foreground); font-size: 1.08rem; line-height: 1.7; }
 .page-header .content-meta { margin-top: 1rem; color: var(--muted-foreground); font-size: .82rem; line-height: 1.55; }
 .content-meta a { color: var(--brand-blue); font-weight: 800; }
@@ -510,7 +537,7 @@ html.dark .theme-icon-sun { display: block; }
   .trust-principles { grid-template-columns: 1fr; }
   .hero-visual { max-width: 34rem; }
   .trust-card { max-width: 32rem; }
-  .feature-grid, .legal-grid, .calculator-grid, .scope-criteria, .regime-options, .regime-options.administrative-regime-options { grid-template-columns: 1fr; }
+  .feature-grid, .legal-grid, .calculator-grid, .calculator-guide-grid, .calculator-guide-columns, .scope-criteria, .regime-options, .regime-options.administrative-regime-options { grid-template-columns: 1fr; }
   .official-source-grid { grid-template-columns: 1fr; }
   .source-box { position: static; }
   .tranche-layout { grid-template-columns: 1fr; }

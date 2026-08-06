@@ -1,7 +1,9 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import AdministrativeCalculator from "@/components/AdministrativeCalculator";
+import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 import {
   breadcrumbStructuredData,
   calculatorStructuredData,
@@ -11,8 +13,14 @@ import {
 const title = "Calculadora para administrativos DAEM y municipales | Sueldos Públicos";
 const description = "Estima la liquidación de administrativos en establecimientos municipales, nivel central DAEM/DEM o municipalidades, con recorridos separados según el régimen contractual.";
 const path = "calculadoras/administrativos-municipales/";
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
   calculatorStructuredData({
     name: "Calculadora para administrativos DAEM y municipales",
     description,
@@ -29,9 +37,69 @@ const structuredData = [
     <span class="eyebrow">Tres regímenes, fórmulas separadas</span>
     <h1>Administrativos DAEM y municipales</h1>
     <p>Identifica si trabajas dentro de un establecimiento educacional, en el nivel central DAEM/DEM o como funcionario/a municipal de planta o contrata. La calculadora cambia los haberes y descuentos según tu vínculo.</p>
+    <p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p>
   </header>
   <div class="page-shell calculator-page-content">
     <AdministrativeCalculator client:load />
   </div>
+  <section class="calculator-guide section-muted" aria-labelledby="guia-calculo-administrativos">
+    <div class="page-shell calculator-guide-content">
+      <div class="section-heading">
+        <span class="eyebrow">Guía de uso</span>
+        <h2 id="guia-calculo-administrativos">El lugar de trabajo no determina el estatuto</h2>
+        <p>Dos personas que trabajan en una oficina DAEM pueden estar sujetas a reglas distintas. Para elegir bien necesitas identificar al empleador y la relación jurídica que aparece en el contrato, nombramiento o decreto, no solo la unidad donde desempeñas tus funciones.</p>
+      </div>
+
+      <div
+        class="calculator-guide-table-scroll"
+        role="region"
+        aria-label="Comparación de los tres recorridos administrativos"
+        tabindex="0"
+      >
+        <table class="calculator-guide-table">
+          <thead><tr><th scope="col">Recorrido</th><th scope="col">Antecedente decisivo</th><th scope="col">Qué modela</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Asistente en establecimiento</th><td>Contrato municipal como asistente de la educación dentro de un establecimiento.</td><td>Ingreso mínimo aplicable, Ley N.º 19.464, bonos educacionales y descuentos del contrato.</td></tr>
+            <tr><th scope="row">Nivel central DAEM/DEM</th><td>Contrato de trabajo con municipalidad o DAEM/DEM para funciones del nivel central.</td><td>Reglas laborales generales y haberes informados, sin trasladar automáticamente beneficios del establecimiento.</td></tr>
+            <tr><th scope="row">Planta o contrata municipal</th><td>Nombramiento en planta o contrata y grado de la escala municipal.</td><td>Sueldo base por grado, asignación municipal, antigüedad y componentes de gestión que informes.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="calculator-guide-columns">
+        <article>
+          <h3>Qué conviene revisar antes de calcular</h3>
+          <ul>
+            <li>Nombre del empleador y norma o calidad jurídica indicada en el contrato o nombramiento.</li>
+            <li>Unidad de desempeño: establecimiento educacional o nivel central DAEM/DEM.</li>
+            <li>Jornada, tipo de contrato, grado municipal y bienios efectivos en el mismo grado, cuando corresponda.</li>
+            <li>Última liquidación y actos que fijan asignaciones locales, gestión, horas extraordinarias o bonos.</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Qué no debe inferirse</h3>
+          <p>Trabajar para una municipalidad no significa necesariamente ser funcionario municipal de planta o contrata. Del mismo modo, trabajar físicamente en un DAEM no convierte un contrato del Código del Trabajo en uno regido por el Estatuto Administrativo Municipal.</p>
+          <p>La afiliación previsional tampoco se deduce del cargo. Si seleccionas IPS, la herramienta advierte que no puede estimar automáticamente las tasas del antiguo régimen en lugar de una AFP.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-grid">
+        <article>
+          <h3>Compara haberes antes del líquido</h3>
+          <p>Verifica sueldo base, asignaciones permanentes y bonos variables uno por uno. Después compara bases imponible y tributable; un haber puede integrar una de ellas y no la otra.</p>
+        </article>
+        <article>
+          <h3>Los bienios no son decimales</h3>
+          <p>En planta o contrata municipal se ingresan períodos completos de dos años y el cálculo los limita al máximo legal. Confirma además si el bienio fue cumplido en el mismo grado.</p>
+        </article>
+        <article>
+          <h3>Los montos locales requieren respaldo</h3>
+          <p>La calculadora permite copiar conceptos que dependen del municipio, pero no los inventa ni presume. Usa la liquidación o el acto administrativo que los establezca.</p>
+        </article>
+      </div>
+
+      <p class="calculator-guide-footer">Lee el detalle de los <a href={sitePath("legal/administrativos-daem-municipales/")}>tres regímenes administrativos</a>, las <a href={sitePath("legal/asistentes-daem-remuneraciones/")}>remuneraciones de asistentes DAEM/DEM</a> y la <a href={sitePath("metodologia/")}>metodología del proyecto</a>.</p>
+    </div>
+  </section>
   <AdSlot placement="después de la calculadora administrativa" />
 </BaseLayout>
