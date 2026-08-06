@@ -1,14 +1,22 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TeacherCalculator from "@/components/TeacherCalculator";
+import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
 
 const title = "Calculadora de sueldo docente en Chile | Sueldos Públicos";
 const description = "Estima gratis tu liquidación como docente municipal o SLEP, con desglose de haberes, descuentos y respaldo legal.";
 const path = "calculadoras/docentes/";
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
   calculatorStructuredData({ name: "Calculadora de sueldo docente en Chile", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -17,7 +25,54 @@ const structuredData = [
 ];
 ---
 <BaseLayout title={title} description={description} structuredData={structuredData} adsense>
-  <header class="calculator-page-header page-shell"><span class="eyebrow">Calculadora docente</span><h1>Liquidación para docentes municipales y SLEP</h1><p>Aplica Carrera Docente, RBMN por nivel de enseñanza y los beneficios propios de profesionales de la educación.</p></header>
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Calculadora docente</span><h1>Liquidación para docentes municipales y SLEP</h1><p>Aplica Carrera Docente, RBMN por nivel de enseñanza y los beneficios propios de profesionales de la educación.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p></header>
   <div class="page-shell calculator-page-content"><TeacherCalculator client:load /></div>
+  <section class="calculator-guide section-muted" aria-labelledby="guia-calculo-docente">
+    <div class="page-shell calculator-guide-content">
+      <div class="section-heading">
+        <span class="eyebrow">Guía de uso</span>
+        <h2 id="guia-calculo-docente">Qué estima la calculadora docente y cómo revisar el resultado</h2>
+        <p>La herramienta reconstruye una remuneración mensual con los antecedentes que ingresas. Sirve para entender la composición de una liquidación y detectar diferencias que conviene consultar; no determina por sí sola un derecho ni reemplaza los actos del sostenedor.</p>
+      </div>
+
+      <div class="calculator-guide-grid">
+        <article>
+          <h3>Antes de comenzar</h3>
+          <p>Ten a mano tu contrato o decreto de nombramiento, la última liquidación, las horas de básica y media, los bienios acreditados y la resolución de tramo. Si recibes BRP, zona, alta concentración o una asignación directiva, confirma también el antecedente oficial que reconoce ese beneficio.</p>
+        </article>
+        <article>
+          <h3>Qué período representa</h3>
+          <p>El cálculo corresponde a un mes completo con los parámetros que la interfaz identifica como vigentes. No prorratea licencias, permisos sin goce, días no trabajados, retroactivos ni reliquidaciones; esos casos pueden explicar una diferencia aunque la fórmula mensual esté bien aplicada.</p>
+        </article>
+        <article>
+          <h3>Qué casos quedan fuera</h3>
+          <p>No uses este recorrido si tu contrato te clasifica como asistente de la educación, si trabajas a honorarios o si tu empleador es JUNJI, Integra o un jardín VTF. La función que realizas y el lugar de trabajo no bastan para asumir que perteneces al Estatuto Docente.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-columns">
+        <article>
+          <h3>Cómo se forma la estimación</h3>
+          <ol>
+            <li><strong>Base docente:</strong> calcula la <a href={sitePath("legal/rbmn/")}>RBMN</a> con el valor hora de cada nivel y la jornada contratada.</li>
+            <li><strong>Carrera Docente:</strong> incorpora experiencia, <a href={sitePath("legal/asignacion-tramo/")}>asignación de tramo</a> y <a href={sitePath("legal/brp/")}>BRP</a> solo con los antecedentes que declaras como reconocidos.</li>
+            <li><strong>Condiciones del cargo y establecimiento:</strong> agrega zona, alumnos prioritarios o responsabilidad directiva cuando informas que corresponden.</li>
+            <li><strong>Pisos y descuentos:</strong> evalúa la Remuneración Total Mínima y estima AFP, salud, impuesto y los demás descuentos seleccionados.</li>
+          </ol>
+        </article>
+        <article>
+          <h3>Cómo compararla con tu liquidación</h3>
+          <p>Compara primero cada haber, después el total imponible y la renta tributable, y solo al final el líquido. Dos liquidaciones con el mismo bruto pueden terminar en líquidos distintos si cambian la AFP, el plan de salud, el APV, el impuesto o un descuento no remuneracional.</p>
+          <p>Si encuentras una diferencia, revisa el período, la jornada y los antecedentes acreditados antes de concluir que existe un error. Puedes consultar el <a href={sitePath("legal/")}>respaldo legal por concepto</a> o <a href={sitePath("contacto/")}>reportar un caso documentado</a>.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-note">
+        <h3>Diferencias que la calculadora no puede conocer sola</h3>
+        <p>Un sostenedor puede pagar asignaciones locales, horas extraordinarias, bonos retroactivos, descuentos judiciales o ajustes por ausencias. Ingrésalos cuando la herramienta lo permita y conserva separados los haberes imponibles, tributables y no remuneracionales: esas categorías afectan de manera distinta las bases y el sueldo líquido.</p>
+      </div>
+      <p class="calculator-guide-footer">Consulta <a href={sitePath("metodologia/")}>cómo seleccionamos fuentes, versionamos parámetros y probamos las fórmulas</a>.</p>
+    </div>
+  </section>
   <AdSlot placement="después de la calculadora docente" />
 </BaseLayout>

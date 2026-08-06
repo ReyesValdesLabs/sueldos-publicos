@@ -1,14 +1,22 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TrancheCalculator from "@/components/TrancheCalculator";
+import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
 
 const title = "Calculadora de tramos de Carrera Docente | Sueldos Públicos";
 const description = "Simula tu progresión de tramo en Carrera Docente según Portafolio, ECEP, experiencia, linealidad y permanencia, con respaldo legal oficial.";
 const path = "calculadoras/tramos-docentes/";
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
   calculatorStructuredData({ name: "Calculadora de tramos de Carrera Docente", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -17,7 +25,54 @@ const structuredData = [
 ];
 ---
 <BaseLayout title={title} description={description} structuredData={structuredData} adsense>
-  <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p></header>
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p></header>
   <div class="page-shell calculator-page-content"><TrancheCalculator client:load /></div>
+  <section class="calculator-guide section-muted" aria-labelledby="guia-progresion-tramos">
+    <div class="page-shell calculator-guide-content">
+      <div class="section-heading">
+        <span class="eyebrow">Guía de interpretación</span>
+        <h2 id="guia-progresion-tramos">La matriz es solo el primer límite de la progresión</h2>
+        <p>Portafolio y ECEP determinan un techo por resultados, pero el tramo proyectado también puede quedar limitado por experiencia, permanencia o la regla de progresión desde el tramo actual. La herramienta aplica esos filtros por separado para explicar qué condición incide.</p>
+      </div>
+
+      <div class="calculator-guide-grid">
+        <article>
+          <h3>Resultados de instrumentos</h3>
+          <p>Informa las categorías oficiales de Portafolio y ECEP. Debe existir al menos un instrumento rendido en el proceso actual; un resultado anterior solo puede usarse cuando la normativa permite conservarlo.</p>
+        </article>
+        <article>
+          <h3>Experiencia acreditada</h3>
+          <p>Los años no se usan como una bonificación libre. Funcionan como requisito para acceder a determinados tramos y deben corresponder a la experiencia reconocida a la fecha legal que indica la interfaz.</p>
+        </article>
+        <article>
+          <h3>Trayectoria y permanencia</h3>
+          <p>El tramo actual, la forma de ingreso y el tiempo de permanencia pueden limitar o habilitar excepciones. Por eso dos docentes con la misma combinación de instrumentos no necesariamente obtienen la misma proyección.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-columns">
+        <article>
+          <h3>Cómo leer el resultado paso a paso</h3>
+          <ol>
+            <li>Revisa el techo que entrega el cruce de Portafolio y ECEP.</li>
+            <li>Comprueba si la experiencia permite alcanzar ese tramo.</li>
+            <li>Observa el límite de progresión desde tu tramo vigente y las excepciones que la herramienta identifique.</li>
+            <li>Confirma permanencia, participación y disponibilidad de instrumentos antes de usar la proyección para tomar una decisión.</li>
+          </ol>
+        </article>
+        <article>
+          <h3>Resultados retenidos y no retroceso</h3>
+          <p>Conservar un resultado no equivale a haber rendido ese instrumento en el proceso actual. La herramienta distingue ambas situaciones y exige al menos una evaluación vigente. También aplica la regla de no retroceso mientras no exista una causal legal especial que deba evaluarse.</p>
+          <p>Las causales por procesos consecutivos, reingreso o falta de instrumentos disponibles dependen de antecedentes que deben confirmarse con CPEIP o Portal Docente.</p>
+        </article>
+      </div>
+
+      <div class="calculator-guide-note">
+        <h3>Qué documento prevalece</h3>
+        <p>Esta simulación ayuda a entender la lógica del sistema, pero la resolución del Ministerio de Educación y los actos del sostenedor son los que reconocen oficialmente el tramo. Si el resultado no coincide, revisa primero la fecha de experiencia, la cohorte de ingreso, los procesos anteriores y si cada instrumento es actual o retenido.</p>
+      </div>
+      <p class="calculator-guide-footer">Consulta la explicación completa de la <a href={sitePath("legal/progresion-tramos/")}>progresión de tramos</a>, la <a href={sitePath("legal/asignacion-tramo/")}>asignación remuneracional asociada</a> y nuestra <a href={sitePath("metodologia/")}>metodología de revisión</a>.</p>
+    </div>
+  </section>
   <AdSlot placement="después de la calculadora de tramos" />
 </BaseLayout>
