@@ -6,6 +6,7 @@ export const SITE = {
   websiteId: "https://sueldospublicos.cl/#website",
   logoUrl: "https://sueldospublicos.cl/sueldospublicos-mark.png",
   socialImageUrl: "https://sueldospublicos.cl/og.png",
+  githubOrganizationUrl: "https://github.com/ReyesValdesLabs",
   githubUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos",
   issuesUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos/issues/new",
   editorialAuthorName: "Victor Reyes Medina",

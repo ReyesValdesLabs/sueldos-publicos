@@ -20,7 +20,7 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   timeZone: "America/Santiago",
 }).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
   calculatorStructuredData({
     name: "Calculadora para administrativos DAEM y municipales",
     description,
@@ -32,7 +32,7 @@ const structuredData = [
   ]),
 ];
 ---
-<BaseLayout title={title} description={description} structuredData={structuredData} adsense>
+<BaseLayout title={title} description={description} author={SITE.editorialAuthorName} structuredData={structuredData} adsense>
   <header class="calculator-page-header page-shell">
     <span class="eyebrow">Tres regímenes, fórmulas separadas</span>
     <h1>Administrativos DAEM y municipales</h1>

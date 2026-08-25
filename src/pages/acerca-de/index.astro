@@ -8,14 +8,14 @@ import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structure
 const title = "Quiénes somos | Sueldos Públicos";
 const description = "Conoce el propósito, independencia y criterios de transparencia detrás de las calculadoras de Sueldos Públicos.";
 const structuredData = [
-  webPageStructuredData({ name: title, description, path: "acerca-de/", type: "AboutPage", dateModified: ABOUT_CONTENT_REVIEWED_AT }),
+  webPageStructuredData({ name: title, description, path: "acerca-de/", type: "AboutPage", dateModified: ABOUT_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
     { name: "Quiénes somos", path: "acerca-de/" },
   ]),
 ];
 ---
-<BaseLayout title={title} description={description} structuredData={structuredData}>
+<BaseLayout title={title} description={description} author={SITE.editorialAuthorName} structuredData={structuredData}>
   <header class="page-header page-shell">
     <span class="eyebrow">Quiénes somos</span>
     <h1>Una herramienta independiente para entender remuneraciones públicas.</h1>

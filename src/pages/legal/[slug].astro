@@ -51,7 +51,7 @@ const legalStructuredData = [
   ]),
 ];
 ---
-<BaseLayout title={pageTitle} description={entry.summary} type="article" structuredData={legalStructuredData}>
+<BaseLayout title={pageTitle} description={entry.summary} type="article" author={SITE.editorialAuthorName} structuredData={legalStructuredData}>
   <header class="page-header page-shell"><a href={sitePath("legal/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p><p class="content-meta">Elaborado y revisado por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · Última revisión: {reviewedLabel}</p></header>
   <div class="page-shell legal-detail">
     <article class="legal-content">

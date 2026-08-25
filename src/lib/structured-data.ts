@@ -12,6 +12,7 @@ interface WebPageOptions {
   type?: "WebPage" | "AboutPage" | "ContactPage" | "CollectionPage";
   datePublished?: string;
   dateModified?: string;
+  author?: "editorialAuthor";
 }
 
 interface CalculatorOptions {
@@ -32,7 +33,7 @@ export const organizationStructuredData = {
     "@type": "ImageObject",
     url: SITE.logoUrl,
   },
-  sameAs: [SITE.githubUrl],
+  sameAs: [SITE.githubOrganizationUrl],
 };
 
 export const personStructuredData = {
@@ -62,6 +63,7 @@ export const webPageStructuredData = ({
   type = "WebPage",
   datePublished = SITE.publishedAt,
   dateModified = SITE.updatedAt,
+  author,
 }: WebPageOptions) => ({
   "@context": "https://schema.org",
   "@type": type,
@@ -74,7 +76,9 @@ export const webPageStructuredData = ({
   dateModified,
   isPartOf: { "@id": SITE.websiteId },
   about: { "@id": SITE.organizationId },
-  author: { "@id": SITE.editorialAuthorId },
+  ...(author === "editorialAuthor" && {
+    author: { "@id": SITE.editorialAuthorId },
+  }),
   primaryImageOfPage: {
     "@type": "ImageObject",
     url: SITE.socialImageUrl,
