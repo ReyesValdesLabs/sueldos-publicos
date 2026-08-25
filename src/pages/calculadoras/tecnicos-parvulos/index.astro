@@ -1,7 +1,7 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TechnicalAssistantCalculator from "@/components/TechnicalAssistantCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
+import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -16,7 +16,7 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   timeZone: "America/Santiago",
 }).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT }),
+  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
   calculatorStructuredData({ name: "Calculadora para técnicos en párvulos", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -24,8 +24,8 @@ const structuredData = [
   ]),
 ];
 ---
-<BaseLayout title={title} description={description} structuredData={structuredData} adsense>
-  <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p></header>
+<BaseLayout title={title} description={description} author={SITE.editorialAuthorName} structuredData={structuredData} adsense>
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Asistentes de la educación</span><h1>Técnicos/as en educación parvularia</h1><p>Identifica primero al empleador que figura en tu contrato para usar la fórmula correcta: SLEP o administración municipal DAEM/DEM.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · Actualizado el {reviewedLabel}</p></header>
   <div class="page-shell calculator-page-content"><TechnicalAssistantCalculator client:load /></div>
   <section class="calculator-guide section-muted" aria-labelledby="guia-calculo-tecnicos">
     <div class="page-shell calculator-guide-content">

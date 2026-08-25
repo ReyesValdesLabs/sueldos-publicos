@@ -6,8 +6,12 @@ export const SITE = {
   websiteId: "https://sueldospublicos.cl/#website",
   logoUrl: "https://sueldospublicos.cl/sueldospublicos-mark.png",
   socialImageUrl: "https://sueldospublicos.cl/og.png",
+  githubOrganizationUrl: "https://github.com/ReyesValdesLabs",
   githubUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos",
   issuesUrl: "https://github.com/ReyesValdesLabs/sueldos-publicos/issues/new",
+  editorialAuthorName: "Victor Reyes Medina",
+  editorialAuthorId: "https://sueldospublicos.cl/acerca-de/#victor-reyes-medina",
+  linkedinUrl: "https://www.linkedin.com/in/vreyes-medina/",
   publishedAt: "2026-07-18",
   updatedAt: "2026-07-26",
 } as const;
@@ -15,6 +19,7 @@ export const SITE = {
 export const LEGAL_CONTENT_PUBLISHED_AT = "2026-07-18";
 export const LEGAL_CONTENT_REVIEWED_AT = "2026-07-26";
 export const CALCULATOR_CONTENT_REVIEWED_AT = "2026-08-05";
+export const ABOUT_CONTENT_REVIEWED_AT = "2026-08-25";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
   "": SITE.updatedAt,
@@ -23,7 +28,7 @@ export const STATIC_PAGE_LAST_MODIFIED = {
   "calculadoras/administrativos-municipales/": CALCULATOR_CONTENT_REVIEWED_AT,
   "calculadoras/tramos-docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
   "legal/": LEGAL_CONTENT_REVIEWED_AT,
-  "acerca-de/": SITE.updatedAt,
+  "acerca-de/": ABOUT_CONTENT_REVIEWED_AT,
   "metodologia/": SITE.updatedAt,
   "contacto/": SITE.updatedAt,
   "privacidad/": SITE.updatedAt,
