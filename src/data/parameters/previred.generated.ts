@@ -2,11 +2,11 @@
 export const PREVIRED_PARAMETERS = {
   "schemaVersion": 1,
   "source": "Previred",
-  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/08/Indicadores-Previsionales-Previred-Agosto-2026-1.pdf",
-  "sourceUpdatedAt": "2026-08-13",
+  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/08/Indicadores-Previsionales-Previred-Agosto-2026-2.pdf",
+  "sourceUpdatedAt": "2026-08-18",
   "remunerationPeriod": "2026-08",
   "paymentPeriod": "2026-09",
-  "sourceHash": "sha256:c07089d88b2fc5e5add42b55d791f30835fde15bcfaaa07cfc52f3fb0bed4bf7",
+  "sourceHash": "sha256:1cc2da227f50bb51a032505fba1f99f6cc961122a9309b15aa66d085287310ae",
   "values": {
     "uf": 40873.77,
     "utm": 71649,
