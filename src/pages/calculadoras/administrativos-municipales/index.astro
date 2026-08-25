@@ -1,7 +1,7 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import AdministrativeCalculator from "@/components/AdministrativeCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
+import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import {
@@ -37,7 +37,7 @@ const structuredData = [
     <span class="eyebrow">Tres regímenes, fórmulas separadas</span>
     <h1>Administrativos DAEM y municipales</h1>
     <p>Identifica si trabajas dentro de un establecimiento educacional, en el nivel central DAEM/DEM o como funcionario/a municipal de planta o contrata. La calculadora cambia los haberes y descuentos según tu vínculo.</p>
-    <p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p>
+    <p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · Actualizado el {reviewedLabel}</p>
   </header>
   <div class="page-shell calculator-page-content">
     <AdministrativeCalculator client:load />

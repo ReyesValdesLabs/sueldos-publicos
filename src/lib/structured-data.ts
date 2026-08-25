@@ -35,6 +35,15 @@ export const organizationStructuredData = {
   sameAs: [SITE.githubUrl],
 };
 
+export const personStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": SITE.editorialAuthorId,
+  name: SITE.editorialAuthorName,
+  url: SITE.editorialAuthorId,
+  sameAs: [SITE.linkedinUrl],
+};
+
 export const websiteStructuredData = {
   "@context": "https://schema.org",
   "@type": "WebSite",
@@ -65,6 +74,7 @@ export const webPageStructuredData = ({
   dateModified,
   isPartOf: { "@id": SITE.websiteId },
   about: { "@id": SITE.organizationId },
+  author: { "@id": SITE.editorialAuthorId },
   primaryImageOfPage: {
     "@type": "ImageObject",
     url: SITE.socialImageUrl,
@@ -100,4 +110,5 @@ export const calculatorStructuredData = ({ name, description, path }: Calculator
     priceCurrency: "CLP",
   },
   provider: { "@id": SITE.organizationId },
+  creator: { "@id": SITE.editorialAuthorId },
 });

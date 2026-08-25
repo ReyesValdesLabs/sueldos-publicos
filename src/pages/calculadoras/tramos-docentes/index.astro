@@ -1,7 +1,7 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TrancheCalculator from "@/components/TrancheCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT } from "@/data/site";
+import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -25,7 +25,7 @@ const structuredData = [
 ];
 ---
 <BaseLayout title={title} description={description} structuredData={structuredData} adsense>
-  <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Actualizado el {reviewedLabel}</p></header>
+  <header class="calculator-page-header page-shell"><span class="eyebrow">Carrera Docente</span><h1>Calculadora de progresión de tramo</h1><p>Proyecta el resultado de un proceso de reconocimiento para docentes municipales y SLEP. La simulación es informativa y no reemplaza la resolución oficial.</p><p class="content-meta">Cálculo y contenido revisados por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · Actualizado el {reviewedLabel}</p></header>
   <div class="page-shell calculator-page-content"><TrancheCalculator client:load /></div>
   <section class="calculator-guide section-muted" aria-labelledby="guia-progresion-tramos">
     <div class="page-shell calculator-guide-content">
