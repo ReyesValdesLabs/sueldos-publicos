@@ -42,7 +42,7 @@ const structuredData = [
   ]),
 ];
 ---
-<BaseLayout title={pageTitle} description={guide.description} type="article" author={SITE.editorialAuthorName} structuredData={structuredData}>
+<BaseLayout title={pageTitle} description={guide.description} type="article" author={SITE.editorialAuthorName} publishedAt={guide.publishedAt} modifiedAt={guide.reviewedAt} structuredData={structuredData}>
   <header class="page-header page-shell guide-header">
     <a href={sitePath("guias/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a las guías</a>
     <h1>{guide.title}</h1>
