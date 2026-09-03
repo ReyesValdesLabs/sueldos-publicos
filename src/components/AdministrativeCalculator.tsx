@@ -499,7 +499,7 @@ export default function AdministrativeCalculator() {
           {step === 2 && <>
             <CardHeader>
               <CardTitle>Previsión y conceptos adicionales</CardTitle>
-              <CardDescription>La tabla tributaria y los montos legales base están versionados para julio de 2026. AFP, UF y topes usan indicadores Previred para remuneraciones de {previredRemunerationPeriod}, pagadas en {previredPaymentPeriod}.</CardDescription>
+              <CardDescription>Los montos legales base están versionados para julio de 2026. La tabla tributaria, AFP, UF y topes usan los parámetros mensuales para remuneraciones de {previredRemunerationPeriod}, pagadas en {previredPaymentPeriod}.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="form-grid">
