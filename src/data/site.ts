@@ -13,13 +13,15 @@ export const SITE = {
   editorialAuthorId: "https://sueldospublicos.cl/acerca-de/#victor-reyes-medina",
   linkedinUrl: "https://www.linkedin.com/in/vreyes-medina/",
   publishedAt: "2026-07-18",
-  updatedAt: "2026-07-26",
+  updatedAt: "2026-09-03",
 } as const;
 
 export const LEGAL_CONTENT_PUBLISHED_AT = "2026-07-18";
 export const LEGAL_CONTENT_REVIEWED_AT = "2026-07-26";
 export const CALCULATOR_CONTENT_REVIEWED_AT = "2026-08-05";
 export const ABOUT_CONTENT_REVIEWED_AT = "2026-08-25";
+export const GUIDES_CONTENT_PUBLISHED_AT = "2026-09-03";
+export const GUIDES_CONTENT_REVIEWED_AT = "2026-09-03";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
   "": SITE.updatedAt,
@@ -28,6 +30,7 @@ export const STATIC_PAGE_LAST_MODIFIED = {
   "calculadoras/administrativos-municipales/": CALCULATOR_CONTENT_REVIEWED_AT,
   "calculadoras/tramos-docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
   "legal/": LEGAL_CONTENT_REVIEWED_AT,
+  "guias/": GUIDES_CONTENT_REVIEWED_AT,
   "acerca-de/": ABOUT_CONTENT_REVIEWED_AT,
   "metodologia/": SITE.updatedAt,
   "contacto/": SITE.updatedAt,

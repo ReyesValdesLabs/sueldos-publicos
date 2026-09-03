@@ -1,0 +1,35 @@
+---
+import { ArrowRight, BookOpenCheck } from "lucide-react";
+import { GUIDES } from "@/data/guides";
+import { GUIDES_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
+
+const title = "Guías para entender remuneraciones públicas | Sueldos Públicos";
+const description = "Casos y métodos prácticos para interpretar liquidaciones, elegir el régimen correcto y revisar resultados de las calculadoras.";
+const structuredData = [
+  webPageStructuredData({ name: title, description, path: "guias/", type: "CollectionPage", dateModified: GUIDES_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
+  breadcrumbStructuredData([{ name: "Inicio", path: "" }, { name: "Guías", path: "guias/" }]),
+];
+---
+<BaseLayout title={title} description={description} author={SITE.editorialAuthorName} structuredData={structuredData}>
+  <header class="page-header page-shell">
+    <span class="eyebrow"><BookOpenCheck size={16} /> Guías y casos</span>
+    <h1>Comprueba el cálculo, no solo el resultado.</h1>
+    <p>Estas guías parten de preguntas reales: qué documento mirar, qué régimen elegir y en qué orden comparar una liquidación. Incluyen ejemplos razonados y enlazan las reglas oficiales utilizadas.</p>
+  </header>
+  <section class="section page-shell guide-index" aria-label="Guías disponibles">
+    <div class="legal-grid">
+      {GUIDES.map((guide) => (
+        <a class="legal-card" href={sitePath(`guias/${guide.slug}/`)}>
+          <BookOpenCheck size={23} />
+          <span class="guide-card-meta">{guide.audience} · {guide.readingTime}</span>
+          <h2 class="text-xl font-bold">{guide.title}</h2>
+          <p>{guide.description}</p>
+          <span class="inline-flex items-center gap-2 font-bold text-primary">Leer guía <ArrowRight size={16} /></span>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

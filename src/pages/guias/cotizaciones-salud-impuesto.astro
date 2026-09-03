@@ -1,0 +1,56 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("cotizaciones-salud-impuesto")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">Bruto, imponible, tributable y líquido responden preguntas distintas. Tratarlos como sinónimos es una de las causas más frecuentes de comparaciones fallidas. La calculadora mantiene esas bases separadas para mostrar qué parte de la diferencia proviene de los haberes y cuál aparece recién al aplicar descuentos.</p>
+
+  <h2>Cuatro totales, cuatro significados</h2>
+  <div class="calculator-guide-table-scroll">
+    <table class="calculator-guide-table">
+      <thead><tr><th>Total</th><th>Qué representa</th><th>Qué no permite concluir por sí solo</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Bruto</th><td>Suma de los haberes remuneracionales considerados antes de descuentos.</td><td>No indica qué parte está afecta a cotizaciones o impuesto.</td></tr>
+        <tr><th scope="row">Imponible</th><td>Haberes sobre los que se calculan cotizaciones, sujetos a reglas y topes.</td><td>No equivale necesariamente a la renta tributable.</td></tr>
+        <tr><th scope="row">Tributable</th><td>Haberes afectos a impuesto, ajustados por las rebajas permitidas.</td><td>No se obtiene copiando siempre el imponible.</td></tr>
+        <tr><th scope="row">Líquido</th><td>Monto resultante tras descuentos legales y personales.</td><td>No revela cuál línea originó una diferencia.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>AFP: tasa obligatoria, comisión y tope</h2>
+  <p>En una persona afiliada y obligada a cotizar, la estimación suma el 10% obligatorio y la comisión de la AFP seleccionada sobre la base imponible hasta el tope del período. La comisión no es igual para todas las administradoras y puede cambiar; por eso debe revisarse contra el documento previsional correspondiente al mes.</p>
+  <div class="formula">Descuento AFP estimado = base imponible topada × (10% + comisión de la AFP)</div>
+  <p>Seleccionar una AFP distinta puede alterar el líquido aunque todos los haberes sean iguales. También existen situaciones particulares —como ciertos pensionados que ejercen una exención— que deben declararse expresamente; la edad por sí sola no autoriza a eliminarlas.</p>
+
+  <h2>Salud: el 7% no siempre es el monto final</h2>
+  <p>Para Fonasa, la referencia general es la cotización legal calculada sobre la base aplicable. En Isapre, el precio pactado del plan puede producir un descuento mayor que el mínimo legal. Por eso dos personas con la misma remuneración imponible pueden tener líquidos distintos.</p>
+  <p>El tratamiento tributario de una cotización adicional de salud también tiene límites propios. La herramienta no debe asumir que todo pago sobre el 7% reduce indefinidamente la base del Impuesto Único.</p>
+
+  <h2>Seguro de Cesantía: depende del vínculo y del contrato</h2>
+  <p>El aporte personal de AFC no corresponde de la misma manera a todos los recorridos. Un contrato indefinido afecto al Seguro de Cesantía puede generar descuento personal; un contrato a plazo fijo no lo descuenta al trabajador de la misma forma. Los funcionarios municipales de planta o contrata no deben recibir AFC en la estimación solo porque trabajen para una municipalidad.</p>
+  <p>También existen límites por duración de la relación laboral y exclusiones específicas. Si la liquidación no coincide, confirma primero el tipo de vínculo que seleccionaste en la calculadora.</p>
+
+  <h2>Impuesto Único: se calcula al final de la cadena</h2>
+  <p>El Impuesto Único de Segunda Categoría usa la renta tributable del mes y la tabla publicada para ese período. Aplicar el factor directamente sobre el bruto ignora tanto la clasificación de haberes como las rebajas permitidas. Además, una pequeña variación en la renta puede cambiar el tramo o el monto calculado.</p>
+  <p>La tabla utiliza un factor y una rebaja para cada tramo. Esto evita interpretar el porcentaje marginal como si se aplicara sin ajuste a toda la renta. La calculadora muestra el descuento resultante, pero la revisión debe comenzar en la renta tributable que lo alimenta.</p>
+
+  <h2>Ejemplo conceptual</h2>
+  <p>Considera un sueldo base y dos asignaciones ficticias de $100.000 cada una. La primera es imponible y tributable; la segunda, no imponible y no tributable. El bruto aumenta $200.000, pero las cotizaciones y el impuesto no se calculan sobre esos $200.000 completos. Si ambas se clasificaran erróneamente como imponibles y tributables, AFP, salud e impuesto quedarían sobreestimados.</p>
+  <p>El ejemplo muestra por qué no conviene “cuadrar” el líquido agregando un descuento manual. Primero debe corregirse la clasificación del haber que originó las bases.</p>
+
+  <div class="guide-checklist">
+    <strong>Antes de aceptar los descuentos</strong>
+    <ul>
+      <li>Confirma la base imponible y la base tributable por separado.</li>
+      <li>Comprueba AFP y comisión del período.</li>
+      <li>Distingue Fonasa de Isapre y registra el precio total del plan cuando corresponda.</li>
+      <li>Revisa si el vínculo y tipo de contrato generan aporte personal de AFC.</li>
+      <li>Usa la tabla de Impuesto Único del mismo mes de la liquidación.</li>
+    </ul>
+  </div>
+  <p>El detalle de implementación está disponible en <a href={sitePath("legal/cotizaciones-previsionales/")}>cotizaciones previsionales</a>, <a href={sitePath("legal/apv/")}>APV</a> e <a href={sitePath("legal/impuesto-unico/")}>Impuesto Único</a>.</p>
+</GuideLayout>

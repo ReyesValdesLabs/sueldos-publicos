@@ -1,0 +1,60 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("documentos-antes-de-calcular")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">Una calculadora puede aplicar una fórmula con exactitud y aun así entregar una estimación incorrecta si las entradas fueron aproximadas. Reunir los antecedentes antes de comenzar reduce ese riesgo y permite explicar cada selección después.</p>
+
+  <h2>Documentos comunes a todos los recorridos</h2>
+  <ul>
+    <li><strong>Contrato, nombramiento o decreto:</strong> identifica empleador, calidad jurídica, cargo y jornada.</li>
+    <li><strong>Liquidación del período:</strong> entrega los haberes efectivos, bases y descuentos que se compararán.</li>
+    <li><strong>Liquidación del mes anterior:</strong> algunos bonos o beneficios usan la remuneración previa para evaluar umbrales.</li>
+    <li><strong>Certificado de AFP y antecedentes de salud:</strong> confirman administradora, sistema y precio del plan cuando corresponda.</li>
+    <li><strong>Actos que reconocen beneficios:</strong> resoluciones, certificados o anexos para no inferir derechos desde el nombre del cargo.</li>
+  </ul>
+
+  <h2>Si eres docente</h2>
+  <p>Separa las horas contratadas por nivel de enseñanza. Una jornada mixta necesita horas básicas y medias por separado para reconstruir la RBMN. Reúne además la resolución de tramo, el certificado de bienios, el antecedente de BRP y las resoluciones que respalden zona, concentración de alumnos prioritarios o responsabilidad directiva.</p>
+  <p>Si el sueldo base pagado es distinto de la RBMN calculada, conserva ambos datos: el monto efectivamente pagado es un haber, mientras la base legal puede seguir utilizándose en asignaciones referidas expresamente a ella.</p>
+
+  <h2>Si eres asistente de la educación</h2>
+  <p>Confirma primero si el empleador es un SLEP o una administración municipal DAEM/DEM. En el régimen SLEP, revisa la categoría indicada en el contrato y los bienios reconocidos. En el municipal, identifica los montos locales o distribuidos que deben copiarse desde la liquidación en vez de presumirse a partir de una tabla nacional.</p>
+  <p>Para beneficios asociados al establecimiento, anota RBD, porcentaje oficial y vigencia. El hecho de trabajar en una zona o establecimiento determinado no sustituye la resolución que reconoce el porcentaje aplicable.</p>
+
+  <h2>Si eres administrativo/a municipal o DAEM</h2>
+  <p>Distingue tres antecedentes que suelen confundirse: trabajar dentro de un establecimiento, tener contrato laboral para el nivel central DAEM/DEM y poseer nombramiento municipal de planta o contrata. Para este último recorrido necesitarás estamento, grado, sueldo base publicado por la municipalidad, asignación municipal y bienios efectivos en el mismo grado.</p>
+  <p>Si existe una cuota de mejoramiento de la gestión, conserva también los antecedentes del trimestre. La calculadora puede mostrar el pago informado, pero no debe inventar cotizaciones o reliquidaciones históricas sin las remuneraciones de cada mes involucrado.</p>
+
+  <h2>Qué datos no conviene adivinar</h2>
+  <div class="calculator-guide-table-scroll">
+    <table class="calculator-guide-table">
+      <thead><tr><th>Dato</th><th>Por qué importa</th><th>Dónde buscarlo</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Régimen o vínculo</th><td>Cambia haberes, jornada, mínimos y descuentos.</td><td>Contrato, nombramiento o decreto.</td></tr>
+        <tr><th scope="row">Bienios reconocidos</th><td>No siempre coinciden con años de experiencia informalmente contados.</td><td>Certificado o resolución del empleador.</td></tr>
+        <tr><th scope="row">Tramo docente</th><td>Debe estar formalmente reconocido para remuneraciones.</td><td>Resolución o Portal Docente.</td></tr>
+        <tr><th scope="row">Grado municipal</th><td>Determina la escala que debes consultar.</td><td>Nombramiento y transparencia activa municipal.</td></tr>
+        <tr><th scope="row">Plan de salud</th><td>Puede superar la cotización legal mínima.</td><td>Contrato o certificado de la institución de salud.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Protege tus datos al pedir ayuda</h2>
+  <p>No necesitas publicar una liquidación completa para reportar una diferencia. Oculta nombre, RUN, domicilio, banco, datos de salud, cargas, descuentos judiciales y cualquier identificador. Describe el régimen, período, entrada y primera salida discrepante con montos ficticios o mínimos necesarios cuando sea posible.</p>
+
+  <div class="guide-checklist">
+    <strong>Carpeta mínima antes de calcular</strong>
+    <ol>
+      <li>Documento que acredita vínculo, cargo y jornada.</li>
+      <li>Liquidación del mismo período y, si corresponde, del mes anterior.</li>
+      <li>Resoluciones de bienios, tramo y beneficios especiales.</li>
+      <li>AFP, salud y otros datos personales de descuento.</li>
+      <li>Fuente municipal o institucional de montos que no son nacionales.</li>
+    </ol>
+  </div>
+  <p>Cuando tengas esos antecedentes, elige la herramienta desde la <a href={sitePath()}>portada</a> y utiliza la guía para <a href={sitePath("guias/comparar-calculo-con-liquidacion/")}>comparar el resultado con tu liquidación</a>.</p>
+</GuideLayout>

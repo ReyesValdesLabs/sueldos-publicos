@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D } from "@/data/parameters/daem-assistants-2026-07";
+import { PREVIRED_PARAMETERS } from "@/data/parameters/previred.generated";
 import {
   calculateAdministrativeMinimumIncome,
   calculateAdministrativeSalary,
@@ -45,6 +46,9 @@ const currency = new Intl.NumberFormat("es-CL", {
 });
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const steps = ["Régimen", "Haberes", "Previsión", "Resultado"];
+const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
+const previredRemunerationPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.remunerationPeriod}-15T12:00:00Z`));
+const previredPaymentPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.paymentPeriod}-15T12:00:00Z`));
 const initialMinimumIncome = calculateAdministrativeMinimumIncome(44);
 
 const regimeDetails = {
@@ -399,7 +403,7 @@ export default function AdministrativeCalculator() {
         <Card className="overflow-hidden">
           {step === 1 && <>
             <CardHeader>
-              <Badge>{regimeDetails[regime].eyebrow} · Julio de 2026</Badge>
+              <Badge>{regimeDetails[regime].eyebrow} · montos legales base de julio de 2026</Badge>
               <CardTitle>Completa tus haberes según este régimen</CardTitle>
               <CardDescription>Usa los montos que aparecen en tu contrato, nombramiento, escala de transparencia o liquidación. No mezcles columnas de otro régimen.</CardDescription>
             </CardHeader>
@@ -495,7 +499,7 @@ export default function AdministrativeCalculator() {
           {step === 2 && <>
             <CardHeader>
               <CardTitle>Previsión y conceptos adicionales</CardTitle>
-              <CardDescription>Los parámetros previsionales y tributarios corresponden a julio de 2026.</CardDescription>
+              <CardDescription>La tabla tributaria y los montos legales base están versionados para julio de 2026. AFP, UF y topes usan indicadores Previred para remuneraciones de {previredRemunerationPeriod}, pagadas en {previredPaymentPeriod}.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="form-grid">
@@ -587,8 +591,8 @@ export default function AdministrativeCalculator() {
               <CardTitle className="text-3xl">{hasPendingManagementReliquidations ? "Subtotal líquido antes de reliquidaciones" : "Sueldo líquido estimado"}</CardTitle>
               <div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div>
               <CardDescription>{hasPendingManagementReliquidations
-                ? "Incluye la cuota pagada en julio, pero faltan las reliquidaciones previsionales y tributarias del trimestre."
-                : "Mes completo calculado con parámetros de julio de 2026."}</CardDescription>
+                ? `Incluye la cuota pagada en julio, pero faltan las reliquidaciones previsionales y tributarias del trimestre. Los indicadores Previred corresponden a remuneraciones de ${previredRemunerationPeriod}, pagadas en ${previredPaymentPeriod}.`
+                : `Mes completo con montos legales base de julio de 2026 e indicadores previsionales para remuneraciones de ${previredRemunerationPeriod}, pagadas en ${previredPaymentPeriod}.`}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {result.warnings.length > 0 && <div className="warning-list" role="status">

@@ -1,0 +1,50 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("entender-progresion-tramo-docente")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">La combinación de Portafolio y ECEP no determina por sí sola el nuevo tramo. Entrega un techo por resultados, pero la experiencia acreditada, la trayectoria desde el tramo actual, la permanencia y ciertas reglas especiales pueden imponer límites adicionales.</p>
+
+  <h2>Piensa en cuatro filtros sucesivos</h2>
+  <ol>
+    <li><strong>Instrumentos:</strong> la combinación de categorías define hasta dónde permitirían llegar los resultados.</li>
+    <li><strong>Experiencia:</strong> los años acreditados fijan otro techo independiente.</li>
+    <li><strong>Progresión:</strong> el tramo actual determina qué saltos están permitidos.</li>
+    <li><strong>Permanencia y continuidad:</strong> algunos avances exigen tiempo en el tramo o evaluar situaciones legales especiales.</li>
+  </ol>
+  <p>El resultado proyectado es el menor tramo permitido después de aplicar todos los filtros. Esta forma de leerlo evita asumir que una categoría alta en un instrumento garantiza por sí sola un avance equivalente.</p>
+
+  <h2>La matriz es el inicio, no la resolución</h2>
+  <p>La matriz oficial cruza Portafolio —categorías A a E— con ECEP —categorías A a D—. Por ejemplo, una combinación A+B puede alcanzar por instrumentos un techo alto. Sin embargo, una persona con cuatro años de experiencia acreditada puede quedar limitada por experiencia o por la progresión permitida desde su tramo actual.</p>
+  <p>Por eso la calculadora muestra por separado el techo de instrumentos, experiencia, progresión y permanencia. Una etiqueta como “sube” describe la simulación con las entradas declaradas, no sustituye la resolución oficial.</p>
+
+  <h2>Caso ilustrativo: A en Portafolio y B en ECEP</h2>
+  <p>Imagina una persona en tramo Inicial con cuatro años acreditados, categoría A en Portafolio y B en ECEP. La matriz de instrumentos permite proyectar más arriba que Avanzado, pero la experiencia acreditada limita el resultado. Además, la trayectoria desde Inicial tiene sus propias reglas. Con esas entradas, la herramienta puede proyectar Avanzado aunque la combinación de instrumentos, considerada de manera aislada, tenga un techo superior.</p>
+  <p>Si se cambia únicamente la experiencia, el resultado puede seguir limitado por progresión. Si se cambia únicamente el tramo actual, puede aparecer una exigencia de permanencia. La utilidad del desglose es precisamente identificar qué condición está actuando.</p>
+
+  <h2>Resultados conservados y participación actual</h2>
+  <p>No todo resultado anterior puede reutilizarse indefinidamente. La interfaz pregunta si una categoría corresponde a un instrumento rendido en el proceso o a un resultado conservado bajo una regla habilitante. También verifica que exista participación actual cuando la normativa así lo exige.</p>
+  <p>Seleccionar “conservado” solo porque el resultado aparece en un antecedente antiguo puede producir una proyección sin respaldo. Ten a mano el documento que identifica el proceso y la vigencia del resultado.</p>
+
+  <h2>Experiencia acreditada no es experiencia aproximada</h2>
+  <p>La simulación solicita años reconocidos a la fecha relevante del proceso. No conviene redondear servicios parciales ni sumar períodos que todavía no han sido acreditados. La experiencia que una persona efectivamente posee y la que aparece reconocida administrativamente pueden diferir temporalmente.</p>
+
+  <h2>Permanencia, linealidad y situaciones especiales</h2>
+  <p>Desde determinados tramos se exige permanencia antes de avanzar, con excepciones acotadas asociadas a resultados y trayectoria. También existen reglas de continuidad o salida que dependen de la cohorte de ingreso, procesos previos y eventuales reingresos. Esas preguntas no son accesorios del formulario: evitan aplicar la regla ordinaria a un caso especial.</p>
+  <p>Si no puedes identificar la opción correspondiente con una resolución o antecedente formal, la proyección debe tratarse como incompleta. No selecciones una excepción porque produzca el tramo esperado.</p>
+
+  <div class="guide-checklist">
+    <strong>Documentos útiles</strong>
+    <ul>
+      <li>Resolución o certificado del tramo actualmente reconocido.</li>
+      <li>Años de experiencia acreditados para el proceso.</li>
+      <li>Resultados oficiales de Portafolio y ECEP, con su proceso.</li>
+      <li>Antecedentes de resultados conservados, si se utilizarán.</li>
+      <li>Historia de participación, continuidad o reingreso cuando sea relevante.</li>
+    </ul>
+  </div>
+  <p>Utiliza la <a href={sitePath("calculadoras/tramos-docentes/")}>calculadora de progresión</a> para explorar qué filtro limita el resultado y revisa las <a href={sitePath("legal/progresion-tramos/")}>reglas y fuentes de progresión</a>. Solo un tramo formalmente reconocido debe trasladarse después a la calculadora de remuneración.</p>
+</GuideLayout>

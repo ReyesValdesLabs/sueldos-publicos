@@ -1,0 +1,54 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("como-leer-liquidacion-docente")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">Una liquidación docente no se comprueba empezando por el sueldo líquido. El líquido es el último resultado de varias decisiones anteriores: jornada, nivel de enseñanza, antecedentes reconocidos, haberes del mes y descuentos personales. Si una de esas piezas difiere, todo lo que sigue también cambia.</p>
+
+  <h2>1. Confirma el período y el vínculo</h2>
+  <p>Antes de mirar montos, identifica el mes de remuneración, el empleador y la calidad jurídica que figuran en el contrato o decreto. La calculadora docente corresponde a profesionales de la educación municipales o de un SLEP sujetos al Estatuto Docente. No debe usarse para asistentes de la educación, honorarios, JUNJI, Integra o jardines VTF solo porque la persona trabaje dentro de un establecimiento.</p>
+  <p>El período importa porque la UF, la UTM, los topes imponibles, las comisiones AFP y la tabla de Impuesto Único pueden cambiar. Una liquidación de un mes no debe compararse con parámetros previsionales de otro.</p>
+
+  <h2>2. Separa la liquidación en cuatro bloques</h2>
+  <div class="calculator-guide-table-scroll">
+    <table class="calculator-guide-table">
+      <thead><tr><th>Bloque</th><th>Qué buscar</th><th>Comprobación inicial</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Contrato</th><td>Horas básicas, medias o técnico-profesionales; sueldo base pagado.</td><td>La suma de horas y el nivel deben coincidir con el contrato o nombramiento.</td></tr>
+        <tr><th scope="row">Carrera Docente</th><td>Bienios, tramo, BRP y eventuales condiciones del establecimiento.</td><td>Cada haber debe tener un antecedente acreditado; no basta con cumplirlo informalmente.</td></tr>
+        <tr><th scope="row">Bases</th><td>Total imponible y renta tributable.</td><td>No todos los haberes pertenecen a ambas bases. Revisa la clasificación antes de sumar.</td></tr>
+        <tr><th scope="row">Descuentos</th><td>AFP, salud, AFC cuando proceda, APV, impuesto y descuentos particulares.</td><td>Comprueba tasa, tope y plan personal antes de comparar el monto final.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>3. Reconstruye primero la RBMN</h2>
+  <p>La Remuneración Básica Mínima Nacional se calcula con el valor mínimo de la hora cronológica correspondiente a cada nivel. Si la jornada es mixta, no conviene multiplicar todas las horas por un solo valor: se calcula cada grupo y luego se suma.</p>
+  <div class="formula">RBMN legal = horas básicas × valor hora básica + horas medias × valor hora media</div>
+  <p>Ejemplo ilustrativo con los valores base vigentes desde julio de 2026: una jornada de 20 horas básicas y 24 horas medias produce $399.840 + $504.816, es decir, una RBMN legal de $904.656. Si existe un sueldo base efectivamente pagado distinto, la herramienta lo muestra como haber, pero conserva la RBMN legal para las asignaciones cuya norma utiliza esa base.</p>
+
+  <h2>4. Agrega solo antecedentes reconocidos</h2>
+  <p>La asignación de experiencia usa bienios acreditados. Para un primer bienio, el porcentaje aplicado es 3,38%; en el ejemplo anterior equivale a $30.577 redondeados. Los bienios adicionales, el tramo, la BRP, la zona, la concentración de alumnos prioritarios y la responsabilidad directiva tienen condiciones propias. La existencia de un título, una función de hecho o años trabajados no permite presumir por sí sola que el empleador ya reconoció el beneficio.</p>
+  <p>Una práctica útil es anotar al lado de cada haber el documento que lo respalda: resolución de tramo, certificado de bienios, contrato, decreto de nombramiento o resolución del establecimiento. Si no puedes asociar una línea con un antecedente, déjala marcada para revisión en vez de completar el formulario por aproximación.</p>
+
+  <h2>5. Compara bases antes de descuentos</h2>
+  <p>Suma los haberes imponibles y contrasta ese subtotal con la base previsional informada. Después repite el ejercicio para los haberes tributables. Una asignación puede ser imponible y no tributable, o tributable y no imponible; por eso copiar el total bruto en ambas bases produce errores que luego parecen problemas de AFP o de impuesto.</p>
+  <p>Recién cuando las bases coinciden conviene revisar descuentos. En AFP debes confirmar la administradora y la comisión del período; en salud, si corresponde Fonasa o el precio pactado de Isapre; y en impuesto, la renta tributable después de las rebajas admitidas.</p>
+
+  <h2>6. Interpreta la primera diferencia, no la última</h2>
+  <p>Si la calculadora y la liquidación no coinciden, busca la primera línea distinta siguiendo el orden anterior. Una RBMN incorrecta arrastra experiencia, tramo, responsabilidad y zona. Un haber omitido altera las bases. Una base distinta cambia cotizaciones e impuesto. El líquido solo indica que existe una diferencia; rara vez revela dónde comenzó.</p>
+  <div class="guide-checklist">
+    <strong>Lista mínima de revisión</strong>
+    <ol>
+      <li>Mismo mes de remuneración y mismos parámetros previsionales.</li>
+      <li>Mismas horas por nivel y mismo sueldo base pagado.</li>
+      <li>Mismos bienios, tramo y beneficios formalmente reconocidos.</li>
+      <li>Mismos haberes imponibles y tributables.</li>
+      <li>Misma AFP, sistema de salud, plan, APV y descuentos particulares.</li>
+    </ol>
+  </div>
+  <p>Cuando encuentres la primera diferencia, consulta el <a href={sitePath("legal/")}>respaldo legal por concepto</a> y conserva el cálculo como una hipótesis verificable, no como prueba definitiva de un error del empleador.</p>
+</GuideLayout>

@@ -1,4 +1,5 @@
 import { LEGAL_ENTRIES } from "@/data/legal";
+import { GUIDES } from "@/data/guides";
 import { LEGAL_CONTENT_REVIEWED_AT, STATIC_PAGE_LAST_MODIFIED } from "@/data/site";
 
 const staticPages = Object.entries(STATIC_PAGE_LAST_MODIFIED).map(([path, lastModified]) => ({
@@ -12,6 +13,10 @@ export function GET({ site }: { site: URL }) {
     ...LEGAL_ENTRIES.map((entry) => ({
       path: `legal/${entry.slug}/`,
       lastModified: LEGAL_CONTENT_REVIEWED_AT,
+    })),
+    ...GUIDES.map((guide) => ({
+      path: `guias/${guide.slug}/`,
+      lastModified: guide.reviewedAt,
     })),
   ];
   const urls = pages.map(({ path, lastModified }) => {

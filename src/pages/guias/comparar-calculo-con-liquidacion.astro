@@ -1,0 +1,53 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("comparar-calculo-con-liquidacion")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">Una diferencia de $20.000 en el sueldo líquido no significa necesariamente que exista un descuento incorrecto por $20.000. Puede originarse mucho antes: en una jornada distinta, un haber ausente, una base mal clasificada o parámetros de otro mes. Esta guía propone un orden reproducible para encontrar la causa.</p>
+
+  <h2>Prepara dos columnas comparables</h2>
+  <p>Guarda o imprime el desglose de la calculadora y coloca al lado la liquidación del mismo período. No compares una estimación de mes completo con una liquidación que incluya licencias, permisos sin goce, días parciales, retroactivos o reliquidaciones sin separar previamente esos efectos.</p>
+  <p>Antes de sumar, normaliza los nombres. “Sueldo base”, “haber base” o una abreviatura local pueden representar el mismo concepto; en cambio, dos líneas con nombres parecidos pueden tener tratamiento imponible distinto. Conserva siempre el nombre original y agrega una categoría de comparación.</p>
+
+  <h2>Orden recomendado de revisión</h2>
+  <div class="calculator-guide-table-scroll">
+    <table class="calculator-guide-table">
+      <thead><tr><th>Paso</th><th>Comparación</th><th>Si no coincide</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">1. Alcance</th><td>Período, empleador, régimen, jornada y días remunerados.</td><td>Detente: los dos resultados todavía no son comparables.</td></tr>
+        <tr><th scope="row">2. Haberes</th><td>Cada línea y su monto, sin mirar todavía el total líquido.</td><td>Busca el documento que crea, modifica o suspende el concepto.</td></tr>
+        <tr><th scope="row">3. Bases</th><td>Total imponible y total tributable.</td><td>Revisa la clasificación de la primera línea divergente.</td></tr>
+        <tr><th scope="row">4. Descuentos legales</th><td>AFP, salud, AFC cuando corresponda e impuesto.</td><td>Confirma tasas, topes y parámetros del mismo mes.</td></tr>
+        <tr><th scope="row">5. Descuentos personales</th><td>Cuotas, préstamos, asociaciones, seguros y órdenes judiciales.</td><td>Ingrésalos como conceptos externos si la calculadora lo permite.</td></tr>
+        <tr><th scope="row">6. Líquido</th><td>Resultado final después de todo lo anterior.</td><td>Úsalo como control aritmético, no como punto de partida.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Ejemplo: el mismo bruto no garantiza el mismo líquido</h2>
+  <p>Supón dos liquidaciones ficticias con igual total bruto. En una, una parte del ingreso corresponde a un haber imponible y no tributable; en la otra, la misma cantidad se registra como imponible y tributable. La cotización previsional puede ser idéntica, pero la renta usada para calcular el impuesto no. También puede ocurrir lo contrario con un haber tributable no imponible.</p>
+  <p>La conclusión no es que una clasificación sea correcta por defecto, sino que el total bruto oculta información necesaria. Para validar la diferencia necesitas identificar la naturaleza de cada concepto en su norma o acto de origen.</p>
+
+  <h2>Otro ejemplo: parámetros de meses diferentes</h2>
+  <p>Si copias todos los haberes de agosto, pero calculas AFP, topes o impuesto con valores de julio, el error aparecerá en descuentos aunque la lista de haberes sea perfecta. Por eso el sitio distingue el período base de ciertos beneficios y el período mensual de los indicadores previsionales. Comprueba la etiqueta visible y el enlace al documento Previred utilizado.</p>
+
+  <h2>Cómo registrar una diferencia útil</h2>
+  <p>Una observación verificable contiene cinco elementos: URL de la calculadora, período, régimen seleccionado, entrada concreta y primera salida diferente. Evita enviar solo capturas del líquido o documentos con datos personales. Un buen reporte diría, por ejemplo: “Con 20 horas básicas y 24 medias, la RBMN esperada según estos valores hora es X; la herramienta muestra Y”.</p>
+  <div class="guide-checklist">
+    <strong>Plantilla de revisión</strong>
+    <ul>
+      <li><strong>Período:</strong> mes de remuneración y mes de pago.</li>
+      <li><strong>Vínculo:</strong> empleador, régimen y jornada.</li>
+      <li><strong>Primera diferencia:</strong> concepto y monto esperado/observado.</li>
+      <li><strong>Fuente:</strong> contrato, resolución, liquidación o enlace oficial.</li>
+      <li><strong>Datos excluidos:</strong> RUN, nombre, salud, banco y otros antecedentes sensibles.</li>
+    </ul>
+  </div>
+
+  <h2>Cuándo la diferencia puede ser legítima</h2>
+  <p>La estimación no conoce automáticamente asignaciones locales, retroactivos, ausencias, licencias, descuentos judiciales, pagos trimestrales ni reliquidaciones históricas. Tampoco reemplaza una acreditación pendiente. Si la primera diferencia pertenece a uno de esos grupos, el siguiente paso es revisar el acto administrativo o consultar al empleador, no ajustar entradas hasta hacer coincidir el líquido.</p>
+  <p>Para continuar, consulta la <a href={sitePath("metodologia/")}>metodología de cálculo</a>, el <a href={sitePath("legal/")}>respaldo legal</a> o prepara un <a href={sitePath("contacto/")}>reporte sin datos personales</a>.</p>
+</GuideLayout>
