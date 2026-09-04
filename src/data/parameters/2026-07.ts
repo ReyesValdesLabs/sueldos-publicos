@@ -23,6 +23,19 @@ export interface PeriodParameters {
   sources: ReadonlyArray<{ label: string; url: string }>;
 }
 
+const taxValue = (utm: number, multiplier: number) => Number((utm * multiplier).toFixed(2));
+
+const monthlyTaxBrackets = (utm: number): PeriodParameters["taxBrackets"] => [
+  { upTo: taxValue(utm, 13.5), factor: 0, rebate: 0 },
+  { upTo: taxValue(utm, 30), factor: 0.04, rebate: taxValue(utm, 0.54) },
+  { upTo: taxValue(utm, 50), factor: 0.08, rebate: taxValue(utm, 1.74) },
+  { upTo: taxValue(utm, 70), factor: 0.135, rebate: taxValue(utm, 4.49) },
+  { upTo: taxValue(utm, 90), factor: 0.23, rebate: taxValue(utm, 11.14) },
+  { upTo: taxValue(utm, 120), factor: 0.304, rebate: taxValue(utm, 17.8) },
+  { upTo: taxValue(utm, 310), factor: 0.35, rebate: taxValue(utm, 23.32) },
+  { upTo: Number.POSITIVE_INFINITY, factor: 0.4, rebate: taxValue(utm, 38.82) },
+];
+
 export const JULY_2026_PARAMETERS: PeriodParameters = {
   id: "2026-07",
   label: "Julio de 2026",
@@ -39,16 +52,7 @@ export const JULY_2026_PARAMETERS: PeriodParameters = {
   afpCommission: PREVIRED_PARAMETERS.values.afpCommission,
   pensionCapUf: PREVIRED_PARAMETERS.values.pensionCapUf,
   unemploymentCapUf: PREVIRED_PARAMETERS.values.unemploymentCapUf,
-  taxBrackets: [
-    { upTo: 967261.5, factor: 0, rebate: 0 },
-    { upTo: 2149470, factor: 0.04, rebate: 38690.46 },
-    { upTo: 3582450, factor: 0.08, rebate: 124669.26 },
-    { upTo: 5015430, factor: 0.135, rebate: 321704.01 },
-    { upTo: 6448410, factor: 0.23, rebate: 798169.86 },
-    { upTo: 8597880, factor: 0.304, rebate: 1275352.2 },
-    { upTo: 22211190, factor: 0.35, rebate: 1670854.68 },
-    { upTo: Number.POSITIVE_INFINITY, factor: 0.4, rebate: 2781414.18 },
-  ],
+  taxBrackets: monthlyTaxBrackets(PREVIRED_PARAMETERS.values.utm),
   sources: [
     { label: "CPEIP · Asignaciones Carrera Docente", url: "https://www.cpeip.cl/carrera-docente-asignaciones/" },
     { label: "SII · Impuesto Único", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm" },
