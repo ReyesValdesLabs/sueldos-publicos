@@ -1,0 +1,65 @@
+---
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import type { GuideEntry } from "@/data/guides";
+import { SITE } from "@/data/site";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { sitePath } from "@/lib/site-path";
+import { breadcrumbStructuredData } from "@/lib/structured-data";
+
+interface Props { guide: GuideEntry }
+const { guide } = Astro.props;
+const guidePath = `guias/${guide.slug}/`;
+const guideUrl = new URL(guidePath, SITE.url).href;
+const pageTitle = `${guide.title} | Sueldos Públicos`;
+const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${guide.reviewedAt}T12:00:00Z`));
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${guideUrl}#article`,
+    headline: guide.title,
+    description: guide.description,
+    url: guideUrl,
+    mainEntityOfPage: guideUrl,
+    inLanguage: "es-CL",
+    datePublished: guide.publishedAt,
+    dateModified: guide.reviewedAt,
+    image: [SITE.socialImageUrl],
+    author: { "@id": SITE.editorialAuthorId },
+    publisher: { "@id": SITE.organizationId },
+    isPartOf: { "@id": SITE.websiteId },
+    citation: guide.sources.map((source) => source.url),
+  },
+  breadcrumbStructuredData([
+    { name: "Inicio", path: "" },
+    { name: "Guías", path: "guias/" },
+    { name: guide.title, path: guidePath },
+  ]),
+];
+---
+<BaseLayout title={pageTitle} description={guide.description} type="article" author={SITE.editorialAuthorName} publishedAt={guide.publishedAt} modifiedAt={guide.reviewedAt} structuredData={structuredData}>
+  <header class="page-header page-shell guide-header">
+    <a href={sitePath("guias/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a las guías</a>
+    <h1>{guide.title}</h1>
+    <p>{guide.description}</p>
+    <p class="content-meta">{guide.audience} · {guide.readingTime} de lectura · Elaborado y revisado por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · {reviewedLabel}</p>
+  </header>
+  <article class="page-shell prose-page guide-prose">
+    <slot />
+    <section class="guide-sources" aria-labelledby="guide-sources-title">
+      <h2 id="guide-sources-title">Fuentes consultadas</h2>
+      <p>Estas fuentes oficiales respaldan las reglas generales descritas. La aplicación a una situación individual puede requerir otros antecedentes.</p>
+      <ul>
+        {guide.sources.map((source) => (
+          <li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ExternalLink size={14} className="inline" /></a></li>
+        ))}
+      </ul>
+    </section>
+    <div class="guide-disclaimer"><strong>Alcance de esta guía.</strong> Es material educativo para revisar una estimación. No reemplaza la liquidación del empleador, una resolución administrativa ni asesoría jurídica, tributaria o previsional.</div>
+  </article>
+</BaseLayout>

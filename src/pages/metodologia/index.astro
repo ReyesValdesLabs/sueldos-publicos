@@ -29,18 +29,21 @@ const structuredData = [
     <p>Priorizamos leyes y decretos publicados oficialmente, textos consolidados de la Biblioteca del Congreso Nacional, resoluciones y documentos de CPEIP o Mineduc, tablas del SII y parámetros previsionales de Previred y superintendencias. Las páginas de <a href={sitePath("legal/")}>respaldo legal</a> enlazan las fuentes específicas de cada concepto.</p>
 
     <h2>3. Parámetros versionados</h2>
-    <p>Los valores mensuales se asocian a un período de remuneración y pago. No reemplazamos silenciosamente un período anterior: la interfaz muestra la versión activa y la fecha de actualización disponible.</p>
+    <p>Distinguimos los montos legales base —que pueden mantener vigencia durante varios meses— de los indicadores previsionales mensuales. La copia de Previred identifica por separado el período de remuneración y el período de pago, además de la URL, fecha y huella del PDF oficial. No reemplazamos silenciosamente un período anterior: la interfaz muestra la versión activa y la fecha de actualización disponible.</p>
 
     <h2>4. Implementación separada y comprobable</h2>
     <p>Las reglas de cálculo se mantienen separadas de la interfaz. Las fórmulas críticas cuentan con pruebas automatizadas para límites, topes y combinaciones relevantes; además, cada resultado muestra sus haberes, bases, descuentos y advertencias.</p>
 
     <h2>5. Revisión y correcciones</h2>
-    <p>Cuando una norma o parámetro cambia, revisamos la fuente exacta, actualizamos el cálculo y comprobamos regresiones antes de publicar. Una compilación correcta no sustituye la revisión del significado legal o previsional.</p>
+    <p>Cuando una norma o parámetro cambia, revisamos la fuente exacta, actualizamos el cálculo y comprobamos regresiones antes de publicar. Una compilación correcta no sustituye la revisión del significado legal o previsional. Las fechas de revisión solo se actualizan cuando cambia el contenido correspondiente; una actualización previsional mensual no se presenta como una nueva revisión jurídica de todas las páginas.</p>
 
-    <h2>6. Privacidad y límites</h2>
+    <h2>6. Autoría y ejemplos</h2>
+    <p>Las páginas editoriales identifican a su responsable y enlazan sus antecedentes públicos. Los ejemplos se construyen para explicar una decisión de cálculo y se marcan como ilustrativos cuando no representan una liquidación real. No atribuimos revisión externa a una autoridad o profesión cuando esa revisión no existe.</p>
+
+    <h2>7. Privacidad y límites</h2>
     <p>Los datos ingresados se calculan localmente en el navegador. La estimación no puede conocer actos administrativos, acreditaciones, retroactivos, ausencias ni beneficios locales que el usuario no informe. Consulta también la <a href={sitePath("privacidad/")}>política de privacidad</a> y los <a href={sitePath("terminos/")}>términos de uso</a>.</p>
 
     <h2>Revisión pública</h2>
-    <p>El <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer">código fuente está disponible públicamente <ExternalLink size={14} className="inline" /></a>. Si encuentras una diferencia documentada, utiliza el canal de <a href={sitePath("contacto/")}>contacto y reporte de errores</a>.</p>
+    <p>El <a href={SITE.githubUrl} target="_blank" rel="noopener noreferrer">código fuente y su historial están disponibles públicamente <ExternalLink size={14} className="inline" /></a>. Si encuentras una diferencia documentada, utiliza el canal de <a href={sitePath("contacto/")}>contacto y reporte de errores</a>. Las <a href={sitePath("guias/")}>guías y casos</a> muestran cómo preparar una comparación reproducible.</p>
   </article>
 </BaseLayout>

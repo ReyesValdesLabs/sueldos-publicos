@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, FileText, Info, Plus, Printer, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_ASSISTANT_PARAMETERS as A } from "@/data/parameters/assistants-2026-07";
+import { PREVIRED_PARAMETERS } from "@/data/parameters/previred.generated";
 import { calculateAssistantSalary } from "@/lib/assistant-calculation/calculate";
 import type { AssistantCalculationInput } from "@/lib/assistant-calculation/types";
 import type { ManualItem, ManualKind } from "@/lib/calculation/types";
@@ -15,6 +16,9 @@ const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Asignaciones", "Previsión y extras", "Resultado"];
+const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
+const previredRemunerationPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.remunerationPeriod}-15T12:00:00Z`));
+const previredPaymentPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.paymentPeriod}-15T12:00:00Z`));
 export const ASSISTANT_EXPERIENCE_FIELD = {
   label: "Bienios reconocidos para esta asignación",
   help: "Incluye los que el SLEP reconoce por servicios previos al traspaso como asistente con el sostenedor municipal; 2% del mínimo técnico por bienio, máximo 15.",
@@ -137,7 +141,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
   return <section id={embedded ? undefined : "calculadora"} className="scroll-mt-24" aria-labelledby="assistant-calculator-title">
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <Badge>Categoría técnica SLEP · {A.label}</Badge>
+        <Badge>Categoría técnica SLEP · montos legales base de {A.label}</Badge>
         <h2 id="assistant-calculator-title" className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Calcula tu liquidación como técnico/a en párvulos</h2>
         <p className="mt-2 max-w-3xl text-muted-foreground">Para asistentes de la educación contratados por un SLEP y clasificados en la categoría técnica. Los datos se procesan solo en tu navegador.</p>
       </div>
@@ -238,7 +242,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
         </>}
 
         {step === 3 && <>
-          <CardHeader className="result-heading"><Badge>{result.supported ? "Estimación lista" : "Estimación incompleta"}</Badge><CardTitle className="text-3xl">{result.supported ? "Tu sueldo líquido estimado" : "Sueldo líquido no disponible"}</CardTitle><div className="result-total" aria-live="polite">{result.supported ? currency.format(result.netSalary) : "No disponible"}</div><CardDescription>Mes completo calculado con valores de {A.label.toLowerCase()}.</CardDescription></CardHeader>
+          <CardHeader className="result-heading"><Badge>{result.supported ? "Estimación lista" : "Estimación incompleta"}</Badge><CardTitle className="text-3xl">{result.supported ? "Tu sueldo líquido estimado" : "Sueldo líquido no disponible"}</CardTitle><div className="result-total" aria-live="polite">{result.supported ? currency.format(result.netSalary) : "No disponible"}</div><CardDescription>Mes completo con montos legales base de {A.label.toLowerCase()} e indicadores previsionales para remuneraciones de {previredRemunerationPeriod}, pagadas en {previredPaymentPeriod}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
             <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />
