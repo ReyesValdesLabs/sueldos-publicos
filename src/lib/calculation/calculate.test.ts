@@ -350,11 +350,18 @@ describe("calculateTeacherSalary", () => {
   it("uses the general IUSC brackets for dependent workers", () => {
     const atThirtyFive = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 12_000_000 });
     const atForty = calculateTeacherSalary({ ...baseInput, paidBaseSalary: 25_000_000 });
-    expect(atThirtyFive.taxableBase).toBeGreaterThan(10_747_350);
-    expect(atThirtyFive.taxableBase).toBeLessThanOrEqual(22_211_190);
-    expect(atThirtyFive.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atThirtyFive.taxableBase * 0.35 - 1_670_854.68));
-    expect(atForty.taxableBase).toBeGreaterThan(22_211_190);
-    expect(atForty.discounts.find((line) => line.id === "tax")?.amount).toBe(Math.round(atForty.taxableBase * 0.4 - 2_781_414.18));
+    const thirtyFiveBracket = P.taxBrackets.find((bracket) => bracket.factor === 0.35)!;
+    const fortyBracket = P.taxBrackets.find((bracket) => bracket.factor === 0.4)!;
+    const bracketBeforeThirtyFive = P.taxBrackets[P.taxBrackets.indexOf(thirtyFiveBracket) - 1];
+    const bracketBeforeForty = P.taxBrackets[P.taxBrackets.indexOf(fortyBracket) - 1];
+
+    expect(atThirtyFive.taxableBase).toBeGreaterThan(bracketBeforeThirtyFive.upTo);
+    expect(atThirtyFive.taxableBase).toBeLessThanOrEqual(thirtyFiveBracket.upTo);
+    expect(atThirtyFive.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(atThirtyFive.taxableBase * thirtyFiveBracket.factor - thirtyFiveBracket.rebate));
+    expect(atForty.taxableBase).toBeGreaterThan(bracketBeforeForty.upTo);
+    expect(atForty.discounts.find((line) => line.id === "tax")?.amount)
+      .toBe(Math.round(atForty.taxableBase * fortyBracket.factor - fortyBracket.rebate));
   });
 
   it("deducts an Isapre additional health contribution from IUSC up to the legal health cap", () => {
