@@ -2,14 +2,14 @@
 export const PREVIRED_PARAMETERS = {
   "schemaVersion": 1,
   "source": "Previred",
-  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/08/Indicadores-Previsionales-Previred-Agosto-2026-2.pdf",
-  "sourceUpdatedAt": "2026-08-18",
-  "remunerationPeriod": "2026-08",
-  "paymentPeriod": "2026-09",
-  "sourceHash": "sha256:1cc2da227f50bb51a032505fba1f99f6cc961122a9309b15aa66d085287310ae",
+  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/09/Indicadores-Previsionales-Previred-Septiembre-2026.pdf",
+  "sourceUpdatedAt": "2026-09-14",
+  "remunerationPeriod": "2026-09",
+  "paymentPeriod": "2026-10",
+  "sourceHash": "sha256:0828c1c2aad002e1038b774e5f61e1aed19c1c20f29629e5305ef91b9cfd1e0d",
   "values": {
-    "uf": 40873.77,
-    "utm": 71649,
+    "uf": 41057.2,
+    "utm": 71721,
     "pensionCapUf": 90,
     "unemploymentCapUf": 135.2,
     "afpCommission": {
