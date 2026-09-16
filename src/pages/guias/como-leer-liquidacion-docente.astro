@@ -3,10 +3,30 @@ import { findGuide } from "@/data/guides";
 import GuideLayout from "@/layouts/GuideLayout.astro";
 import { sitePath } from "@/lib/site-path";
 
+import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
+import { createTeacherExampleInput, teacherExampleResult as result } from "@/data/examples/teacher";
+import { teacherComparisonRows, teacherTwoBienniaResult, teacherEarning } from "@/data/examples/teacher-comparison";
+
+const input = createTeacherExampleInput();
+const money = (value: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(value);
+const month = (period: string) => new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" }).format(new Date(`${period}-15T12:00:00Z`));
+const contributionTotal = result.discounts.filter((line) => line.id === "afp" || line.id === "health").reduce((sum, line) => sum + line.amount, 0);
 const guide = findGuide("como-leer-liquidacion-docente")!;
 ---
 <GuideLayout guide={guide}>
   <p class="guide-lead">Una liquidación docente no se comprueba empezando por el sueldo líquido. El líquido es el último resultado de varias decisiones anteriores: jornada, nivel de enseñanza, antecedentes reconocidos, haberes del mes y descuentos personales. Si una de esas piezas difiere, todo lo que sigue también cambia.</p>
+
+  <section class="guide-checklist" aria-labelledby="caso-docente">
+    <h2 id="caso-docente">El caso que vamos a comprobar</h2>
+    <p>Usaremos el mismo caso ficticio de la calculadora: <strong>{input.basicHours} horas básicas y {input.secondaryHours} horas medias, {input.biennia} bienios reconocidos, tramo Avanzado y BRP por título y mención</strong>. Supone un mes completo, sueldo base igual a la RBMN, AFP Habitat y Fonasa. No incluye AFC, APV, zona, alta concentración, responsabilidad directiva, haberes adicionales ni descuentos particulares; el tramo se paga completo.</p>
+    <p>Montos legales base de {P.label.toLowerCase()}; indicadores previsionales para remuneraciones de <strong>{month(P.previred.remunerationPeriod)}</strong>, pagadas en {month(P.previred.paymentPeriod)}. Las cifras del caso se recalculan con los parámetros publicados; no son una liquidación real ni una promesa de remuneración.</p>
+    <ul>
+      <li>Haberes: <strong>{money(result.totalEarnings)}</strong>.</li>
+      <li>Descuentos: <strong>{money(result.totalDiscounts)}</strong>.</li>
+      <li>Líquido: <strong>{money(result.netSalary)}</strong>.</li>
+    </ul>
+    <p><a href={sitePath("calculadoras/docentes/#ejemplo-docente")}>Abrir el desglose completo y cargar el ejemplo en la calculadora</a>. Esta guía explica qué comprobar en cada paso y cómo interpretar una diferencia.</p>
+  </section>
 
   <h2>1. Confirma el período y el vínculo</h2>
   <p>Antes de mirar montos, identifica el mes de remuneración, el empleador y la calidad jurídica que figuran en el contrato o decreto. La calculadora docente corresponde a profesionales de la educación municipales o de un SLEP sujetos al Estatuto Docente. No debe usarse para asistentes de la educación, honorarios, JUNJI, Integra o jardines VTF solo porque la persona trabaje dentro de un establecimiento.</p>
@@ -28,18 +48,46 @@ const guide = findGuide("como-leer-liquidacion-docente")!;
   <h2>3. Reconstruye primero la RBMN</h2>
   <p>La Remuneración Básica Mínima Nacional se calcula con el valor mínimo de la hora cronológica correspondiente a cada nivel. Si la jornada es mixta, no conviene multiplicar todas las horas por un solo valor: se calcula cada grupo y luego se suma.</p>
   <div class="formula">RBMN legal = horas básicas × valor hora básica + horas medias × valor hora media</div>
-  <p>Ejemplo ilustrativo con los valores base vigentes desde julio de 2026: una jornada de 20 horas básicas y 24 horas medias produce $399.840 + $504.816, es decir, una RBMN legal de $904.656. Si existe un sueldo base efectivamente pagado distinto, la herramienta lo muestra como haber, pero conserva la RBMN legal para las asignaciones cuya norma utiliza esa base.</p>
+  <p>En nuestro caso, {input.basicHours} horas básicas × {money(P.hourlyRate.basic)} producen {money(input.basicHours * P.hourlyRate.basic)}; {input.secondaryHours} horas medias × {money(P.hourlyRate.secondary)} producen {money(input.secondaryHours * P.hourlyRate.secondary)}. La suma es una RBMN legal de <strong>{money(result.legalRbmn)}</strong>. Si existe un sueldo base efectivamente pagado distinto, la herramienta lo muestra como haber, pero conserva la RBMN legal para las asignaciones cuya norma utiliza esa base.</p>
 
   <h2>4. Agrega solo antecedentes reconocidos</h2>
-  <p>La asignación de experiencia usa bienios acreditados. Para un primer bienio, el porcentaje aplicado es 3,38%; en el ejemplo anterior equivale a $30.577 redondeados. Los bienios adicionales, el tramo, la BRP, la zona, la concentración de alumnos prioritarios y la responsabilidad directiva tienen condiciones propias. La existencia de un título, una función de hecho o años trabajados no permite presumir por sí sola que el empleador ya reconoció el beneficio.</p>
+  <p>La asignación de experiencia usa bienios acreditados. Para los {input.biennia} bienios del caso, el porcentaje es 3,38% + 2 × 3,33% = 10,04%; aplicado a la RBMN produce <strong>{money(teacherEarning(result, "experience"))}</strong>, redondeados al peso. Los bienios adicionales, el tramo, la BRP, la zona, la concentración de alumnos prioritarios y la responsabilidad directiva tienen condiciones propias. La existencia de un título, una función de hecho o años trabajados no permite presumir por sí sola que el empleador ya reconoció el beneficio.</p>
   <p>Una práctica útil es anotar al lado de cada haber el documento que lo respalda: resolución de tramo, certificado de bienios, contrato, decreto de nombramiento o resolución del establecimiento. Si no puedes asociar una línea con un antecedente, déjala marcada para revisión en vez de completar el formulario por aproximación.</p>
+
+  <p>El desglose distingue la asignación de experiencia del componente «Tramo · experiencia». Este último se suma a la progresión y al componente fijo para formar la asignación por tramo; no debes comparar solo uno de esos componentes con el total de tramo que aparezca en tu liquidación. En el caso, sus tres componentes suman <strong>{money(teacherEarning(result, "tranche-experience") + teacherEarning(result, "tranche-progression") + teacherEarning(result, "tranche-fixed"))}</strong>. Consulta el <a href={sitePath("legal/asignacion-tramo/")}>respaldo de la asignación por tramo</a> y la <a href={sitePath("legal/experiencia/")}>explicación de los bienios</a>.</p>
 
   <h2>5. Compara bases antes de descuentos</h2>
   <p>Suma los haberes imponibles y contrasta ese subtotal con la base previsional informada. Después repite el ejercicio para los haberes tributables. Una asignación puede ser imponible y no tributable, o tributable y no imponible; por eso copiar el total bruto en ambas bases produce errores que luego parecen problemas de AFP o de impuesto.</p>
   <p>Recién cuando las bases coinciden conviene revisar descuentos. En AFP debes confirmar la administradora y la comisión del período; en salud, si corresponde Fonasa o el precio pactado de Isapre; y en impuesto, la renta tributable después de las rebajas admitidas.</p>
 
+  <p>En este caso todos los haberes son imponibles y tributables, por lo que suman <strong>{money(result.totalEarnings)}</strong> en ambas categorías antes de rebajas. AFP y Fonasa descuentan en conjunto <strong>{money(contributionTotal)}</strong>; al restarlos, la renta para calcular el impuesto queda en <strong>{money(result.taxableBase)}</strong>. El impuesto se agrega después a los descuentos: no se resta para calcular su propia base.</p>
+  <div class="formula">Haberes {money(result.totalEarnings)} − descuentos {money(result.totalDiscounts)} = líquido {money(result.netSalary)}</div>
+  <p>La calculadora redondea cada haber y descuento al peso antes de sumarlos. Si las bases coinciden y queda una diferencia pequeña, comprueba el criterio de redondeo; si la diferencia es grande, vuelve a los antecedentes y conceptos antes de atribuirla al redondeo.</p>
+
   <h2>6. Interpreta la primera diferencia, no la última</h2>
   <p>Si la calculadora y la liquidación no coinciden, busca la primera línea distinta siguiendo el orden anterior. Una RBMN incorrecta arrastra experiencia, tramo, responsabilidad y zona. Un haber omitido altera las bases. Una base distinta cambia cotizaciones e impuesto. El líquido solo indica que existe una diferencia; rara vez revela dónde comenzó.</p>
+  <h3>Ejercicio: dos bienios ingresados en vez de tres</h3>
+  <p>Conserva todos los antecedentes del caso y cambia únicamente los bienios a dos. Ambas simulaciones son ilustrativas: ninguna prueba que un empleador haya cometido un error. La tabla sigue el orden en que conviene buscar la primera diferencia.</p>
+  <p>En pantallas pequeñas puedes desplazar la tabla horizontalmente.</p>
+  <div class="calculator-guide-table-scroll" tabindex="0" role="region" aria-label="Comparación de dos y tres bienios; tabla desplazable">
+    <table class="calculator-guide-table">
+      <caption>El mismo caso, cambiando solo los bienios</caption>
+      <thead><tr><th scope="col">Concepto</th><th scope="col">2 bienios</th><th scope="col">3 bienios</th><th scope="col">Diferencia (3 − 2)</th></tr></thead>
+      <tbody>{teacherComparisonRows.map((row) => <tr><th scope="row">{row.label}</th><td>{money(row.two)}</td><td>{money(row.three)}</td><td>{money(row.three - row.two)}</td></tr>)}</tbody>
+    </table>
+  </div>
+  <p>La RBMN permanece igual porque no cambiaste la jornada. La primera diferencia aparece en la asignación de experiencia: con dos bienios se aplica 6,71%, y con tres, 10,04%. También cambian el componente de experiencia del tramo y su progresión. El componente fijo y la BRP permanecen iguales en este ejercicio.</p>
+  <p>Los haberes aumentan <strong>{money(result.totalEarnings - teacherTwoBienniaResult.totalEarnings)}</strong>, pero el líquido aumenta <strong>{money(result.netSalary - teacherTwoBienniaResult.netSalary)}</strong>, porque los descuentos también cambian. Agregar un descuento manual para hacer coincidir el líquido ocultaría la diferencia de origen.</p>
+  <ol>
+    <li>Abre el <a href={sitePath("calculadoras/docentes/#ejemplo-docente")}>caso completo</a> y pulsa «Cargar este ejemplo en la calculadora».</li>
+    <li>Vuelve a «Carrera docente» y cambia «Bienios reconocidos» de tres a dos.</li>
+    <li>Avanza hasta el resultado, sin modificar otros campos, y compara las líneas de la tabla.</li>
+    <li>Para volver al caso inicial, carga otra vez el ejemplo. Esto reemplaza los datos de la simulación.</li>
+  </ol>
+
+  <h2>7. Prepara una consulta que se pueda responder</h2>
+  <p>Cuando compares tu liquidación real, solicita al área de remuneraciones el número de bienios utilizado, su fecha de reconocimiento y la base aplicada al haber que no coincide. Adjunta antecedentes personales solo mediante el canal privado y autorizado de tu empleador.</p>
+  <p>Una consulta concreta sería: «Para el mes revisado y la jornada indicada, mi antecedente de reconocimiento registra tres bienios. ¿Cuántos se aplicaron y sobre qué RBMN se calculó la asignación de experiencia?». Esto permite revisar el dato inicial sin afirmar que la diferencia ya constituye una deuda.</p>
   <div class="guide-checklist">
     <strong>Lista mínima de revisión</strong>
     <ol>
@@ -50,5 +98,6 @@ const guide = findGuide("como-leer-liquidacion-docente")!;
       <li>Misma AFP, sistema de salud, plan, APV y descuentos particulares.</li>
     </ol>
   </div>
+  <p>Si reportas un problema técnico en el <a href={sitePath("contacto/")}>canal público del sitio</a>, usa datos ficticios que lo reproduzcan. No publiques liquidaciones, RUN, nombres ni documentos laborales personales.</p>
   <p>Cuando encuentres la primera diferencia, consulta el <a href={sitePath("legal/")}>respaldo legal por concepto</a> y conserva el cálculo como una hipótesis verificable, no como prueba definitiva de un error del empleador.</p>
 </GuideLayout>
