@@ -1,7 +1,9 @@
 ---
+import SalaryCase from "@/components/SalaryCase.astro";
+import { administrativeExampleResult } from "@/data/examples/administrative";
 import AdSlot from "@/components/AdSlot.astro";
 import AdministrativeCalculator from "@/components/AdministrativeCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
+import { STATIC_PAGE_LAST_MODIFIED, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import {
@@ -18,9 +20,9 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${STATIC_PAGE_LAST_MODIFIED[path]}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
+  webPageStructuredData({ name: title, description, path, dateModified: STATIC_PAGE_LAST_MODIFIED[path], author: "editorialAuthor" }),
   calculatorStructuredData({
     name: "Calculadora para administrativos DAEM y municipales",
     description,
@@ -101,5 +103,6 @@ const structuredData = [
       <p class="calculator-guide-footer">Lee el detalle de los <a href={sitePath("legal/administrativos-daem-municipales/")}>tres regímenes administrativos</a>, las <a href={sitePath("legal/asistentes-daem-remuneraciones/")}>remuneraciones de asistentes DAEM/DEM</a> y la <a href={sitePath("metodologia/")}>metodología del proyecto</a>.</p>
     </div>
   </section>
+  <SalaryCase title="Caso completo: administrativo del nivel central DAEM" assumptions="Persona adulta, cotizante AFP Habitat y Fonasa, contrato indefinido en el nivel central DAEM/DEM, 42 horas y sueldo base contractual ficticio de $900.000. El bruto anterior también es $900.000. No hay antigüedad local, bonos educacionales ni asignaciones municipales. AFC vigente. El monto contractual es un supuesto del ejercicio, no una escala salarial oficial." instructions="Pulsa «Cargar caso explicado» y verifica que el recorrido sea nivel central DAEM/DEM." source="legal/administrativos-daem-municipales/" result={administrativeExampleResult} />
   <AdSlot placement="después de la calculadora administrativa" />
 </BaseLayout>
