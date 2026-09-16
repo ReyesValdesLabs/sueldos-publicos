@@ -12,7 +12,7 @@ export function GET({ site }: { site: URL }) {
     ...staticPages,
     ...LEGAL_ENTRIES.map((entry) => ({
       path: `legal/${entry.slug}/`,
-      lastModified: LEGAL_CONTENT_REVIEWED_AT,
+      lastModified: entry.reviewedAt ?? LEGAL_CONTENT_REVIEWED_AT,
     })),
     ...GUIDES.map((guide) => ({
       path: `guias/${guide.slug}/`,

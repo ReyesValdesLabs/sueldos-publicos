@@ -615,3 +615,27 @@ html.dark .theme-icon-sun { display: block; }
   .page-shell { width: 100%; }
   @page { margin: 1.2cm; }
 }
+
+/* Worked salary example: readable in the initial HTML as well as after hydration. */
+.teacher-example { margin-top: 3rem; padding: clamp(1.25rem, 3vw, 2.5rem); border: 1px solid var(--border); border-radius: 1.5rem; background: var(--card); }
+.teacher-example h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; line-height: 1.25; margin: .75rem 0 1rem; }
+.teacher-example h3 { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; }
+.teacher-example p { line-height: 1.8; margin: .8rem 0; }
+.teacher-example a { color: var(--primary); text-decoration: underline; text-underline-offset: .2em; }
+.example-facts, .example-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.example-facts > div, .example-summary > div { padding: 1rem; background: var(--muted); border-radius: .8rem; }
+.example-facts dt, .example-summary span { display: block; font-size: .85rem; margin-bottom: .4rem; }
+.example-facts dd { font-weight: 600; }
+.example-summary strong { display: block; font-size: clamp(1.2rem, 2vw, 1.7rem); }
+.example-actions button { white-space: normal; height: auto; min-height: 2.75rem; }
+.example-actions p { font-size: .85rem; color: var(--muted-foreground); }
+.example-table-scroll { overflow-x: auto; }
+.example-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .9rem; }
+.example-table th, .example-table td { padding: .85rem; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
+.example-table thead { background: var(--muted); }
+.example-table td:nth-child(2) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.example-table td:last-child { min-width: 15rem; }
+@media (max-width: 640px) {
+  .example-facts, .example-summary { grid-template-columns: 1fr; }
+  .example-table { min-width: 36rem; }
+}
