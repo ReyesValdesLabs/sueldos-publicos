@@ -1,5 +1,6 @@
 ---
-import { ArrowRight, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpenCheck, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
+import { GUIDES } from "@/data/guides";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { sitePath } from "@/lib/site-path";
@@ -119,7 +120,19 @@ const homeStructuredData = [
     </div>
   </section>
 
-  <section id="preguntas" class="section section-muted">
+  <section class="section section-muted">
+    <div class="page-shell">
+      <div class="section-heading"><span class="eyebrow">Guías y casos</span><h2>Aprende a comprobar el resultado</h2><p>No basta con obtener un número: revisa el régimen, los documentos y la primera diferencia antes de interpretar el líquido.</p></div>
+      <div class="legal-grid">
+        {GUIDES.slice(0, 3).map((guide) => (
+          <a class="legal-card" href={sitePath(`guias/${guide.slug}/`)}><BookOpenCheck size={24} /><h3>{guide.title}</h3><p>{guide.description}</p><span class="inline-flex items-center gap-2 font-bold text-primary">Leer guía <ArrowRight size={16} /></span></a>
+        ))}
+      </div>
+      <div class="hero-actions"><a class="hero-button" href={sitePath("guias/")}>Ver todas las guías <ArrowRight size={17} /></a></div>
+    </div>
+  </section>
+
+  <section id="preguntas" class="section">
     <div class="page-shell"><div class="section-heading"><span class="eyebrow">Preguntas frecuentes</span><h2>Antes de usar el resultado</h2></div>
       <div class="faq-list">
         <details><summary>¿El resultado reemplaza mi liquidación?</summary><p>No. Es una estimación informativa. Tu empleador puede incluir conceptos locales, retroactivos, licencias, descuentos u otras situaciones que debes ingresar o revisar por separado.</p></details>

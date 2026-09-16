@@ -12,6 +12,7 @@ interface WebPageOptions {
   type?: "WebPage" | "AboutPage" | "ContactPage" | "CollectionPage";
   datePublished?: string;
   dateModified?: string;
+  author?: "editorialAuthor";
 }
 
 interface CalculatorOptions {
@@ -32,7 +33,16 @@ export const organizationStructuredData = {
     "@type": "ImageObject",
     url: SITE.logoUrl,
   },
-  sameAs: [SITE.githubUrl],
+  sameAs: [SITE.githubOrganizationUrl],
+};
+
+export const personStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": SITE.editorialAuthorId,
+  name: SITE.editorialAuthorName,
+  url: SITE.editorialAuthorId,
+  sameAs: [SITE.linkedinUrl],
 };
 
 export const websiteStructuredData = {
@@ -53,6 +63,7 @@ export const webPageStructuredData = ({
   type = "WebPage",
   datePublished = SITE.publishedAt,
   dateModified = SITE.updatedAt,
+  author,
 }: WebPageOptions) => ({
   "@context": "https://schema.org",
   "@type": type,
@@ -65,6 +76,9 @@ export const webPageStructuredData = ({
   dateModified,
   isPartOf: { "@id": SITE.websiteId },
   about: { "@id": SITE.organizationId },
+  ...(author === "editorialAuthor" && {
+    author: { "@id": SITE.editorialAuthorId },
+  }),
   primaryImageOfPage: {
     "@type": "ImageObject",
     url: SITE.socialImageUrl,
@@ -100,4 +114,5 @@ export const calculatorStructuredData = ({ name, description, path }: Calculator
     priceCurrency: "CLP",
   },
   provider: { "@id": SITE.organizationId },
+  creator: { "@id": SITE.editorialAuthorId },
 });

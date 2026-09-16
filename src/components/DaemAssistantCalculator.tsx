@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, CircleHelp, ExternalLink, FileText, Info, Plus, Printer, ShieldCheck, Trash2, X } from "lucide-react";
 import { JULY_2026_DAEM_ASSISTANT_PARAMETERS as D } from "@/data/parameters/daem-assistants-2026-07";
+import { PREVIRED_PARAMETERS } from "@/data/parameters/previred.generated";
 import { calculateDaemAssistantSalary, calculateDaemMinimumIncome, resolveDaemMinimumIncomeAutofill } from "@/lib/daem-assistant-calculation/calculate";
 import type { DaemAssistantCalculationInput } from "@/lib/daem-assistant-calculation/types";
 import type { ManualItem, ManualKind } from "@/lib/calculation/types";
@@ -15,6 +16,9 @@ const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const afpNames = { capital: "Capital", cuprum: "Cuprum", habitat: "Habitat", modelo: "Modelo", planvital: "PlanVital", provida: "Provida", uno: "Uno" } as const;
 const steps = ["Contrato", "Haberes DAEM", "Previsión y extras", "Resultado"];
+const period = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
+const previredRemunerationPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.remunerationPeriod}-15T12:00:00Z`));
+const previredPaymentPeriod = period.format(new Date(`${PREVIRED_PARAMETERS.paymentPeriod}-15T12:00:00Z`));
 const initialMinimumIncome = calculateDaemMinimumIncome(44);
 
 type FieldHelpKey = "law19464" | "seniority" | "priority" | "excellence" | "difficult";
@@ -174,7 +178,7 @@ export default function DaemAssistantCalculator({ embedded = false }: { embedded
 
   return <section id={embedded ? undefined : "calculadora"} className="scroll-mt-24" aria-labelledby="daem-calculator-title">
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-      <div><Badge>Asistentes DAEM/DEM · {D.label}</Badge><h2 id="daem-calculator-title" className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Calcula tu liquidación como técnico/a municipal</h2><p className="mt-2 max-w-3xl text-muted-foreground">Para técnicos/as en educación parvularia y otros asistentes de la educación contratados por un DAEM o DEM municipal. Los datos se procesan solo en tu navegador.</p></div>
+      <div><Badge>Asistentes DAEM/DEM · montos legales base de {D.label}</Badge><h2 id="daem-calculator-title" className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Calcula tu liquidación como técnico/a municipal</h2><p className="mt-2 max-w-3xl text-muted-foreground">Para técnicos/as en educación parvularia y otros asistentes de la educación contratados por un DAEM o DEM municipal. Los datos se procesan solo en tu navegador.</p></div>
       <a href={sitePath("legal/asistentes-daem-remuneraciones/")} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline"><ShieldCheck size={18} /> Ver respaldo legal</a>
     </div>
 
@@ -205,7 +209,7 @@ export default function DaemAssistantCalculator({ embedded = false }: { embedded
           <div className="border-t border-border pt-6"><div className="flex items-center justify-between gap-3"><div><h3 className="font-bold">Otros haberes o descuentos</h3><p className="text-sm text-muted-foreground">Agrega asignación familiar, bonos locales, cuotas u otros ítems. Imponibilidad y tributación se clasifican por separado.</p></div><Button type="button" variant="outline" size="sm" onClick={addManualItem}><Plus size={16} /> Agregar</Button></div><div className="mt-4 space-y-3">{input.manualItems.length === 0 && <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">No agregaste conceptos adicionales.</p>}{input.manualItems.map((item) => <div key={item.id} className="manual-row daem-manual-row"><Input aria-label="Nombre del concepto" placeholder="Nombre del concepto" value={item.name} onChange={(event) => patchManualItem(item.id, { name: event.target.value })} /><Input aria-label={`Monto de ${item.name || "concepto"}`} type="text" inputMode="numeric" placeholder="Monto" value={item.amount ? integerMoney.format(item.amount) : ""} onChange={(event) => patchManualItem(item.id, { amount: parseMoney(event.target.value) })} /><select aria-label={`Clasificación de ${item.name || "concepto"}`} className="form-control" value={item.kind} onChange={(event) => patchManualItem(item.id, { kind: event.target.value as ManualKind })}><option value="imposableTaxable">Imponible y tributable</option><option value="imposableNonTaxable">Imponible y no tributable</option><option value="nonImposableTaxable">No imponible y tributable</option><option value="nonImposableNonTaxable">No imponible y no tributable</option><option value="discount">Descuento</option></select><Button type="button" variant="ghost" size="icon" onClick={() => removeManualItem(item.id)} aria-label={`Eliminar ${item.name || "concepto"}`}><Trash2 size={18} /></Button></div>)}</div></div>
         </CardContent></>}
 
-        {step === 3 && <><CardHeader className="result-heading"><Badge>Estimación lista</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {D.label.toLowerCase()}.</CardDescription></CardHeader><CardContent className="space-y-6">
+        {step === 3 && <><CardHeader className="result-heading"><Badge>Estimación lista</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo con montos legales base de {D.label.toLowerCase()} e indicadores previsionales para remuneraciones de {previredRemunerationPeriod}, pagadas en {previredPaymentPeriod}.</CardDescription></CardHeader><CardContent className="space-y-6">
           {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
           <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive /><ResultTable title="Descuentos" lines={result.discounts} total={result.totalDiscounts} />
           <div className="base-grid daem-base-grid"><div><span>Base imponible</span><strong>{currency.format(result.imposableBase)}</strong></div><div><span>Base tributable</span><strong>{currency.format(result.taxableBase)}</strong></div><div><span>Bono artículo 59</span><strong>{currency.format(result.article59Bonus)}</strong></div><div><span>Bono bajas rentas</span><strong>{currency.format(result.lowIncomeBonus)}</strong></div></div>

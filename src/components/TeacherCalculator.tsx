@@ -27,6 +27,7 @@ const steps = ["Contrato", "Carrera docente", "Previsión y extras", "Resultado"
 const date = new Intl.DateTimeFormat("es-CL", { day: "numeric", month: "long", year: "numeric", timeZone: "America/Santiago" });
 const month = new Intl.DateTimeFormat("es-CL", { month: "long", year: "numeric", timeZone: "America/Santiago" });
 const sourceUpdatedLabel = date.format(new Date(`${P.previred.sourceUpdatedAt}T12:00:00Z`));
+const remunerationPeriodLabel = month.format(new Date(`${P.previred.remunerationPeriod}-15T12:00:00Z`));
 const paymentPeriodLabel = month.format(new Date(`${P.previred.paymentPeriod}-15T12:00:00Z`));
 
 function parseMoney(value: string) {
@@ -239,10 +240,10 @@ export default function TeacherCalculator() {
   return <section ref={calculatorRef} id="calculadora" className="scroll-mt-24" aria-labelledby="calculator-title">
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <Badge>Valores vigentes · {P.label}</Badge>
+        <Badge>Montos legales base · {P.label}</Badge>
         <h2 id="calculator-title" className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Calcula tu liquidación docente</h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">Completa tus antecedentes. Nada de lo que ingreses se guarda o se envía fuera de tu navegador.</p>
-        <p className="data-update-line"><CalendarClock size={16} /><span>Última actualización previsional: <strong>{sourceUpdatedLabel}</strong></span><a href={P.previred.sourceUrl} target="_blank" rel="noopener noreferrer">Ver Previred <ExternalLink size={13} /></a></p>
+        <p className="data-update-line"><CalendarClock size={16} /><span>Indicadores previsionales para remuneraciones de <strong>{remunerationPeriodLabel}</strong>, pagadas en {paymentPeriodLabel} · fuente actualizada el {sourceUpdatedLabel}</span><a href={P.previred.sourceUrl} target="_blank" rel="noopener noreferrer">Ver Previred <ExternalLink size={13} /></a></p>
       </div>
       <a href={sitePath("legal/")} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline"><ShieldCheck size={18} /> Ver respaldo legal</a>
     </div>
@@ -410,7 +411,7 @@ export default function TeacherCalculator() {
         </>}
 
         {step === 3 && <>
-          <CardHeader className="result-heading"><Badge className={manualParameters ? "border-destructive/30 bg-destructive/10 text-destructive" : ""}>{manualParameters ? "Parámetros manuales" : "Estimación lista"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo calculado con valores de {P.label.toLowerCase()}. Datos previsionales actualizados el {sourceUpdatedLabel}.</CardDescription></CardHeader>
+          <CardHeader className="result-heading"><Badge className={manualParameters ? "border-destructive/30 bg-destructive/10 text-destructive" : ""}>{manualParameters ? "Parámetros manuales" : "Estimación lista"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo con montos legales base de {P.label.toLowerCase()} e indicadores previsionales para remuneraciones de {remunerationPeriodLabel}, pagadas en {paymentPeriodLabel}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
             <ResultTable title="Haberes" lines={result.earnings} total={result.totalEarnings} positive />

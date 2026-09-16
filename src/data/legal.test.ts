@@ -2,6 +2,23 @@ import { describe, expect, it } from "vitest";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
 import { findLegalEntry } from "./legal";
 
+const taxValue = (multiplier: number) => Number((P.utm * multiplier).toFixed(2));
+
+describe("Parámetros tributarios mensuales", () => {
+  it("derives every SII bracket and rebate from the current UTM", () => {
+    expect(P.taxBrackets).toEqual([
+      { upTo: taxValue(13.5), factor: 0, rebate: 0 },
+      { upTo: taxValue(30), factor: 0.04, rebate: taxValue(0.54) },
+      { upTo: taxValue(50), factor: 0.08, rebate: taxValue(1.74) },
+      { upTo: taxValue(70), factor: 0.135, rebate: taxValue(4.49) },
+      { upTo: taxValue(90), factor: 0.23, rebate: taxValue(11.14) },
+      { upTo: taxValue(120), factor: 0.304, rebate: taxValue(17.8) },
+      { upTo: taxValue(310), factor: 0.35, rebate: taxValue(23.32) },
+      { upTo: Number.POSITIVE_INFINITY, factor: 0.4, rebate: taxValue(38.82) },
+    ]);
+  });
+});
+
 describe("Asignación por tramo legal table", () => {
   it("mirrors the current CPEIP amounts from the period parameters", () => {
     const table = findLegalEntry("asignacion-tramo")?.amountTable;

@@ -15,6 +15,13 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   year: "numeric",
   timeZone: "America/Santiago",
 }).format(new Date(`${LEGAL_CONTENT_REVIEWED_AT}T12:00:00Z`));
+const monthLabel = (period: string) => new Intl.DateTimeFormat("es-CL", {
+  month: "long",
+  year: "numeric",
+  timeZone: "America/Santiago",
+}).format(new Date(`${period}-15T12:00:00Z`));
+const remunerationPeriodLabel = monthLabel(P.previred.remunerationPeriod);
+const paymentPeriodLabel = monthLabel(P.previred.paymentPeriod);
 const structuredData = [
   webPageStructuredData({
     name: title,
@@ -49,7 +56,7 @@ const officialSources = [
   {
     group: "Parámetros y descuentos",
     sources: [
-      { title: "Previred — Indicadores previsionales", description: `UF, UTM, topes imponibles y comisiones AFP utilizados en ${P.label.toLowerCase()}.`, url: P.previred.sourceUrl },
+      { title: "Previred — Indicadores previsionales", description: `UF, UTM, topes imponibles y comisiones AFP para remuneraciones de ${remunerationPeriodLabel}, pagadas en ${paymentPeriodLabel}.`, url: P.previred.sourceUrl },
       { title: "SII — Impuesto Único de Segunda Categoría", description: "Tramos, factores y rebajas mensuales aplicables al impuesto de trabajadores dependientes.", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm" },
       { title: "Superintendencia de Pensiones — Comisiones AFP", description: "Comisiones vigentes cobradas por cada administradora de fondos de pensiones.", url: "https://www.spensiones.cl/portal/institucional/594/w3-article-2815.html" },
       { title: "Superintendencia de Salud — Cotizaciones", description: "Reglas de cotización legal de salud para Fonasa e Isapres.", url: "https://www.superdesalud.gob.cl/tax-materias-isapres/cotizaciones-de-salud-3465/" },
@@ -84,7 +91,7 @@ const officialSources = [
 ];
 ---
 <BaseLayout title={title} description={description} structuredData={structuredData}>
-  <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. La versión activa corresponde a julio de 2026.</p><p class="content-meta">Última revisión editorial: {reviewedLabel} · <a href={sitePath("metodologia/")}>Cómo revisamos las fuentes</a></p></header>
+  <header class="page-header page-shell"><span class="eyebrow"><Scale size={16} /> Biblioteca legal</span><h1>Cada cálculo debe poder explicarse.</h1><p>Aquí documentamos qué representa cada concepto, cómo lo calcula la herramienta y qué fuentes oficiales respaldan sus parámetros. Los montos legales base están versionados desde julio de 2026; los indicadores previsionales corresponden a remuneraciones de {remunerationPeriodLabel}, pagadas en {paymentPeriodLabel}.</p><p class="content-meta">Última revisión del contenido legal: {reviewedLabel} · <a href={sitePath("metodologia/")}>Cómo distinguimos vigencia legal y período previsional</a></p></header>
   <section class="page-shell official-sources" aria-labelledby="fuentes-principales">
     <div class="section-heading">
       <span class="eyebrow">Documentos consultados</span>

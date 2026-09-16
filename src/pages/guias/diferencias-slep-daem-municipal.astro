@@ -1,0 +1,60 @@
+---
+import { findGuide } from "@/data/guides";
+import GuideLayout from "@/layouts/GuideLayout.astro";
+import { sitePath } from "@/lib/site-path";
+
+const guide = findGuide("diferencias-slep-daem-municipal")!;
+---
+<GuideLayout guide={guide}>
+  <p class="guide-lead">“Trabajo en educación municipal” no identifica por sí solo un régimen remuneracional. Dos personas que desempeñan tareas parecidas, incluso en el mismo edificio, pueden tener empleadores, estatutos y beneficios distintos. La selección correcta empieza en los documentos, no en el nombre informal del cargo.</p>
+
+  <h2>Las tres preguntas que ordenan el caso</h2>
+  <ol>
+    <li><strong>¿Quién figura como empleador?</strong> Busca el nombre exacto en el contrato, nombramiento o liquidación.</li>
+    <li><strong>¿Dónde se prestan los servicios?</strong> Distingue establecimiento educacional, oficinas centrales DAEM/DEM o dependencia municipal.</li>
+    <li><strong>¿Qué tipo de vínculo consta?</strong> Contrato de trabajo, nombramiento de planta o contrata, u otra calidad que la herramienta no cubre.</li>
+  </ol>
+  <p>Responder solo una pregunta puede inducir a error. Por ejemplo, estar destinado físicamente a un DAEM no convierte automáticamente a una persona con nombramiento municipal en trabajadora del nivel central bajo el Código del Trabajo.</p>
+
+  <h2>Mapa de decisión</h2>
+  <div class="calculator-guide-table-scroll">
+    <table class="calculator-guide-table">
+      <thead><tr><th>Documento decisivo</th><th>Recorrido orientativo</th><th>Qué no debes trasladar automáticamente</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Contrato con un SLEP y categoría técnica de asistente</th><td>Técnico/a en educación parvularia — SLEP.</td><td>Reglas municipales DAEM/DEM o escalas de funcionarios municipales.</td></tr>
+        <tr><th scope="row">Contrato municipal como asistente dentro de una escuela o liceo</th><td>Asistente de establecimiento administrado por DAEM/DEM.</td><td>Mínimo técnico y bienios propios del régimen SLEP.</td></tr>
+        <tr><th scope="row">Contrato laboral para oficinas centrales DAEM/DEM</th><td>Personal del nivel central.</td><td>Beneficios ligados al desempeño dentro de un establecimiento.</td></tr>
+        <tr><th scope="row">Nombramiento municipal, estamento y grado</th><td>Funcionario/a de planta o contrata bajo Ley N.º 18.883.</td><td>AFC y reglas propias de un contrato laboral ordinario.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Caso 1: misma función, empleador diferente</h2>
+  <p>Imagina dos técnicas en educación parvularia. La primera tiene contrato directo con un SLEP y el documento la clasifica en la categoría técnica de asistentes de la educación. La segunda tiene contrato con una municipalidad para trabajar en un establecimiento todavía administrado por DAEM. Aunque ambas realicen tareas semejantes, no corresponde copiar a la segunda el mínimo técnico y la asignación de experiencia definidos para el régimen SLEP.</p>
+  <p>La calculadora separa estos recorridos porque la fuente jurídica y la forma de incorporar ciertos haberes no son las mismas. En el caso municipal, algunos montos deben copiarse desde la liquidación o desde el acto local que los concede.</p>
+
+  <h2>Caso 2: trabajar en el DAEM no siempre significa contrato DAEM</h2>
+  <p>Una persona puede trabajar en las oficinas del DAEM con un contrato regido por el Código del Trabajo. Otra puede estar destinada en esas mismas oficinas, pero tener nombramiento municipal de planta o contrata, grado y estamento. La primera utiliza el recorrido de nivel central; la segunda, el recorrido municipal estatutario.</p>
+  <p>La consecuencia práctica aparece en conceptos como escala de sueldo, asignación municipal, bienios y Seguro de Cesantía. La herramienta no puede deducir la calidad jurídica a partir del lugar físico ni del título del cargo.</p>
+
+  <h2>Señales de que todavía no debes calcular</h2>
+  <ul>
+    <li>El documento identifica una corporación municipal, JUNJI, Integra, un jardín VTF u otro empleador no cubierto.</li>
+    <li>La relación es a honorarios y no existe contrato de trabajo o nombramiento aplicable a los recorridos disponibles.</li>
+    <li>No sabes si el acto corresponde a planta, contrata o Código del Trabajo.</li>
+    <li>La liquidación usa un régimen previsional antiguo IPS que la herramienta declara fuera del cálculo automático.</li>
+  </ul>
+  <p>En esos casos, forzar la opción “más parecida” genera una cifra precisa con una premisa incorrecta. Es preferible obtener primero el contrato, nombramiento o certificado del empleador.</p>
+
+  <h2>Qué anotar antes de abrir la calculadora</h2>
+  <div class="guide-checklist">
+    <ul>
+      <li>Nombre legal del empleador.</li>
+      <li>Unidad o establecimiento donde se prestan servicios.</li>
+      <li>Norma, calidad jurídica o tipo de contrato indicado.</li>
+      <li>Categoría o estamento, grado y jornada, cuando correspondan.</li>
+      <li>Fecha de un eventual traspaso al SLEP.</li>
+    </ul>
+  </div>
+  <p>Con esos antecedentes puedes usar la <a href={sitePath("calculadoras/tecnicos-parvulos/")}>calculadora para técnicos/as</a> o la <a href={sitePath("calculadoras/administrativos-municipales/")}>calculadora administrativa</a> sin convertir categorías distintas en equivalentes.</p>
+</GuideLayout>

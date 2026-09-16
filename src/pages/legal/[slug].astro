@@ -39,7 +39,7 @@ const legalStructuredData = [
     datePublished: LEGAL_CONTENT_PUBLISHED_AT,
     dateModified: LEGAL_CONTENT_REVIEWED_AT,
     image: [SITE.socialImageUrl],
-    author: { "@id": SITE.organizationId },
+    author: { "@id": SITE.editorialAuthorId },
     publisher: { "@id": SITE.organizationId },
     isPartOf: { "@id": SITE.websiteId },
     citation: entry.sources.map((source) => source.url),
@@ -51,8 +51,8 @@ const legalStructuredData = [
   ]),
 ];
 ---
-<BaseLayout title={pageTitle} description={entry.summary} type="article" structuredData={legalStructuredData}>
-  <header class="page-header page-shell"><a href={sitePath("legal/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p><p class="content-meta">Elaborado y revisado por <a href={sitePath("acerca-de/")}>Sueldos Públicos</a> · Última revisión: {reviewedLabel}</p></header>
+<BaseLayout title={pageTitle} description={entry.summary} type="article" author={SITE.editorialAuthorName} structuredData={legalStructuredData}>
+  <header class="page-header page-shell"><a href={sitePath("legal/")} class="eyebrow normal-case tracking-normal"><ArrowLeft size={16} /> Volver a respaldo legal</a><h1>{entry.title}</h1><p>{entry.summary}</p><p class="content-meta">Elaborado y revisado por <a href={sitePath("acerca-de/#victor-reyes-medina")}>{SITE.editorialAuthorName}</a> · Última revisión: {reviewedLabel}</p></header>
   <div class="page-shell legal-detail">
     <article class="legal-content">
       <h2>A quién se aplica</h2><p>{entry.appliesTo}</p>
@@ -94,7 +94,7 @@ const legalStructuredData = [
       )}
       <h2>Consideraciones</h2><ul>{entry.notes.map((note) => <li>{note}</li>)}</ul>
       <p class="mt-8 rounded-xl bg-muted p-4 text-sm">Esta página explica la implementación de la calculadora y no reemplaza una interpretación jurídica aplicada a un caso particular.</p>
-      <p class="text-sm">Consulta nuestra <a href={sitePath("metodologia/")}>metodología de fuentes, revisión y actualización</a> o <a href={sitePath("contacto/")}>reporta una posible corrección</a>.</p>
+      <p class="text-sm">Consulta nuestra <a href={sitePath("metodologia/")}>metodología de fuentes, revisión y actualización</a>, aprende a <a href={sitePath("guias/comparar-calculo-con-liquidacion/")}>comparar una estimación con tu liquidación</a> o <a href={sitePath("contacto/")}>reporta una posible corrección</a>.</p>
     </article>
     <aside><div class="source-box"><Scale size={24} className="text-primary" /><h2 class="mt-3 font-bold">Fuentes oficiales</h2><p class="text-sm leading-6 text-muted-foreground">Enlaces consultados para documentar el concepto y sus parámetros.</p>{entry.sources.map((source) => <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ExternalLink size={14} className="inline" /></a>)}</div></aside>
   </div>
