@@ -397,3 +397,17 @@ describe("calculateTeacherSalary", () => {
     expect(result.warnings).toContain("La jornada se limitó proporcionalmente a 44 horas para un mismo empleador.");
   });
 });
+
+
+describe("Ejemplo editorial de asignación de experiencia (julio 2026)", () => {
+  it.each([[0, 0], [1, 30577], [3, 90827], [15, 452328]])(
+    "reproduce el haber publicado con %i bienios",
+    (biennia, amount) => {
+      const result = calculateTeacherSalary({ ...baseInput, basicHours: 20, secondaryHours: 24, biennia }, {
+        ...P, hourlyRate: { basic: 19992, secondary: 21034 },
+      });
+      expect(result.legalRbmn).toBe(904656);
+      expect(result.earnings.find((line) => line.id === "experience")?.amount ?? 0).toBe(amount);
+    },
+  );
+});

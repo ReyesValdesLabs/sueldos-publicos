@@ -1,3 +1,5 @@
+import { TEACHER_EXAMPLE_REVIEWED_AT } from "./examples/teacher";
+
 export const SITE = {
   name: "Sueldos Públicos",
   url: "https://sueldospublicos.cl/",
@@ -25,7 +27,7 @@ export const GUIDES_CONTENT_REVIEWED_AT = "2026-09-03";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
   "": SITE.updatedAt,
-  "calculadoras/docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
+  "calculadoras/docentes/": TEACHER_EXAMPLE_REVIEWED_AT,
   "calculadoras/tecnicos-parvulos/": CALCULATOR_CONTENT_REVIEWED_AT,
   "calculadoras/administrativos-municipales/": CALCULATOR_CONTENT_REVIEWED_AT,
   "calculadoras/tramos-docentes/": CALCULATOR_CONTENT_REVIEWED_AT,

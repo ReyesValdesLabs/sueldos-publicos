@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PrioritySchoolSearch } from "@/components/PrioritySchoolSearch";
 
+import TeacherSalaryExample from "@/components/TeacherSalaryExample";
+import { createTeacherExampleInput, teacherExampleResult } from "@/data/examples/teacher";
+
 const currency = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
 const integerMoney = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 0 });
 const decimalMoney = new Intl.NumberFormat("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -135,6 +138,8 @@ function CheckField({ id, checked, onChange, label, help }: { id: string; checke
 
 export default function TeacherCalculator() {
   const [step, setStep] = useState(0);
+  const [exampleLoadCount, setExampleLoadCount] = useState(0);
+  const resultRef = useRef<HTMLDivElement>(null);
   const calculatorRef = useRef<HTMLElement>(null);
   const scrollAfterStepChange = useRef(false);
   const [input, setInput] = useState<CalculationInput>(initialInput);
@@ -227,6 +232,23 @@ export default function TeacherCalculator() {
     });
   }, [step]);
 
+  useEffect(() => {
+    if (exampleLoadCount === 0) return;
+    resultRef.current?.focus({ preventScroll: true });
+    resultRef.current?.scrollIntoView({ behavior: "auto", block: "start" });
+  }, [exampleLoadCount]);
+
+  const loadExample = () => {
+    setInput(createTeacherExampleInput());
+    setEditBase(false);
+    setResponsibilityPercentageEdited(false);
+    setManualParameters(false);
+    setManualValues({ uf: P.uf, pensionCapUf: P.pensionCapUf, unemploymentCapUf: P.unemploymentCapUf, afpCommission: { ...P.afpCommission } });
+    scrollAfterStepChange.current = false;
+    setStep(3);
+    setExampleLoadCount((count) => count + 1);
+  };
+
   const addManualItem = () => update("manualItems", [...input.manualItems, { id: crypto.randomUUID(), name: "", amount: 0, kind: "imposableTaxable" }]);
   const patchManualItem = (id: string, patch: Partial<ManualItem>) => update("manualItems", input.manualItems.map((item) => item.id === id ? { ...item, ...patch } : item));
   const removeManualItem = (id: string) => update("manualItems", input.manualItems.filter((item) => item.id !== id));
@@ -247,6 +269,8 @@ export default function TeacherCalculator() {
       </div>
       <a href={sitePath("legal/")} className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-primary hover:underline"><ShieldCheck size={18} /> Ver respaldo legal</a>
     </div>
+
+    <p className="mb-6 rounded-xl border border-border bg-muted/30 p-4 text-sm print:hidden">¿Quieres ver cómo se forma un sueldo? <a className="font-bold text-primary underline" href="#ejemplo-docente">Revisa el ejemplo completo de jornada mixta: {currency.format(teacherExampleResult.netSalary)} líquidos</a>, con sus antecedentes y descuentos.</p>
 
     {dataIssue && <div className="data-alert" role="alert"><AlertTriangle size={20} /><div><strong>{periodStale ? "Los indicadores previsionales pueden estar desactualizados" : "No pudimos comprobar la disponibilidad de Previred"}</strong><p>La copia verificada sigue disponible. También puedes ingresar los valores previsionales para esta simulación.</p></div><Button type="button" size="sm" variant="outline" onClick={() => { setManualParameters(true); goTo(2); }}>Ingresar valores</Button></div>}
 
@@ -411,6 +435,7 @@ export default function TeacherCalculator() {
         </>}
 
         {step === 3 && <>
+          <div ref={resultRef} tabIndex={-1} className="scroll-mt-24" role="status">{exampleLoadCount > 0 && <p className="px-6 pt-4 text-sm text-muted-foreground print:hidden">Se cargaron los antecedentes del ejemplo. Puedes modificarlos en los pasos anteriores.</p>}</div>
           <CardHeader className="result-heading"><Badge className={manualParameters ? "border-destructive/30 bg-destructive/10 text-destructive" : ""}>{manualParameters ? "Parámetros manuales" : "Estimación lista"}</Badge><CardTitle className="text-3xl">Tu sueldo líquido estimado</CardTitle><div className="result-total" aria-live="polite">{currency.format(result.netSalary)}</div><CardDescription>Mes completo con montos legales base de {P.label.toLowerCase()} e indicadores previsionales para remuneraciones de {remunerationPeriodLabel}, pagadas en {paymentPeriodLabel}.</CardDescription></CardHeader>
           <CardContent className="space-y-6">
             {result.warnings.length > 0 && <div className="warning-list" role="status"><AlertTriangle size={20} /><div><strong>Revisa estas consideraciones</strong><ul>{result.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div></div>}
@@ -429,6 +454,7 @@ export default function TeacherCalculator() {
       </Card>
 
     </div>
+    <TeacherSalaryExample onLoad={loadExample} />
   </section>;
 }
 

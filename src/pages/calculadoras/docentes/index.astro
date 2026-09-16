@@ -1,7 +1,8 @@
 ---
 import AdSlot from "@/components/AdSlot.astro";
 import TeacherCalculator from "@/components/TeacherCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
+import { SITE } from "@/data/site";
+import { TEACHER_EXAMPLE_REVIEWED_AT } from "@/data/examples/teacher";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -14,9 +15,9 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${TEACHER_EXAMPLE_REVIEWED_AT}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
+  webPageStructuredData({ name: title, description, path, dateModified: TEACHER_EXAMPLE_REVIEWED_AT, author: "editorialAuthor" }),
   calculatorStructuredData({ name: "Calculadora de sueldo docente en Chile", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
