@@ -1,7 +1,9 @@
 ---
+import { trancheExampleResult as example } from "@/data/examples/tranche";
+import { TRANCHE_NAMES } from "@/lib/tranche-progression/calculate";
 import AdSlot from "@/components/AdSlot.astro";
 import TrancheCalculator from "@/components/TrancheCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
+import { STATIC_PAGE_LAST_MODIFIED, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -14,9 +16,9 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${STATIC_PAGE_LAST_MODIFIED[path]}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
+  webPageStructuredData({ name: title, description, path, dateModified: STATIC_PAGE_LAST_MODIFIED[path], author: "editorialAuthor" }),
   calculatorStructuredData({ name: "Calculadora de tramos de Carrera Docente", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -74,5 +76,20 @@ const structuredData = [
       <p class="calculator-guide-footer">Consulta la explicación completa de la <a href={sitePath("legal/progresion-tramos/")}>progresión de tramos</a>, la <a href={sitePath("legal/asignacion-tramo/")}>asignación remuneracional asociada</a> y nuestra <a href={sitePath("metodologia/")}>metodología de revisión</a>.</p>
     </div>
   </section>
+  <section id="caso-explicado" class="calculator-guide section-muted scroll-mt-24" aria-labelledby="caso-tramo-title"><div class="page-shell calculator-guide-content">
+    <h2 id="caso-tramo-title" class="text-3xl font-extrabold">Caso explicado: desde Inicial con cuatro años</h2>
+    <p>Docente ficticio en Inicial, cuatro años de experiencia reconocida y cero años de permanencia en el tramo. Portafolio A y ECEP B, ambos rendidos en el proceso actual. Ingreso al sistema anterior a 2025, sin un proceso anterior insuficiente, sin reingreso ni plazo de Acceso vencido. No se invocan excepciones de ingreso con A o doble A.</p>
+    <ul>
+      <li>Techo por instrumentos: <strong>{TRANCHE_NAMES[example.matrixCeiling]}</strong>.</li>
+      <li>Techo por experiencia: <strong>{TRANCHE_NAMES[example.experienceCeiling]}</strong>.</li>
+      <li>Techo por progresión: <strong>{TRANCHE_NAMES[example.progressionCeiling]}</strong>.</li>
+      <li>Techo por permanencia: <strong>{TRANCHE_NAMES[example.permanenceCeiling]}</strong>.</li>
+      <li>Proyección final: <strong>{example.resultTranche ? TRANCHE_NAMES[example.resultTranche] : "Sin tramo proyectable"}</strong>.</li>
+    </ul>
+    <p>La combinación de instrumentos no garantiza por sí sola el tramo de la matriz: la proyección debe cumplir también experiencia, progresión y permanencia. Estas son las razones que entrega el motor para el caso:</p>
+    <ul>{example.reasons.map(reason => <li>{reason}</li>)}</ul>
+    <h3>Reproduce y compara</h3><p>Pulsa «Cargar caso explicado» para reemplazar los datos actuales. El resultado se actualiza inmediatamente. Cambia solo los años de experiencia a cero y observa qué límite cambia; después vuelve a cargar el caso. No confundas esta proyección con una resolución ni con un aumento de sueldo: la asignación remuneracional requiere además jornada y antecedentes reconocidos.</p>
+    <p><a href={sitePath("guias/entender-progresion-tramo-docente/")}>Cómo interpretar la progresión</a> · <a href={sitePath("legal/progresion-tramos/")}>Fuentes y condiciones legales</a></p>
+  </div></section>
   <AdSlot placement="después de la calculadora de tramos" />
 </BaseLayout>

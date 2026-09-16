@@ -1,3 +1,4 @@
+import { createTrancheExampleInput } from "@/data/examples/tranche";
 import { useMemo, useState, type ReactNode } from "react";
 import { ArrowRight, Check, CircleAlert, CircleCheck, ExternalLink, Flag, Grid3X3, Info, Scale, SlidersHorizontal, X } from "lucide-react";
 import type { Tranche } from "@/lib/calculation/types";
@@ -157,6 +158,7 @@ export default function TrancheCalculator() {
         : "La combinación no produce un tramo superior en este proceso, pero el sistema conserva el tramo ya reconocido.";
 
   return <section id="calculadora-tramos" aria-labelledby="tranche-calculator-title">
+    <button type="button" className="hero-button mb-6" onClick={() => { setInput(createTrancheExampleInput()); setTarget("early"); }}>Cargar caso explicado (reemplaza los datos actuales)</button>
     <div className="tranche-intro">
       <div><Badge>Simulador informativo</Badge><h2 id="tranche-calculator-title">Proyecta tu progresión en Carrera Docente</h2><p>Cada cambio recalcula el resultado en tu navegador. Usa años acreditados y resultados oficiales.</p></div>
       <a href={sitePath("legal/progresion-tramos/")} className="context-help-link"><Scale size={18} /> Ver reglas y fuentes</a>

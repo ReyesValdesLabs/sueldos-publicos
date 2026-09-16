@@ -1,3 +1,4 @@
+import { createAssistantExampleInput } from "@/data/examples/assistant";
 import { useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowLeft, ArrowRight, Check, FileText, Info, Plus, Printer, ShieldCheck, Trash2 } from "lucide-react";
 import { JULY_2026_ASSISTANT_PARAMETERS as A } from "@/data/parameters/assistants-2026-07";
@@ -139,6 +140,7 @@ export default function AssistantCalculator({ embedded = false }: { embedded?: b
   };
 
   return <section id={embedded ? undefined : "calculadora"} className="scroll-mt-24" aria-labelledby="assistant-calculator-title">
+    <button type="button" className="hero-button mb-6" onClick={() => { setInput(createAssistantExampleInput()); setRemunerationEdited(false); setStep(0); }}>Cargar caso explicado (reemplaza los datos actuales)</button>
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
         <Badge>Categoría técnica SLEP · montos legales base de {A.label}</Badge>
