@@ -17,6 +17,7 @@ const currency = new Intl.NumberFormat("es-CL", {
   currency: "CLP",
   maximumFractionDigits: 0,
 });
+const reviewedAt = entry.reviewedAt ?? LEGAL_CONTENT_REVIEWED_AT;
 const entryPath = `legal/${entry.slug}/`;
 const entryUrl = new URL(entryPath, SITE.url).href;
 const pageTitle = `${entry.title} | Respaldo legal | Sueldos Públicos`;
@@ -25,7 +26,7 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${LEGAL_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${reviewedAt}T12:00:00Z`));
 const legalStructuredData = [
   {
     "@context": "https://schema.org",
@@ -37,7 +38,7 @@ const legalStructuredData = [
     mainEntityOfPage: entryUrl,
     inLanguage: "es-CL",
     datePublished: LEGAL_CONTENT_PUBLISHED_AT,
-    dateModified: LEGAL_CONTENT_REVIEWED_AT,
+    dateModified: reviewedAt,
     image: [SITE.socialImageUrl],
     author: { "@id": SITE.editorialAuthorId },
     publisher: { "@id": SITE.organizationId },
@@ -92,6 +93,13 @@ const legalStructuredData = [
           </a>
         </section>
       )}
+      {entry.sections?.map((section) => (
+        <section>
+          <h2>{section.title}</h2>
+          {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        </section>
+      ))}
+      {entry.slug === "experiencia" && <p><a href={sitePath("calculadoras/docentes/")}>Comprobar el ejemplo en la calculadora docente</a> · <a href={sitePath("legal/asignacion-tramo/")}>Entender los componentes del tramo</a></p>}
       <h2>Consideraciones</h2><ul>{entry.notes.map((note) => <li>{note}</li>)}</ul>
       <p class="mt-8 rounded-xl bg-muted p-4 text-sm">Esta página explica la implementación de la calculadora y no reemplaza una interpretación jurídica aplicada a un caso particular.</p>
       <p class="text-sm">Consulta nuestra <a href={sitePath("metodologia/")}>metodología de fuentes, revisión y actualización</a>, aprende a <a href={sitePath("guias/comparar-calculo-con-liquidacion/")}>comparar una estimación con tu liquidación</a> o <a href={sitePath("contacto/")}>reporta una posible corrección</a>.</p>
