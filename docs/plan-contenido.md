@@ -38,14 +38,36 @@ producción se comprobó por las guías y páginas visibles, no por un identific
 
 El caso usa los parámetros publicados y se recalcula en cada compilación. Los valores
 mensuales no están duplicados ni fijados en el texto. Las fechas de las otras calculadoras
-se conservan. El siguiente paso es desarrollar la guía a partir de este caso.
+se conservan.
 
-## Siguientes partes
+## Parte 3: guía de liquidación docente
 
-1. Integrar ese caso en la guía de liquidación docente evitando duplicación.
-2. Ampliar BRP y seguro de cesantía; decidir agrupaciones después de revisar su utilidad.
-3. Replicar casos en las otras calculadoras; mejorar acceso desde la portada.
-4. Revisar experiencia móvil, rastreo y configuración publicitaria antes de solicitar AdSense.
+- [x] Integrar el caso compartido, con supuestos, períodos, haberes, descuentos y líquido.
+- [x] Explicar la revisión de RBMN, experiencia, tramo y bases antes de comparar el líquido.
+- [x] Comparar dos y tres bienios manteniendo los demás antecedentes; verificar los cambios con pruebas.
+- [x] Añadir pasos para reproducir la comparación y preparar una consulta al empleador.
+- [x] Actualizar solo la fecha de revisión de esta guía y comprobar HTML, enlaces, JSON-LD y sitemap.
+- [x] Validar tipos, 150 pruebas unitarias, 13 pruebas de automatización y compilación; revisar escritorio y móvil.
+
+La PR #20 aportó el caso compartido. Las PR #22 y #23 se integraron en la rama
+intermedia; la recuperación aplica sus cambios sobre main, conservando Analytics.
+
+## Partes 4 a 6: contenido restante y revisión técnica
+
+- [x] Ampliar BRP con proporcionalidad, tope, acreditación y caso numérico.
+- [x] Ampliar cotizaciones y la ficha específica AFC de asistentes con casos y comprobaciones.
+- [x] Conservar ambas fichas: bases comunes y aplicación contractual tienen propósitos distintos.
+- [x] Publicar casos en HTML inicial para técnicos SLEP, administrativos DAEM central y progresión docente.
+- [x] Permitir cargar antecedentes completos y volver a cargarlos tras modificar datos.
+- [x] Enlazar los cuatro casos desde portada y biblioteca legal.
+- [x] Validar cifras, enlaces, fechas, metadatos y configuración publicitaria del código.
+- [x] Revisar formularios y lectura móvil.
+- [ ] Verificar rastreo de producción en Search Console: este entorno recibe HTTP 403.
+- [ ] Confirmar ajustes de cuenta AdSense, consentimiento y anuncios reales tras publicar.
+- [ ] Revisión editorial humana, integración y despliegue; después solicitar revisión AdSense.
+
+Detalle y comprobaciones reproducibles: [revisión AdSense](revision-adsense.md).
+La recuperación reúne estas partes y la guía docente en una PR dirigida a main.
 
 ## Datos todavía no disponibles
 

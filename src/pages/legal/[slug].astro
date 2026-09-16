@@ -100,6 +100,8 @@ const legalStructuredData = [
         </section>
       ))}
       {entry.slug === "experiencia" && <p><a href={sitePath("calculadoras/docentes/")}>Comprobar el ejemplo en la calculadora docente</a> · <a href={sitePath("legal/asignacion-tramo/")}>Entender los componentes del tramo</a></p>}
+      {entry.slug === "brp" && <p><a href={sitePath("calculadoras/docentes/#ejemplo-docente")}>Ver título y mención en el caso completo docente</a></p>}
+      {["cotizaciones-previsionales", "asistentes-seguro-cesantia"].includes(entry.slug) && <p><a href={sitePath("calculadoras/administrativos-municipales/#caso-explicado")}>Ver AFC en el caso administrativo</a> · <a href={sitePath("calculadoras/tecnicos-parvulos/#caso-explicado")}>Ver descuentos en el caso SLEP</a></p>}
       <h2>Consideraciones</h2><ul>{entry.notes.map((note) => <li>{note}</li>)}</ul>
       <p class="mt-8 rounded-xl bg-muted p-4 text-sm">Esta página explica la implementación de la calculadora y no reemplaza una interpretación jurídica aplicada a un caso particular.</p>
       <p class="text-sm">Consulta nuestra <a href={sitePath("metodologia/")}>metodología de fuentes, revisión y actualización</a>, aprende a <a href={sitePath("guias/comparar-calculo-con-liquidacion/")}>comparar una estimación con tu liquidación</a> o <a href={sitePath("contacto/")}>reporta una posible corrección</a>.</p>
