@@ -38,14 +38,26 @@ producción se comprobó por las guías y páginas visibles, no por un identific
 
 El caso usa los parámetros publicados y se recalcula en cada compilación. Los valores
 mensuales no están duplicados ni fijados en el texto. Las fechas de las otras calculadoras
-se conservan. El siguiente paso es desarrollar la guía a partir de este caso.
+se conservan.
+
+## Parte 3: guía de liquidación docente
+
+- [x] Integrar el caso compartido, con supuestos, períodos, haberes, descuentos y líquido.
+- [x] Explicar la revisión de RBMN, experiencia, tramo y bases antes de comparar el líquido.
+- [x] Comparar dos y tres bienios manteniendo los demás antecedentes; verificar los cambios con pruebas.
+- [x] Añadir pasos para reproducir la comparación y preparar una consulta al empleador.
+- [x] Actualizar solo la fecha de revisión de esta guía y comprobar HTML, enlaces, JSON-LD y sitemap.
+- [x] Validar tipos, 150 pruebas unitarias, 13 pruebas de automatización y compilación; revisar escritorio y móvil.
+
+Esta parte depende de la PR #20, que aporta el caso compartido. Se presenta en una PR
+separada sobre su rama para revisar únicamente la ampliación de la guía. Primero debe
+integrarse #20 y después cambiar la base de esta parte a main antes de integrarla.
 
 ## Siguientes partes
 
-1. Integrar ese caso en la guía de liquidación docente evitando duplicación.
-2. Ampliar BRP y seguro de cesantía; decidir agrupaciones después de revisar su utilidad.
-3. Replicar casos en las otras calculadoras; mejorar acceso desde la portada.
-4. Revisar experiencia móvil, rastreo y configuración publicitaria antes de solicitar AdSense.
+1. Ampliar BRP y seguro de cesantía; decidir agrupaciones después de revisar su utilidad.
+2. Replicar casos en las otras calculadoras; mejorar acceso desde la portada.
+3. Revisar experiencia móvil, rastreo y configuración publicitaria antes de solicitar AdSense.
 
 ## Datos todavía no disponibles
 

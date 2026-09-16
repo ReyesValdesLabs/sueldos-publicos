@@ -21,11 +21,13 @@ export const GUIDES: GuideEntry[] = [
   {
     ...sharedDates,
     slug: "como-leer-liquidacion-docente",
+    reviewedAt: "2026-09-16",
     title: "Cómo leer una liquidación docente, línea por línea",
-    description: "Un método práctico para separar haberes, bases de cálculo, descuentos y sueldo líquido antes de buscar una diferencia.",
+    description: "Comprueba una liquidación docente con un caso completo: haberes, descuentos y una comparación de dos y tres bienios para encontrar la primera diferencia.",
     audience: "Docentes municipales y SLEP",
-    readingTime: "9 min",
+    readingTime: "12 min",
     sources: [
+      { label: "Previred — indicadores previsionales del caso", url: PREVIRED_PARAMETERS.sourceUrl },
       { label: "Estatuto Docente", url: "https://www.bcn.cl/leychile/navegar?idNorma=60439" },
       { label: "CPEIP — Asignaciones de Carrera Docente", url: "https://cpeip.cl/carrera-docente-asignaciones/" },
       { label: "SII — Impuesto Único 2026", url: "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm" },
