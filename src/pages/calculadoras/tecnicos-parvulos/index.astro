@@ -1,7 +1,9 @@
 ---
+import SalaryCase from "@/components/SalaryCase.astro";
+import { assistantExampleResult } from "@/data/examples/assistant";
 import AdSlot from "@/components/AdSlot.astro";
 import TechnicalAssistantCalculator from "@/components/TechnicalAssistantCalculator";
-import { CALCULATOR_CONTENT_REVIEWED_AT, SITE } from "@/data/site";
+import { STATIC_PAGE_LAST_MODIFIED, SITE } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, calculatorStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -14,9 +16,9 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${CALCULATOR_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${STATIC_PAGE_LAST_MODIFIED[path]}T12:00:00Z`));
 const structuredData = [
-  webPageStructuredData({ name: title, description, path, dateModified: CALCULATOR_CONTENT_REVIEWED_AT, author: "editorialAuthor" }),
+  webPageStructuredData({ name: title, description, path, dateModified: STATIC_PAGE_LAST_MODIFIED[path], author: "editorialAuthor" }),
   calculatorStructuredData({ name: "Calculadora para técnicos en párvulos", description, path }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -74,5 +76,6 @@ const structuredData = [
       <p class="calculator-guide-footer">Consulta también las <a href={sitePath("legal/asistentes-asignaciones-establecimiento/")}>asignaciones del establecimiento</a>, las <a href={sitePath("legal/asistentes-daem-remuneraciones/")}>remuneraciones DAEM/DEM</a> y nuestra <a href={sitePath("metodologia/")}>metodología de actualización</a>.</p>
     </div>
   </section>
+  <SalaryCase title="Caso completo: técnico SLEP con dos bienios" assumptions="Contrato directo con SLEP, categoría técnica, 44 horas, dos bienios reconocidos y remuneración computable igual al mínimo técnico de jornada completa. AFP Habitat, Fonasa, contrato indefinido y aporte AFC vigente. Los bonos y asignaciones adicionales informados están en cero; el motor evalúa por separado el bono legal de bajas remuneraciones." instructions="Selecciona «Mi empleador es un SLEP» y pulsa «Cargar caso explicado»." source="legal/asistentes-minimo-experiencia/" result={assistantExampleResult} />
   <AdSlot placement="después de la calculadora técnica" />
 </BaseLayout>

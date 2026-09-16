@@ -53,11 +53,22 @@ Esta parte depende de la PR #20, que aporta el caso compartido. Se presenta en u
 separada sobre su rama para revisar únicamente la ampliación de la guía. Primero debe
 integrarse #20 y después cambiar la base de esta parte a main antes de integrarla.
 
-## Siguientes partes
+## Partes 4 a 6: contenido restante y revisión técnica
 
-1. Ampliar BRP y seguro de cesantía; decidir agrupaciones después de revisar su utilidad.
-2. Replicar casos en las otras calculadoras; mejorar acceso desde la portada.
-3. Revisar experiencia móvil, rastreo y configuración publicitaria antes de solicitar AdSense.
+- [x] Ampliar BRP con proporcionalidad, tope, acreditación y caso numérico.
+- [x] Ampliar cotizaciones y la ficha específica AFC de asistentes con casos y comprobaciones.
+- [x] Conservar ambas fichas: bases comunes y aplicación contractual tienen propósitos distintos.
+- [x] Publicar casos en HTML inicial para técnicos SLEP, administrativos DAEM central y progresión docente.
+- [x] Permitir cargar antecedentes completos y volver a cargarlos tras modificar datos.
+- [x] Enlazar los cuatro casos desde portada y biblioteca legal.
+- [x] Validar cifras, enlaces, fechas, metadatos y configuración publicitaria del código.
+- [x] Revisar formularios y lectura móvil.
+- [ ] Verificar rastreo de producción en Search Console: este entorno recibe HTTP 403.
+- [ ] Confirmar ajustes de cuenta AdSense, consentimiento y anuncios reales tras publicar.
+- [ ] Revisión editorial humana, integración y despliegue; después solicitar revisión AdSense.
+
+Detalle y comprobaciones reproducibles: [revisión AdSense](revision-adsense.md).
+Estas partes se presentan sobre la rama de #22 mientras las PR previas siguen abiertas.
 
 ## Datos todavía no disponibles
 

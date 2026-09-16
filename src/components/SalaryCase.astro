@@ -1,0 +1,30 @@
+---
+import { PREVIRED_PARAMETERS as P } from "@/data/parameters/previred.generated";
+import type { ResultLine } from "@/lib/calculation/types";
+import { sitePath } from "@/lib/site-path";
+interface Props {
+  title: string; assumptions: string; instructions: string; source: string;
+  result: { earnings: ResultLine[]; discounts: ResultLine[]; totalEarnings: number; totalDiscounts: number; netSalary: number; imposableBase: number; taxableBase: number; warnings: string[] };
+}
+const { title, assumptions, instructions, source, result } = Astro.props;
+const money = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
+const period = (s: string) => new Intl.DateTimeFormat("es-CL", {month:"long", year:"numeric", timeZone:"America/Santiago"}).format(new Date(`${s}-15T12:00:00Z`));
+---
+<section id="caso-explicado" class="calculator-guide section-muted scroll-mt-24" aria-labelledby="caso-title">
+  <div class="page-shell calculator-guide-content">
+    <h2 id="caso-title" class="text-3xl font-extrabold">{title}</h2>
+    <p>{assumptions}</p>
+    <p>Caso ficticio de mes completo con montos legales base de julio de 2026 e indicadores para remuneraciones de {period(P.remunerationPeriod)}, pagadas en {period(P.paymentPeriod)}. No incluye APV, Isapre, haberes manuales ni descuentos personales adicionales.</p>
+    <div class="calculator-guide-columns">
+      <section><h3>Haberes del caso</h3><ul>{result.earnings.map(line => <li><strong>{line.label}: {money(line.amount)}</strong>. {line.imposable ? "Imponible" : "No imponible"}; {line.taxable ? "tributable" : "no tributable"}. {line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)}>Ver fundamento</a>}</li>)}</ul></section>
+      <section><h3>Descuentos personales</h3><ul>{result.discounts.map(line => <li><strong>{line.label}: {money(line.amount)}</strong>. {line.legalSlug && <a href={sitePath(`legal/${line.legalSlug}/`)}>Ver fundamento</a>}</li>)}</ul></section>
+    </div>
+    <p>Base imponible: <strong>{money(result.imposableBase)}</strong>. Base para el impuesto después de rebajas: <strong>{money(result.taxableBase)}</strong>. Las cotizaciones aplican sus respectivos topes; no todas las bases se sustituyen por el total bruto.</p>
+    <div class="formula">{money(result.totalEarnings)} en haberes − {money(result.totalDiscounts)} en descuentos = {money(result.netSalary)} líquidos</div>
+    {result.warnings.length > 0 && <ul>{result.warnings.map(warning => <li>{warning}</li>)}</ul>}
+    <h3>Cómo reproducirlo y buscar una diferencia</h3>
+    <p>{instructions} El botón reemplaza todos los antecedentes de la simulación. Avanza hasta el resultado sin alterar otros campos y compara primero los haberes; luego las bases y descuentos.</p>
+    <p>Prueba cambiar el contrato de indefinido a plazo fijo: desaparece el descuento personal AFC, aunque eso no significa que el empleador deje de cotizar. El líquido puede cambiar también por la base del impuesto. No ajustes descuentos a mano solo para igualar un líquido.</p>
+    <p><a href={sitePath(source)}>Consultar las reglas de este régimen</a> · <a href={sitePath("guias/cotizaciones-salud-impuesto/")}>Entender cotizaciones e impuesto</a></p>
+  </div>
+</section>

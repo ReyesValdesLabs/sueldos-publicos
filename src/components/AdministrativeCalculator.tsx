@@ -1,3 +1,4 @@
+import { createAdministrativeExampleInput } from "@/data/examples/administrative";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
@@ -341,6 +342,7 @@ export default function AdministrativeCalculator() {
   );
 
   return <section id="calculadora" className="scroll-mt-24">
+    <button type="button" className="hero-button mb-6" onClick={() => { setInput(createAdministrativeExampleInput()); setStep(1); }}>Cargar caso explicado (reemplaza los datos actuales)</button>
     {step === 0 && <div className="regime-selector">
       <div className="regime-selector-heading">
         <span className="eyebrow">Paso 1 · Identifica tu vínculo</span>

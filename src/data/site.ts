@@ -26,12 +26,12 @@ export const GUIDES_CONTENT_PUBLISHED_AT = "2026-09-03";
 export const GUIDES_CONTENT_REVIEWED_AT = "2026-09-03";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
-  "": SITE.updatedAt,
+  "": "2026-09-16",
   "calculadoras/docentes/": TEACHER_EXAMPLE_REVIEWED_AT,
-  "calculadoras/tecnicos-parvulos/": CALCULATOR_CONTENT_REVIEWED_AT,
-  "calculadoras/administrativos-municipales/": CALCULATOR_CONTENT_REVIEWED_AT,
-  "calculadoras/tramos-docentes/": CALCULATOR_CONTENT_REVIEWED_AT,
-  "legal/": LEGAL_CONTENT_REVIEWED_AT,
+  "calculadoras/tecnicos-parvulos/": "2026-09-16",
+  "calculadoras/administrativos-municipales/": "2026-09-16",
+  "calculadoras/tramos-docentes/": "2026-09-16",
+  "legal/": "2026-09-16",
   "guias/": GUIDES_CONTENT_REVIEWED_AT,
   "acerca-de/": ABOUT_CONTENT_REVIEWED_AT,
   "metodologia/": SITE.updatedAt,

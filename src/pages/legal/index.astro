@@ -2,7 +2,7 @@
 import { ArrowRight, ExternalLink, Scale } from "lucide-react";
 import { LEGAL_ENTRIES } from "@/data/legal";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
-import { LEGAL_CONTENT_REVIEWED_AT } from "@/data/site";
+import { STATIC_PAGE_LAST_MODIFIED } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -14,7 +14,7 @@ const reviewedLabel = new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
   timeZone: "America/Santiago",
-}).format(new Date(`${LEGAL_CONTENT_REVIEWED_AT}T12:00:00Z`));
+}).format(new Date(`${STATIC_PAGE_LAST_MODIFIED["legal/"]}T12:00:00Z`));
 const monthLabel = (period: string) => new Intl.DateTimeFormat("es-CL", {
   month: "long",
   year: "numeric",
@@ -28,7 +28,7 @@ const structuredData = [
     description,
     path: "legal/",
     type: "CollectionPage",
-    dateModified: LEGAL_CONTENT_REVIEWED_AT,
+    dateModified: STATIC_PAGE_LAST_MODIFIED["legal/"],
   }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
@@ -126,4 +126,16 @@ const officialSources = [
       </a>
     ))}
   </section>
+
+  <section class="calculator-guide" aria-labelledby="casos-title"><div class="page-shell calculator-guide-content">
+    <h2 id="casos-title" class="text-3xl font-extrabold">Aprende con casos completos</h2>
+    <p>Revisa los antecedentes y el resultado antes de ingresar tus datos. Cada caso permite comprobar las líneas del cálculo y entender sus límites.</p>
+    <ul>
+      <li><a href={sitePath("calculadoras/docentes/#ejemplo-docente")}>Docente: jornada mixta, tres bienios y BRP</a></li>
+      <li><a href={sitePath("calculadoras/tecnicos-parvulos/#caso-explicado")}>Técnico SLEP: mínimo técnico, experiencia y descuentos</a></li>
+      <li><a href={sitePath("calculadoras/administrativos-municipales/#caso-explicado")}>Administrativo DAEM central: sueldo contractual y AFC</a></li>
+      <li><a href={sitePath("calculadoras/tramos-docentes/#caso-explicado")}>Carrera Docente: instrumentos, experiencia y tramo proyectado</a></li>
+    </ul>
+    <p><a href={sitePath("legal/brp/")}>Cómo comprobar la BRP</a> · <a href={sitePath("legal/cotizaciones-previsionales/")}>Cómo comprobar cotizaciones y seguro de cesantía</a></p>
+  </div></section>
 </BaseLayout>

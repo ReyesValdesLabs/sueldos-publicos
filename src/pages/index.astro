@@ -1,5 +1,6 @@
 ---
 import { ArrowRight, BookOpenCheck, BriefcaseBusiness, Calculator, CalendarClock, FileCheck2, GraduationCap, Scale, ShieldCheck, TrendingUp } from "lucide-react";
+import { STATIC_PAGE_LAST_MODIFIED } from "@/data/site";
 import { GUIDES } from "@/data/guides";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { JULY_2026_PARAMETERS as P } from "@/data/parameters/2026-07";
@@ -11,7 +12,7 @@ const paymentPeriodLabel = new Intl.DateTimeFormat("es-CL", { month: "long", yea
 const homeTitle = "Calculadoras de sueldos públicos en Chile | Sueldos Públicos";
 const homeDescription = "Estima liquidaciones de docentes, asistentes de la educación y personal administrativo DAEM o municipal con fórmulas explicadas y respaldo legal.";
 const homeStructuredData = [
-  webPageStructuredData({ name: homeTitle, description: homeDescription, path: "" }),
+  webPageStructuredData({ name: homeTitle, description: homeDescription, path: "", dateModified: STATIC_PAGE_LAST_MODIFIED[""] }),
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -141,4 +142,16 @@ const homeStructuredData = [
       </div>
     </div>
   </section>
+
+  <section class="calculator-guide" aria-labelledby="casos-title"><div class="page-shell calculator-guide-content">
+    <h2 id="casos-title" class="text-3xl font-extrabold">Aprende con casos completos</h2>
+    <p>Revisa los antecedentes y el resultado antes de ingresar tus datos. Cada caso permite comprobar las líneas del cálculo y entender sus límites.</p>
+    <ul>
+      <li><a href={sitePath("calculadoras/docentes/#ejemplo-docente")}>Docente: jornada mixta, tres bienios y BRP</a></li>
+      <li><a href={sitePath("calculadoras/tecnicos-parvulos/#caso-explicado")}>Técnico SLEP: mínimo técnico, experiencia y descuentos</a></li>
+      <li><a href={sitePath("calculadoras/administrativos-municipales/#caso-explicado")}>Administrativo DAEM central: sueldo contractual y AFC</a></li>
+      <li><a href={sitePath("calculadoras/tramos-docentes/#caso-explicado")}>Carrera Docente: instrumentos, experiencia y tramo proyectado</a></li>
+    </ul>
+    <p><a href={sitePath("legal/brp/")}>Cómo comprobar la BRP</a> · <a href={sitePath("legal/cotizaciones-previsionales/")}>Cómo comprobar cotizaciones y seguro de cesantía</a></p>
+  </div></section>
 </BaseLayout>
