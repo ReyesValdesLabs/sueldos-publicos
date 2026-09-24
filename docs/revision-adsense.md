@@ -1,6 +1,6 @@
 # Revisión técnica y editorial para AdSense
 
-Revisión del código y compilación local: 16 de septiembre de 2026.
+Revisión inicial: 16 de septiembre de 2026. Seguimiento: 24 de septiembre de 2026.
 
 ## Comprobado
 
@@ -46,21 +46,36 @@ El auditor requiere Python 3 y usa solo su biblioteca estándar. Inspecciona los
 archivos de `dist`; no demuestra que esa misma versión esté desplegada ni que
 Google ya la haya rastreado.
 
+## Seguimiento del 24 de septiembre
+
+- La recuperación #25 ya está integrada en `main`; no quedan PR abiertas del plan.
+- La portada pública presenta los cuatro enlaces a casos y la descripción ampliada
+  de la guía docente. La revisión de contenido en producción confirma las mejoras,
+  aunque el alojamiento no expone un identificador del commit desplegado.
+- Revisión editorial: se corrige la FAQ de portada para distinguir datos salariales
+  locales de cookies de Analytics/AdSense. El README ya no afirma que no existe
+  analítica. La fecha de privacidad del JSON-LD y sitemap coincide con su fecha
+  visible (16 de septiembre).
+- Se añade `Validate site` a cada PR y push a main: diagnósticos, 155 pruebas
+  unitarias, 13 de automatización, compilación y auditoría estática. Estos mismos
+  comandos pasan localmente. El workflow no despliega ni modifica parámetros.
+- El navegador disponible bloqueó `robots.txt` con `ERR_BLOCKED_BY_CLIENT`; la
+  consulta HTTP directa falló en la conexión TLS. Esto no prueba un error del
+  servidor ni un bloqueo a Google y no justifica desactivar protecciones del sitio.
+- Search Console mostró la página pública de acceso. El usuario tiene su sesión
+  en Zen, que no está conectado a las herramientas de esta tarea.
+
 ## Pendientes externos antes de solicitar otra revisión
 
-1. Revisar editorialmente la recuperación de #22 y #23 sobre `main`. Las PR
-   originales quedaron integradas en una rama intermedia después del squash de #20.
-   Publicar y comprobar el contenido real después del despliegue.
-2. Revisar en Search Console la inspección de URL en vivo y el sitemap. Las peticiones
-   públicas realizadas desde este entorno a `robots.txt`, `ads.txt` y `sitemap.xml`
-   devolvieron HTTP 403. No sabemos si la restricción afecta a Google o solo a este
-   cliente. Si la inspección también falla, revisar reglas de Cloudflare/alojamiento
-   y registros de acceso antes de solicitar revisión.
-3. En AdSense, verificar estado de `ads.txt`, anuncios automáticos, exclusiones y
-   mensajes de privacidad/consentimiento aplicables. Comprobar en móvil que los
-   anuncios reales no interrumpan formularios ni se confundan con controles.
-4. Confirmar un canal de contacto atendido por el responsable. GitHub Issues existe
-   como canal público técnico; no debe recibir liquidaciones ni datos personales.
+1. Publicar la corrección de privacidad del 24 de septiembre. El workflow de imagen
+   se ejecuta por etiqueta o manualmente; mergear no garantiza el despliegue.
+2. En Search Console, inspeccionar en vivo la portada y una calculadora; comprobar
+   acceso permitido e informe de sitemap. Los errores de las herramientas de esta
+   tarea no sustituyen esa inspección.
+3. En AdSense, verificar estado de ads.txt, anuncios automáticos, exclusiones y
+   mensajes de consentimiento. La presencia del script no confirma estos ajustes.
+4. Confirmar que el responsable atiende GitHub Issues. El canal está documentado;
+   no se inventó una dirección de correo ni se envió un reporte de prueba público.
 5. Solicitar revisión cuando la versión revisada esté publicada y sea rastreable.
    No se ha enviado ninguna solicitud desde este trabajo.
 

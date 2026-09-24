@@ -1,5 +1,5 @@
 ---
-import { SITE } from "@/data/site";
+import { SITE, STATIC_PAGE_LAST_MODIFIED } from "@/data/site";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { sitePath } from "@/lib/site-path";
 import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structured-data";
@@ -7,7 +7,7 @@ import { breadcrumbStructuredData, webPageStructuredData } from "@/lib/structure
 const title = "Privacidad | Sueldos Públicos";
 const description = "Cómo protege tus datos la calculadora de Sueldos Públicos.";
 const structuredData = [
-  webPageStructuredData({ name: title, description, path: "privacidad/" }),
+  webPageStructuredData({ name: title, description, path: "privacidad/", dateModified: STATIC_PAGE_LAST_MODIFIED["privacidad/"] }),
   breadcrumbStructuredData([
     { name: "Inicio", path: "" },
     { name: "Privacidad", path: "privacidad/" },
