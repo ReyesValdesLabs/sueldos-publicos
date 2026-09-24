@@ -26,7 +26,7 @@ export const GUIDES_CONTENT_PUBLISHED_AT = "2026-09-03";
 export const GUIDES_CONTENT_REVIEWED_AT = "2026-09-03";
 
 export const STATIC_PAGE_LAST_MODIFIED = {
-  "": "2026-09-16",
+  "": "2026-09-24",
   "calculadoras/docentes/": TEACHER_EXAMPLE_REVIEWED_AT,
   "calculadoras/tecnicos-parvulos/": "2026-09-16",
   "calculadoras/administrativos-municipales/": "2026-09-16",
@@ -36,6 +36,6 @@ export const STATIC_PAGE_LAST_MODIFIED = {
   "acerca-de/": ABOUT_CONTENT_REVIEWED_AT,
   "metodologia/": SITE.updatedAt,
   "contacto/": SITE.updatedAt,
-  "privacidad/": SITE.updatedAt,
+  "privacidad/": "2026-09-16",
   "terminos/": SITE.updatedAt,
 } as const;

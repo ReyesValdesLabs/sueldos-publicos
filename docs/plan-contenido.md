@@ -64,10 +64,13 @@ intermedia; la recuperación aplica sus cambios sobre main, conservando Analytic
 - [x] Revisar formularios y lectura móvil.
 - [ ] Verificar rastreo de producción en Search Console: este entorno recibe HTTP 403.
 - [ ] Confirmar ajustes de cuenta AdSense, consentimiento y anuncios reales tras publicar.
-- [ ] Revisión editorial humana, integración y despliegue; después solicitar revisión AdSense.
+- [x] Integración de todas las etapas mediante #25 y presencia de los casos en producción.
+- [x] Revisión editorial técnica del 24 de septiembre y corrección de privacidad/fechas.
+- [ ] Revisión humana final y comprobaciones de cuenta; después solicitar revisión AdSense.
 
 Detalle y comprobaciones reproducibles: [revisión AdSense](revision-adsense.md).
-La recuperación reúne estas partes y la guía docente en una PR dirigida a main.
+La recuperación #25 reunió estas partes y la guía docente en main. El seguimiento
+del 24 de septiembre incorpora validación automática de PR y correcciones editoriales.
 
 ## Datos todavía no disponibles
 

@@ -156,8 +156,28 @@ Para la asignación de mejoramiento de la gestión municipal se ingresa la cuota
 
 Todas aplican un máximo de 44 horas semanales para un mismo empleador y estiman un mes completo, sin prorratear licencias, ausencias ni fracciones de mes.
 
-El resultado es informativo y no reemplaza la liquidación del empleador ni asesoría jurídica, previsional o tributaria. La primera versión no activa publicidad ni analítica; los espacios futuros están preparados pero ocultos.
+El resultado es informativo y no reemplaza la liquidación del empleador ni asesoría jurídica, previsional o tributaria. El sitio carga Google Analytics y las calculadoras pueden cargar AdSense. Los espacios manuales de anuncios están ocultos; los anuncios automáticos y mensajes de consentimiento se administran en la cuenta AdSense. Consulta la política de privacidad para el tratamiento de datos.
 
 ## Licencia
 
 Copyright © 2026 ReyesValdesLabs. Este proyecto se distribuye bajo la [GNU Affero General Public License v3.0](LICENSE). Las modificaciones utilizadas para ofrecer el sitio a través de una red deben mantener disponible su código fuente bajo la misma licencia.
+
+## Validación antes de integrar
+
+El workflow `Validate site` ejecuta en cada PR y push a `main` los diagnósticos,
+pruebas unitarias, pruebas de automatización, compilación y auditoría del HTML.
+No publica ni modifica los parámetros oficiales. Puede ejecutarse localmente con:
+
+```sh
+pnpm check
+pnpm test
+pnpm test:automation
+pnpm build
+python3 scripts/audit-static-site.py
+```
+
+El merge a `main` no publica por sí mismo la imagen del contenedor: el workflow
+`Publish container image` se dispara mediante una etiqueta o ejecución manual.
+El despliegue del alojamiento y la inspección de Search Console deben comprobarse
+por separado. Consulta `docs/revision-adsense.md` para los resultados y límites de
+la revisión de producción.
