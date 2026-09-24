@@ -48,7 +48,7 @@ Google ya la haya rastreado.
 
 ## Seguimiento del 24 de septiembre
 
-- La recuperación #25 ya está integrada en `main`; no quedan PR abiertas del plan.
+- La recuperación #25 ya está integrada en `main`; la revisión final se agrupa en #26.
 - La portada pública presenta los cuatro enlaces a casos y la descripción ampliada
   de la guía docente. La revisión de contenido en producción confirma las mejoras,
   aunque el alojamiento no expone un identificador del commit desplegado.
@@ -62,18 +62,27 @@ Google ya la haya rastreado.
 - El navegador disponible bloqueó `robots.txt` con `ERR_BLOCKED_BY_CLIENT`; la
   consulta HTTP directa falló en la conexión TLS. Esto no prueba un error del
   servidor ni un bloqueo a Google y no justifica desactivar protecciones del sitio.
-- Search Console mostró la página pública de acceso. El usuario tiene su sesión
-  en Zen, que no está conectado a las herramientas de esta tarea.
+- Revisión autenticada mediante Brave: Search Console informa sitemap correcto,
+  con 37 páginas descubiertas y última lectura el 21 de septiembre. La portada
+  está indexada y su prueba en vivo confirma que está disponible para Google.
+  La calculadora docente también figura indexada y supera la prueba en vivo.
+- AdSense mantiene el rechazo por contenido de poco valor y el estado de ads.txt
+  «No se encuentra», con actualización del 15 de septiembre, anterior a las últimas
+  mejoras. El archivo del repositorio coincide con el identificador del editor.
+  La comprobación directa en el navegador fue bloqueada por el cliente; queda
+  pendiente confirmar su entrega pública y el posterior rastreo de AdSense.
+- El mensaje de reglamentos europeos figura publicado para el dominio. La tabla
+  de anuncios no mostró filas, por lo que no se pudieron confirmar anuncios
+  automáticos ni exclusiones. No se modificaron los ajustes de la cuenta.
 
 ## Pendientes externos antes de solicitar otra revisión
 
 1. Publicar la corrección de privacidad del 24 de septiembre. El workflow de imagen
    se ejecuta por etiqueta o manualmente; mergear no garantiza el despliegue.
-2. En Search Console, inspeccionar en vivo la portada y una calculadora; comprobar
-   acceso permitido e informe de sitemap. Los errores de las herramientas de esta
-   tarea no sustituyen esa inspección.
-3. En AdSense, verificar estado de ads.txt, anuncios automáticos, exclusiones y
-   mensajes de consentimiento. La presencia del script no confirma estos ajustes.
+2. Resolver o actualizar el estado de ads.txt en AdSense tras confirmar su entrega
+   desde el alojamiento. Search Console ya confirma sitemap y portada accesibles.
+3. Confirmar anuncios automáticos y exclusiones cuando la tabla muestre el sitio.
+   El mensaje europeo está publicado; su entrega efectiva no se probó desde Europa.
 4. Confirmar que el responsable atiende GitHub Issues. El canal está documentado;
    no se inventó una dirección de correo ni se envió un reporte de prueba público.
 5. Solicitar revisión cuando la versión revisada esté publicada y sea rastreable.
