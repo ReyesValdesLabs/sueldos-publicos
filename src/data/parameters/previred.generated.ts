@@ -2,8 +2,8 @@
 export const PREVIRED_PARAMETERS = {
   "schemaVersion": 1,
   "source": "Previred",
-  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/09/Indicadores-Previsionales-Previred-Septiembre-2026.pdf",
-  "sourceUpdatedAt": "2026-09-14",
+  "sourceUrl": "https://www.previred.com/wp-content/uploads/2026/09/Indicadores-Previsionales-Previred-Septiembre-2026-1.pdf",
+  "sourceUpdatedAt": "2026-09-30",
   "remunerationPeriod": "2026-09",
   "paymentPeriod": "2026-10",
   "sourceHash": "sha256:0828c1c2aad002e1038b774e5f61e1aed19c1c20f29629e5305ef91b9cfd1e0d",
